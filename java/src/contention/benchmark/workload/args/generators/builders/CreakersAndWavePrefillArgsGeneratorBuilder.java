@@ -57,7 +57,7 @@ public class CreakersAndWavePrefillArgsGeneratorBuilder implements ArgsGenerator
 
     @Override
     public ArgsGenerator build() {
-        return new CreakersAndWavePrefillArgsGenerator(waveBegin, prefillLength, dataMapBuilder.getOrBuild());
+        return new CreakersAndWavePrefillArgsGenerator(waveBegin, prefillLength, dataMapBuilder.build());
     }
 
     @Override

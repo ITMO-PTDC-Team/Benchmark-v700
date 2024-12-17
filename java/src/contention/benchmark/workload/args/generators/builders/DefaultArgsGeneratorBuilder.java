@@ -35,7 +35,7 @@ public class DefaultArgsGeneratorBuilder implements ArgsGeneratorBuilder {
     @Override
     public DefaultArgsGenerator build() {
         return new DefaultArgsGenerator(
-                dataMapBuilder.getOrBuild(),
+                dataMapBuilder.build(),
                 distributionBuilder.build(range)
         );
     }

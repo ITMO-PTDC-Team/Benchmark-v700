@@ -78,7 +78,7 @@ public class CreakersAndWaveArgsGeneratorBuilder implements ArgsGeneratorBuilder
     @Override
     public ArgsGenerator build() {
         return new CreakersAndWaveArgsGenerator(creakersRatio, creakersBegin, waveBegin, waveEnd,
-                creakersDistBuilder.build(creakersLength), waveDistBuilder.build(), dataMapBuilder.getOrBuild()
+                creakersDistBuilder.build(creakersLength), waveDistBuilder.build(), dataMapBuilder.build()
         );
     }
 

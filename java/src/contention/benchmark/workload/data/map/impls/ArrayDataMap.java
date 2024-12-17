@@ -10,9 +10,7 @@ import java.util.stream.IntStream;
 public class ArrayDataMap implements DataMap {
     protected final int[] data;
 
-    public ArrayDataMap(int range) {
-        List<Integer> dataList = IntStream.range(0, range).boxed().collect(Collectors.toList());
-        Collections.shuffle(dataList);
+    public ArrayDataMap(List<Integer> dataList) {
         data = dataList.stream().mapToInt(Integer::intValue).toArray();
     }
 
