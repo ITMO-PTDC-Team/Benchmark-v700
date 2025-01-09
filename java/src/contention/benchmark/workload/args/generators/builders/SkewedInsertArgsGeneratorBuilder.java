@@ -38,7 +38,7 @@ public class SkewedInsertArgsGeneratorBuilder implements ArgsGeneratorBuilder {
     @Override
     public SkewedInsertArgsGeneratorBuilder init(int range) {
         this.range = range;
-        dataMapBuilder.init(range);
+        // dataMapBuilder.init(range);
         skewedLength = (int) (range * skewedSize);
         return this;
     }

@@ -43,7 +43,7 @@ public class SkewedSetsArgsGeneratorBuilder implements ArgsGeneratorBuilder {
     @Override
     public SkewedSetsArgsGeneratorBuilder init(int range) {
         this.range = range;
-        dataMapBuilder.init(range);
+        // dataMapBuilder.init(range);
         writeSetBegins = readDistBuilder.getHotLength(range) - (int) (range * intersection);
         return this;
     }

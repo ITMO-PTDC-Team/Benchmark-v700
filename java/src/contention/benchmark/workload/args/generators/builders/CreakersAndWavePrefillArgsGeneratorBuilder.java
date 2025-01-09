@@ -49,7 +49,7 @@ public class CreakersAndWavePrefillArgsGeneratorBuilder implements ArgsGenerator
 
     @Override
     public ArgsGeneratorBuilder init(int range) {
-        dataMapBuilder.init(range);
+        // dataMapBuilder.init(range);
         prefillLength = (int) (range * creakersSize) + (int) (range * waveSize);
         waveBegin = range - prefillLength;
         return this;

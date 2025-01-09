@@ -71,7 +71,7 @@ public class CreakersAndWaveArgsGeneratorBuilder implements ArgsGeneratorBuilder
         creakersBegin = range - creakersLength;
         waveEnd = new AtomicInteger(creakersBegin);
         waveBegin = new AtomicInteger(waveEnd.get() - (int) (range * waveSize));
-        dataMapBuilder.init(range);
+        // dataMapBuilder.init(range);
         return this;
     }
 

@@ -10,8 +10,8 @@ import java.util.stream.IntStream;
 public class ArrayDataMap implements DataMap {
     protected final int[] data;
 
-    public ArrayDataMap(List<Integer> dataList) {
-        data = dataList.stream().mapToInt(Integer::intValue).toArray();
+    public ArrayDataMap(int[] data) {
+        this.data = data;
     }
 
     public int get(int index) {

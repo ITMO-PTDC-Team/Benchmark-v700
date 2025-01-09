@@ -12,9 +12,9 @@ import java.util.stream.IntStream;
 import static contention.benchmark.tools.StringFormat.indentedTitleWithData;
 
 public class ArrayDataMapBuilder extends DataMapBuilder {
-    List<Integer> dataList;
+    transient List<Integer> dataList;
 
-    public ArrayDataMapBuilder setDataList(int range) {
+    private ArrayDataMapBuilder generateDataList(int range) {
         dataList = IntStream.range(0, range).boxed().collect(Collectors.toList());
         Collections.shuffle(dataList);
         return this;
@@ -22,12 +22,12 @@ public class ArrayDataMapBuilder extends DataMapBuilder {
 
     @Override
     public ArrayDataMapBuilder init(int range) {
-        return setDataList(range);
+        return generateDataList(range);
     }
 
     @Override
     public DataMap build() {
-        return new ArrayDataMap(dataList);
+        return new ArrayDataMap(dataList.stream().mapToInt(Integer::intValue).toArray());
     }
 
     @Override
