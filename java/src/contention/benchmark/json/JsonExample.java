@@ -12,6 +12,7 @@ import contention.benchmark.workload.stop.condition.Timer;
 import contention.benchmark.workload.thread.loops.abstractions.ThreadLoopBuilder;
 import contention.benchmark.workload.thread.loops.parameters.RatioThreadLoopParameters;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -25,6 +26,17 @@ public class JsonExample {
                 )
                 .setDataMapBuilder(
                         new ArrayDataMapBuilder()
+                );
+    }
+
+    public static ArgsGeneratorBuilder getFileKeysArgsGeneratorBuilder() {
+        return new DefaultArgsGeneratorBuilder()
+                .setDistributionBuilder(
+                        new UniformDistributionBuilder()
+                )
+                .setDataMapBuilder(
+                        new KeyArrayDataMapBuilder()
+                                .readFile(new File("testBin.txt").getAbsolutePath())
                 );
     }
 
@@ -103,7 +115,7 @@ public class JsonExample {
          * TemporarySkewedArgsGeneratorBuilder and CreakersAndWaveArgsGeneratorBuilder are also presented
          * in the corresponding functions
          */
-        ArgsGeneratorBuilder argsGeneratorBuilder = getDefaultArgsGeneratorBuilder();
+        ArgsGeneratorBuilder argsGeneratorBuilder = getFileKeysArgsGeneratorBuilder();
 
         /**
          * in addition to the DefaultThreadLoopBuilder,
