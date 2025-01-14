@@ -13,6 +13,7 @@ import contention.benchmark.workload.thread.loops.abstractions.ThreadLoopBuilder
 import contention.benchmark.workload.thread.loops.parameters.RatioThreadLoopParameters;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -29,14 +30,30 @@ public class JsonExample {
                 );
     }
 
+    public static void makeSyntheticBinaryData() {
+        try {
+            FileOutputStream out = new FileOutputStream("test-binary-file");
+            byte []arr = {0, 0, 0, 1};
+            for (int i = 0; i<2048; ++i) {
+                out.write(arr);
+            }
+            out.close();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     public static ArgsGeneratorBuilder getFileKeysArgsGeneratorBuilder() {
+        // Generate file first
+        makeSyntheticBinaryData();
+
         return new DefaultArgsGeneratorBuilder()
                 .setDistributionBuilder(
                         new UniformDistributionBuilder()
                 )
                 .setDataMapBuilder(
                         new KeyArrayDataMapBuilder()
-                                .readFile(new File("testBin.txt").getAbsolutePath())
+                                .readFile(new File("test-binary-file").getAbsolutePath())
                 );
     }
 
@@ -82,7 +99,6 @@ public class JsonExample {
         /**
          * The first step is the creation the BenchParameters class.
          */
-
         BenchParameters benchParameters = new BenchParameters();
 
         /**

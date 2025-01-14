@@ -32,7 +32,6 @@ public class KeyArrayDataMapBuilder extends DataMapBuilder {
     }
 
     public KeyArrayDataMapBuilder readFile(String filename) {
-        System.out.println("GGGGGGGGGGGGGGGGGGGGG");
         try {
             FileInputStream fin = new FileInputStream(filename);
             BufferedInputStream bin = new BufferedInputStream(fin);
@@ -40,11 +39,10 @@ public class KeyArrayDataMapBuilder extends DataMapBuilder {
             System.out.println(stream.readInt());
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            System.out.println("Cannot open file " + filename);
-            System.out.println(System.getProperty("user.dir"));
-            System.out.println(new File(".").getAbsolutePath());
+            //System.out.println("Cannot open file " + filename);
+            //System.out.println(System.getProperty("user.dir"));
+            //System.out.println(new File(".").getAbsolutePath());
         }
-        System.out.println("FILE READ SUCCESSFULLY");
         return this;
     }
 }
