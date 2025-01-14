@@ -53,7 +53,7 @@ public class JsonExample {
                 )
                 .setDataMapBuilder(
                         new KeyArrayDataMapBuilder()
-                                .readFile(new File("test-binary-file").getAbsolutePath())
+                                .setFileName(new File("test-binary-file").getAbsolutePath())
                 );
     }
 

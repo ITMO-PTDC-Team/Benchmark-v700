@@ -13,7 +13,8 @@ import static contention.benchmark.tools.StringFormat.indentedTitleWithData;
 
 public class KeyArrayDataMapBuilder extends DataMapBuilder {
     transient public int range;
-    transient private DataInputStream stream;
+    transient private int[] data;
+    transient private String filename;
 
     @Override
     public DataMapBuilder init(int range) {
@@ -23,7 +24,9 @@ public class KeyArrayDataMapBuilder extends DataMapBuilder {
 
     @Override
     public DataMap build() {
-        return new KeysArrayDataMap(-range, stream);
+        readFile();
+
+        return new KeysArrayDataMap(-range, data);
     }
 
     @Override
@@ -31,18 +34,23 @@ public class KeyArrayDataMapBuilder extends DataMapBuilder {
         return new StringBuilder(indentedTitleWithData("Type", "KeysArrayDataMap", indents));
     }
 
-    public KeyArrayDataMapBuilder readFile(String filename) {
+    public KeyArrayDataMapBuilder setFileName(String filename) {
+        this.filename = filename;
+        return this;
+    }
+
+    public void readFile() {
         try {
             FileInputStream fin = new FileInputStream(filename);
             BufferedInputStream bin = new BufferedInputStream(fin);
-            this.stream = new DataInputStream(bin);
-            System.out.println(stream.readInt());
+            DataInputStream stream = new DataInputStream(bin);
+            int fileSize = stream.available() / 4;
+            this.data = new int[fileSize];
+            for (int i = 0; i < fileSize - 1; ++i) {
+                data[i] = stream.readInt();
+            }
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            //System.out.println("Cannot open file " + filename);
-            //System.out.println(System.getProperty("user.dir"));
-            //System.out.println(new File(".").getAbsolutePath());
         }
-        return this;
     }
 }
