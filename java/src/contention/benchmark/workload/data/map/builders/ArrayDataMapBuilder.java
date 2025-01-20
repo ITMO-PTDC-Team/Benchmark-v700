@@ -6,28 +6,29 @@ import contention.benchmark.workload.data.map.impls.ArrayDataMap;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static contention.benchmark.tools.StringFormat.indentedTitleWithData;
 
 public class ArrayDataMapBuilder extends DataMapBuilder {
-    transient List<Integer> dataList;
+    transient int[] data;
 
     private ArrayDataMapBuilder generateDataList(int range) {
-        dataList = IntStream.range(0, range).boxed().collect(Collectors.toList());
-        Collections.shuffle(dataList);
+        List<Integer> list = new java.util.ArrayList<>(IntStream.range(0, range).boxed().toList());
+        Collections.shuffle(list);
+        data = list.stream().mapToInt(Integer::intValue).toArray();
         return this;
     }
 
     @Override
     public ArrayDataMapBuilder init(int range) {
+        data = new int[range];
         return generateDataList(range);
     }
 
     @Override
     public DataMap build() {
-        return new ArrayDataMap(dataList.stream().mapToInt(Integer::intValue).toArray());
+        return new ArrayDataMap(data);
     }
 
     @Override
