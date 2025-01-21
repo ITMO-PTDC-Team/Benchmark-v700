@@ -43,7 +43,7 @@ public class JsonExample {
         }
     }
 
-    public static ArgsGeneratorBuilder getFileKeysArgsGeneratorBuilder() {
+    public static ArgsGeneratorBuilder getFileBasedArgsGeneratorBuilder() {
         // Generate file first
         makeSyntheticBinaryData();
 
@@ -52,8 +52,8 @@ public class JsonExample {
                         new UniformDistributionBuilder()
                 )
                 .setDataMapBuilder(
-                        new KeyArrayDataMapBuilder()
-                                .setFileName(new File("test-binary-file").getAbsolutePath())
+                        new ArrayDataMapBuilder()
+                                .setFilename(new File("test-binary-file").getAbsolutePath())
                 );
     }
 
@@ -131,7 +131,8 @@ public class JsonExample {
          * TemporarySkewedArgsGeneratorBuilder and CreakersAndWaveArgsGeneratorBuilder are also presented
          * in the corresponding functions
          */
-        ArgsGeneratorBuilder argsGeneratorBuilder = getFileKeysArgsGeneratorBuilder();
+        ArgsGeneratorBuilder argsGeneratorBuilder = getFileBasedArgsGeneratorBuilder();
+        //ArgsGeneratorBuilder argsGeneratorBuilder = getDefaultArgsGeneratorBuilder();
 
         /**
          * in addition to the DefaultThreadLoopBuilder,
