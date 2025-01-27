@@ -63,8 +63,8 @@ public class LeafsHandshakeArgsGeneratorBuilder implements ArgsGeneratorBuilder 
                 readDistBuilder.build(range),
                 insertDistBuilder.build(),
                 removeDistBuilder.build(range),
-                readDataMapBuilder.getOrBuild(),
-                removeDataMapBuilder.getOrBuild()
+                readDataMapBuilder.build(),
+                removeDataMapBuilder.build()
         );
     }
 

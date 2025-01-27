@@ -12,16 +12,4 @@ public abstract class DataMapBuilder {
     }
 
     public abstract StringBuilder toStringBuilder(int indents);
-
-    private DataMap dataMap;
-
-    public DataMap getOrBuild() {
-        if (dataMap == null)
-            dataMap = this.build();
-        return dataMap;
-    }
-
-    public void reset() {
-        dataMap = null;
-    }
 }

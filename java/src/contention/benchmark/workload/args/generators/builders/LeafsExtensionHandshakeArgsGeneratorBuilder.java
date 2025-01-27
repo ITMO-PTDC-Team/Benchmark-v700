@@ -65,8 +65,8 @@ public class LeafsExtensionHandshakeArgsGeneratorBuilder implements ArgsGenerato
                 readDistBuilder.build(),
                 insertDistBuilder.build(),
                 removeDistBuilder.build(),
-                readDataMapBuilder.getOrBuild(),
-                removeDataMapBuilder.getOrBuild()
+                readDataMapBuilder.build(),
+                removeDataMapBuilder.build()
         );
     }
 

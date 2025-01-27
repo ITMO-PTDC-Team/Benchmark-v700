@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DataMapBuilderSerializer extends BuilderSerializer<DataMapBuilder> {
-    private final Map<Integer, DataMapBuilder> builders = new HashMap<>();
+    private final static Map<Integer, DataMapBuilder> builders = new HashMap<>();
 
     @Override
     protected String getClassPath() {
@@ -30,4 +30,7 @@ public class DataMapBuilderSerializer extends BuilderSerializer<DataMapBuilder> 
         return builder;
     }
 
+    public static Map<Integer, DataMapBuilder> getBuilders() {
+        return builders;
+    }
 }
