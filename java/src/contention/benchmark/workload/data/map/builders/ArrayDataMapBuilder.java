@@ -15,7 +15,8 @@ import static contention.benchmark.tools.StringFormat.indentedTitleWithData;
 
 public class ArrayDataMapBuilder extends DataMapBuilder {
     transient int[] data;
-    private String filename;
+    private boolean shuffle = false;
+    private String filename = "";
 
     private ArrayDataMapBuilder generateDataList(int range) {
         List<Integer> list = new java.util.ArrayList<>(IntStream.range(0, range).boxed().toList());
@@ -24,15 +25,20 @@ public class ArrayDataMapBuilder extends DataMapBuilder {
         return this;
     }
 
-    private ArrayDataMapBuilder readFile(int range) {
+    private ArrayDataMapBuilder readFile(int range, boolean shuffle) {
         try {
             FileInputStream fin = new FileInputStream(this.filename);
             BufferedInputStream bin = new BufferedInputStream(fin);
             DataInputStream stream = new DataInputStream(bin);
             int fileSize = stream.available() / 4;
+            List<Integer> list = new java.util.ArrayList<>();
             for (int i = 0; i < range || i < fileSize; ++i) {
-                data[i] = stream.readInt();
+                list.add(stream.readInt());
             }
+            if (shuffle) {
+                Collections.shuffle(list);
+            }
+            data = list.stream().mapToInt(Integer::intValue).toArray();
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -41,10 +47,8 @@ public class ArrayDataMapBuilder extends DataMapBuilder {
 
     @Override
     public ArrayDataMapBuilder init(int range) {
-        data = new int[range];
         if (this.filename != null) {
-            //System.out.println("FILENAME FOUND");
-            return readFile(range);
+            return readFile(range, shuffle);
         }
         return generateDataList(range);
     }
@@ -61,6 +65,11 @@ public class ArrayDataMapBuilder extends DataMapBuilder {
 
     public ArrayDataMapBuilder setFilename(String filename) {
         this.filename = filename;
+        return this;
+    }
+
+    public ArrayDataMapBuilder setShuffleFlag(Boolean shuffle) {
+        this.shuffle = shuffle;
         return this;
     }
 }

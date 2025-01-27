@@ -54,6 +54,7 @@ public class JsonExample {
                 .setDataMapBuilder(
                         new ArrayDataMapBuilder()
                                 .setFilename(new File("test-binary-file").getAbsolutePath())
+                                .setShuffleFlag(false)
                 );
     }
 
