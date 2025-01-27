@@ -22,7 +22,6 @@ public class ArrayDataMapBuilder extends DataMapBuilder {
 
     @Override
     public ArrayDataMapBuilder init(int range) {
-        data = new int[range];
         return generateDataList(range);
     }
 
