@@ -52,7 +52,7 @@ public class CreakersAndWaveParameters {
         waveEnd = new AtomicInteger(creakersBegin);
         waveBegin = new AtomicInteger(waveEnd.get() - defaultWaveLength);
         prefillSize = creakersLength + defaultWaveLength;
-        dataMapBuilder.init(range);
+//        dataMapBuilder.init(range);
     }
 
 //    @Override
