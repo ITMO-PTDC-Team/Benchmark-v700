@@ -12,6 +12,8 @@ import contention.benchmark.workload.stop.condition.Timer;
 import contention.benchmark.workload.thread.loops.abstractions.ThreadLoopBuilder;
 import contention.benchmark.workload.thread.loops.parameters.RatioThreadLoopParameters;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -25,6 +27,34 @@ public class JsonExample {
                 )
                 .setDataMapBuilder(
                         new ArrayDataMapBuilder()
+                );
+    }
+
+    public static void makeSyntheticBinaryData() {
+        try {
+            FileOutputStream out = new FileOutputStream("test-binary-file");
+            byte []arr = {0, 0, 0, 1};
+            for (int i = 0; i<2048; ++i) {
+                out.write(arr);
+            }
+            out.close();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public static ArgsGeneratorBuilder getFileBasedArgsGeneratorBuilder() {
+        // Generate file first
+        makeSyntheticBinaryData();
+
+        return new DefaultArgsGeneratorBuilder()
+                .setDistributionBuilder(
+                        new UniformDistributionBuilder()
+                )
+                .setDataMapBuilder(
+                        new ArrayDataMapBuilder()
+                                .setFilename(new File("test-binary-file").getAbsolutePath())
+                                .setShuffleFlag(false)
                 );
     }
 
@@ -70,7 +100,6 @@ public class JsonExample {
         /**
          * The first step is the creation the BenchParameters class.
          */
-
         BenchParameters benchParameters = new BenchParameters();
 
         /**
@@ -103,7 +132,8 @@ public class JsonExample {
          * TemporarySkewedArgsGeneratorBuilder and CreakersAndWaveArgsGeneratorBuilder are also presented
          * in the corresponding functions
          */
-        ArgsGeneratorBuilder argsGeneratorBuilder = getDefaultArgsGeneratorBuilder();
+        ArgsGeneratorBuilder argsGeneratorBuilder = getFileBasedArgsGeneratorBuilder();
+        //ArgsGeneratorBuilder argsGeneratorBuilder = getDefaultArgsGeneratorBuilder();
 
         /**
          * in addition to the DefaultThreadLoopBuilder,
