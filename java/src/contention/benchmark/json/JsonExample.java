@@ -52,7 +52,7 @@ public class JsonExample {
                         new UniformDistributionBuilder()
                 )
                 .setDataMapBuilder(
-                        new ArrayDataMapBuilder()
+                        new FileBasedDataMapBuilder()
                                 .setFilename(new File("test-binary-file").getAbsolutePath())
                                 .setShuffleFlag(false)
                 );
@@ -152,6 +152,8 @@ public class JsonExample {
 
         benchParameters.setTest(test)
                 .createDefaultPrefill();
+
+        benchParameters.setDetailedStats(true);
 
         String json = JsonConverter.toJson(benchParameters);
 
