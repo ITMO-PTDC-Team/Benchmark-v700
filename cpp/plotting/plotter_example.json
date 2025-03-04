@@ -1,0 +1,58 @@
+{
+    "benchmark-params": [
+        {
+            "folder": "aksenov-plots",
+            "json-file-input": "example.json",
+            "json-file-output": "result.json",
+            "tests": [
+                {
+                    "name": "test_aksenov_splay_list_1",
+                    "data-structure": {
+                        "name": "aksenov_splaylist_64"
+                    },
+                    "keys": {
+                        "name": "threadNumber",
+                        "values": [1, 2, 4, 8]
+                    }
+                }, 
+                {
+                    "name": "test_aksenov_splay_list_2",
+                    "data-structure": {
+                        "name": "aksenov_splaylist_64"
+                    },
+                    "keys": {
+                        "name": "threadNumber",
+                        "values": [1, 2, 4, 8]
+                    }
+                }
+            ]
+        },
+        {
+            "folder": "srisatava-plots",
+            "json-file-input": "src/input",
+            "json-file-output": "src/output",
+            "tests": [
+                {
+                    "name": "test_srisatava_1",
+                    "data-structure": {
+                        "name": "srisatava_abtree_pub"
+                    },
+                    "keys": {
+                        "name": "threadNumber",
+                        "values": [1, 2, 4, 8]
+                    }
+                }, 
+                {
+                    "name": "test_srisatava_2",
+                    "data-structure": {
+                        "name": "srisatava_abtree_pub"
+                    },
+                    "keys": {
+                        "name": "threadNumber",
+                        "values": [1, 2, 4, 8]
+                    }
+                }
+            ]
+        }
+    ]
+}
