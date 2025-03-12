@@ -13,6 +13,7 @@ import seaborn as sns
 import json
 import sys
 import plotter
+import copy
 
 DEFAULT_OUTPUT_DIR_NAME = "plotter-output"
 
@@ -21,29 +22,36 @@ def parse_json(file_path):
         with open(file_path, 'r') as file:
             data = json.load(file)
         
-        if "benchmark-params" not in data:
-            print("No benchmark-params key in JSON.")
+        if "folder" not in data:
+            print("Please, set up the \"folder\" parameter.")
             return
+        out_folder = data['folder']
 
-        for benchmark in data["benchmark-params"]:
-            print(f"Benchmark: {benchmark['folder']}")
 
-            input_file = benchmark['json-file-input']
-            output_file = benchmark['json-file-output']
+        if "json-file-input" not in data:
+            print("Please, set up the \"json-file-input\" parameter.")
+            return
+        param_json = data['json-file-input']
 
-            for test in benchmark["tests"]:
-                print(f"TEST: {test['name']}")
-                
-                ds = test['data-structure']['name']
-                if "keys" in test:
-                    keys = test["keys"]
+        iterations = 1
+        if "iterations" in data:
+            iterations = data['iterations']
 
-                    x_axis_name = keys['name']
-                    x_axis_keys = map(int, keys['values'])
-                    
-                    # SCRIPT RUNNING
-                    print("RUNNING")
-                    modify_and_run_second_json(input_file, output_file, ds, x_axis_name, x_axis_keys, {})
+        for structs in data['competitors']:
+            ds = structs['name']
+            print(f"Benchmark: {ds}")
+
+            key_names = []
+            for cur_keys in data['keys']:
+                key_names.append(cur_keys['name'])
+
+            for i in range(len(data['keys_title'])):
+                print(f"TEST: {data['key_title']}")
+                keys = []
+                for cur_keys in data['keys']:
+                    keys.append(cur_keys['values'][i])
+                print("KEK")
+                modify_and_run_second_json(out_folder, param_json, iterations, ds, keys, key_names, data['key_title'] + data['keys_title'][i])
                 print("-" * 40)
 
     except FileNotFoundError:
@@ -57,61 +65,80 @@ def parse_json(file_path):
     except Exception as e:
         print(f"Error: {e}")
 
-def modify_and_run_second_json(input_file, 
-                               output_file, 
+def set_value(data, path, new_value):
+    keys = path.split('.')
+    print(new_value)
+    current = data
+    for key in keys[:-1]:
+        try:
+            current = current[int(key)]
+        except ValueError:
+            current = current[key]
+    current[keys[-1]] = new_value
+
+
+def modify_and_run_second_json(folder, 
+                               params, 
+                               iters,
                                ds,
-                               x_axis_name,
-                               x_axis_keys,
-                               additional):
+                               keys,
+                               path_to_keys,
+                               title):
     try:
         bench_path = Path.cwd().parent
         print(bench_path)
 
-        with open(Path.cwd().parent / json_example / input_file, 'r') as file:
+        with open(params, 'r') as file:
             data = json.load(file)
 
-        for x_key in x_axis_keys:
+        temp_data = copy.copy(data)
+
+        for key, key_path in zip(keys, path_to_keys):
             # TEMP JSON
-            data["test"]["numThreads"] = x_key
-            temp_file = f"temp_config_{x_key}_{x_axis_name}.json"
-            with open(temp_file, 'w') as temp:
-                json.dump(data, temp, indent=4)
+            set_value(temp_data, key_path, key)
 
+        temp_file = os.path.join(folder, f"temp_config_{ds}_{title}.json")
 
-            allocator = "libmimalloc"
-            ld_preload = f"LD_PRELOAD= ../lib/{allocator}.so"
+        if not os.path.exists(folder):
+            os.makedirs(folder)
 
-            run_command = f"{ld_preload} ./bin/{ds}.debra -json-file {temp_file} -result-file {result-file} "
+        with open(temp_file, 'w') as temp:
+            json.dump(temp_data, temp, indent=4)
 
-            for argument, value in additional: 
-                run_command += f"-{argument} {value}"
+        allocator = "libmimalloc"   
+        ld_preload = f"LD_PRELOAD= ../lib/{allocator}.so"
 
-            bench_path = Path.cwd().parent
-            print(bench_path)
-            
-            try:
-                env = os.environ.copy()
-                # env["LD_PRELOAD"] = ld_preload
-                cp = subprocess.run(
-                    run_command.split(),
-                    cwd=str(bench_path / "json_example"),
-                    env=env,
-                    timeout=100000,
-                    check=True,
-                    capture_output=True,
-                    text=True
-                )
-                if cp.stderr:
-                    task_logger.info(f"stderr: {cp.stderr}")
-                log = cp.stdout
-            except subprocess.CalledProcessError as exc:
-                task_logger.error(
-                    f"ProcessError while running command: {exc}")
-                log = exc.stdout
-            except subprocess.TimeoutExpired as exc:
-                task_logger.error(
-                    f"TimeoutExpired while running command: {exc}")
-                log = exc.stdout
+        inp = f"../plotting/{temp_file}"
+        out = f"../plotting/{temp_file[:-5]}/_benchrestul.json"
+        # + temp_file[:-5] + "_benchresult.json"
+        run_command = f"./bin/{ds}.debra -json-file {inp} -result-file {out}"
+
+        # for argument, value in additional: 
+        #    run_command += f"-{argument} {value}"
+        
+        # try:
+        env = os.environ.copy()
+        env["LD_PRELOAD"] = ld_preload
+        cp = subprocess.run(
+            run_command.split(),
+            cwd=str(bench_path / "microbench"),
+            env=env,
+            timeout=100000,
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        #     if cp.stderr:
+        #         task_logger.info(f"stderr: {cp.stderr}")
+        #     log = cp.stdout
+        # except subprocess.CalledProcessError as exc:
+        #     task_logger.error(
+        #         f"ProcessError while running command: {exc}")
+        #     log = exc.stdout
+        # except subprocess.TimeoutExpired as exc:
+        #     task_logger.error(
+        #         f"TimeoutExpired while running command: {exc}")
+        #     log = exc.stdout
 
     except FileNotFoundError:
         print(f"Could not open '{input_file}'")
