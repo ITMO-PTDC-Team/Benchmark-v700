@@ -45,29 +45,144 @@ def parse_json(file_path):
             for cur_keys in data['keys']:
                 key_names.append(cur_keys['name'])
 
-            for i in range(len(data['keys_title'])):
-                print(f"TEST: {data['key_title']}")
-                keys = []
-                for cur_keys in data['keys']:
-                    keys.append(cur_keys['values'][i])
-                print("KEK")
-                modify_and_run_second_json(out_folder, param_json, iterations, ds, keys, key_names, data['key_title'] + data['keys_title'][i])
-                print("-" * 40)
+        self.ds = []
+        self.settings = defaultdict(dict)
 
-    except FileNotFoundError:
-        print(f"Could not open '{file_path}'")
-        sys.exit(1)
-    except json.JSONDecodeError:
-        print(f"Could not open '{file_path}'")
-        sys.exit(1)
-    except KeyError as e:
-        print(f"No key in JSON: {e}")
-    except Exception as e:
-        print(f"Error: {e}")
+    def extract(self):
+        try:
+            with open(self.path, 'r') as file:
+                data = json.load(file)
+            
+            # necessary
+            if "folder" not in data:
+                print("Please, set up the \"folder\" parameter.")
+                return
+            self.out_folder = data['folder']
+
+            if "json-file-input" not in data:
+                print("Please, set up the \"json-file-input\" parameter.")
+                return
+            self.input_path = data['json-file-input']
+
+            if "key_title" not in data:
+                print("Please, set up the \"key_title\" parameter.")
+                return
+            self.xtitle = data['key_title']
+
+            if "keys_title" not in data:
+                print("Please, set up the \"keys_title\" parameter.")
+                return
+            self.xvalues = data['keys_title']
+
+            # optional
+            if "iterations" in data:
+                self.iterations = data['iterations']
+
+            if "allocator" in data:
+                self.allocator = data['allocator']
+
+            if "ylabel" in data:
+                self.ylabel = data['ylabel']
+
+            for structs in data['competitors']:
+                ds_name = structs['name']
+                self.ds.append(ds_name)
+
+                for cur_keys in data['keys']:
+                    assert(len(cur_keys['values']) == len(self.xvalues))
+                    self.settings[cur_keys['name']] = cur_keys['values']
+        except FileNotFoundError:
+            print(f"Could not open '{file_path}'")
+            sys.exit(1)
+        except json.JSONDecodeError:
+            print(f"Could not open '{file_path}'")
+            sys.exit(1)
+        except KeyError as e:
+            print(f"No key in JSON: {e}")
+        except Exception as e:
+            print(f"Error: {e}")
+
+    def run_extractor(self):
+        for ds_name in self.ds:
+            print("Running for " + ds_name)
+            for iter_num in range(len(self.xvalues)):
+                keys = []
+                for key, values in self.settings.items():
+                    keys.append(values[iter_num])
+                paths = list(self.settings.keys())
+                modify_and_run_second_json(self.out_folder, 
+                                        self.input_path, 
+                                        self.iterations, 
+                                        self.allocator,
+                                        ds_name, 
+                                        keys, 
+                                        paths, 
+                                        str(self.xtitle) + self.xvalues[iter_num])
+
+class ResultJsonExtractor(JsonStatExtractor):
+    def __init__(self, label, **kwargs):
+        super().__init__(**kwargs)
+        self.ylabel = label
+
+        self.average_num_operations = 1
+        # can add more parameters
+
+    def extract(self):
+        try:
+            with open(self.path, 'r', encoding='utf-8') as file:
+                data_temp = json.load(file)
+            if 'average_num_operations_total' in data_temp:
+                self.average_num_operations = data_temp['average_num_operations_total']
+            else:
+                print(f"No key")
+        except json.JSONDecodeError:
+            print(f"Error while reading {filename}")
+        except Exception as e:
+            print(f"Error during working with {filename}: {e}") 
+        except FileNotFoundError:
+            print(f"Could not open '{file_path}'")
+            sys.exit(1)
+        except json.JSONDecodeError:
+            print(f"Could not open '{file_path}'")
+            sys.exit(1)
+        except KeyError as e:
+            print(f"No key in JSON: {e}")
+        except Exception as e:
+            print(f"Error: {e}")
+    
+    def run_extractor(self):
+        return
+
+
+def parse_json(file_path):
+    plotter_initial = PlotterJsonExtractor(path=file_path)
+    plotter_initial.extract()
+    plotter_initial.run_extractor()
+    
+    fig, ax = plt.subplots()
+    fig.suptitle("Result")
+    ax.set_xlabel(plotter_initial.xtitle)
+    # ax.xaxis.labelpad = 2
+    ax.set_xscale("log")
+    ax.set_ylabel(plotter_initial.ylabel)
+
+    for ds in plotter_initial.ds:
+        yvalues = []
+        for val in plotter_initial.xvalues:
+            path_to_result = f"{plotter_initial.out_folder}/{ds}_{plotter_initial.xtitle}{val}.json"
+            plotter_final = ResultJsonExtractor(label=plotter_initial.ylabel, path=path_to_result)
+            plotter_final.extract()
+            yvalues.append(plotter_final.average_num_operations)
+        ax.plot(plotter_initial.xvalues, yvalues, label = ds)
+
+    ax.grid(True)
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(f"Result_graph.png")
+    plt.close(fig)
 
 def set_value(data, path, new_value):
     keys = path.split('.')
-    print(new_value)
     current = data
     for key in keys[:-1]:
         try:
@@ -155,7 +270,6 @@ def modify_and_run_second_json(folder,
     except Exception as e:
         print(f"Error: {e}")
         sys.exit(1)
-        
 def main():
     if len(sys.argv) != 2:
         print("Wrong number of arguments")

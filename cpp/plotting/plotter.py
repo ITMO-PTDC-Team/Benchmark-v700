@@ -449,7 +449,6 @@ if __name__ == "__main__":
     """)
     plotter_group = parser.add_argument_group("plotter args")
     plotter_group.add_argument("--stat", nargs="+", required=True, choices=[*AGGREGATOR_BY_STAT], help="Stats to plot.")
-    # test.numTreads = [1, 2, 4, 8]
     plotter_group.add_argument("--num-threads", nargs="+", required=True, action="extend", help="Number of threads for JSON config")
     plotter_group.add_argument("-o", "--output-dir", type=Path, default=Path.cwd() / DEFAULT_OUTPUT_DIR_NAME, help="Directory where results will be stored")
     plotter_group.add_argument("-s", "--setbench-dir", type=Path, default=Path.cwd().parent, help="Directory where setbench is located")
