@@ -58,7 +58,7 @@ public class DefaultArgsGenerator implements ArgsGenerator {
         @Override
         public Builder init(int range) {
             this.range = range;
-            dataMapBuilder.init(range);
+//            dataMapBuilder.init(range);
             return this;
         }
 

@@ -112,7 +112,7 @@ public class TemporarySkewedArgsGeneratorBuilder implements ArgsGeneratorBuilder
     @Override
     public TemporarySkewedArgsGeneratorBuilder init(int range) {
         this.range = range;
-        dataMapBuilder.init(range);
+//        dataMapBuilder.init(range);
 
         for (int i = 0; i < setNumber; ++i) {
             if (relaxTimes[i] == -1) {

@@ -109,6 +109,9 @@ public class BenchParameters {
     }
 
     public void init() {
+        for (DataMapBuilder currentBuilder : DataMapBuilderSerializer.getBuilders().values()) {
+            currentBuilder.init(range);
+        }
         test.init(range);
         prefill.init(range);
         warmUp.init(range);

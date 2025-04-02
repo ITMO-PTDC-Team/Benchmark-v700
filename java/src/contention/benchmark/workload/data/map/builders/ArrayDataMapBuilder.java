@@ -4,9 +4,6 @@ import contention.benchmark.workload.data.map.abstractions.DataMap;
 import contention.benchmark.workload.data.map.abstractions.DataMapBuilder;
 import contention.benchmark.workload.data.map.impls.ArrayDataMap;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -16,6 +13,7 @@ import static contention.benchmark.tools.StringFormat.indentedTitleWithData;
 public class ArrayDataMapBuilder extends DataMapBuilder {
     transient int[] data;
     protected boolean shuffle = false;
+
 
     private ArrayDataMapBuilder generateDataList(int range) {
         List<Integer> list = new java.util.ArrayList<>(IntStream.range(0, range).boxed().toList());
