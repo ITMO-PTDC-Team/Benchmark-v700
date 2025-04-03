@@ -12,8 +12,6 @@ import static contention.benchmark.tools.StringFormat.indentedTitleWithData;
 
 public class ArrayDataMapBuilder extends DataMapBuilder {
     transient int[] data;
-    protected boolean shuffle = false;
-
 
     private ArrayDataMapBuilder generateDataList(int range) {
         List<Integer> list = new java.util.ArrayList<>(IntStream.range(0, range).boxed().toList());
@@ -35,10 +33,5 @@ public class ArrayDataMapBuilder extends DataMapBuilder {
     @Override
     public StringBuilder toStringBuilder(int indents) {
         return new StringBuilder(indentedTitleWithData("Type", "ArrayDataMap", indents));
-    }
-
-    public ArrayDataMapBuilder setShuffleFlag(Boolean shuffle) {
-        this.shuffle = shuffle;
-        return this;
     }
 }

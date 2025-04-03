@@ -1,52 +1,78 @@
 package contention.benchmark.workload.data.map.builders;
 
-import contention.benchmark.workload.data.map.abstractions.DataMap;
-import contention.benchmark.workload.data.map.impls.ArrayDataMap;
+import contention.benchmark.exceptions.FileBasedDataMapException;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
+import java.io.*;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.IntStream;
 
 import static contention.benchmark.tools.StringFormat.indentedTitleWithData;
 
 public class FileBasedDataMapBuilder extends ArrayDataMapBuilder {
     private String filename = "";
+    private Boolean shuffle = false;
 
-    private ArrayDataMapBuilder readFile(int range, boolean shuffle) {
+    private FileBasedDataMapBuilder readFile(int range, boolean shuffle) {
         try {
             FileInputStream fin = new FileInputStream(this.filename);
             BufferedInputStream bin = new BufferedInputStream(fin);
             DataInputStream stream = new DataInputStream(bin);
             int fileSize = stream.available() / 4;
+
+            if (fileSize < range) {
+                throw new FileBasedDataMapException("File too small. \n" +
+                        "The FileBasedDataMap size is " + range + ". " +
+                        "The file size is " + fileSize + ".\n" +
+                        "The number of keys in the file must be no less than the range of keys. ");
+            }
+
             List<Integer> list = new java.util.ArrayList<>();
-            for (int i = 0; i < range || i < fileSize; ++i) {
+            for (int i = 0; i < range; ++i) {
                 list.add(stream.readInt());
             }
             if (shuffle) {
                 Collections.shuffle(list);
             }
             data = list.stream().mapToInt(Integer::intValue).toArray();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+        } catch (FileNotFoundException e) {
+            throw new FileBasedDataMapException("File \""+filename+"\" for FileBasedDataMap not found. ", e);
+        } catch (IOException e) {
+            throw new FileBasedDataMapException(e);
         }
         return this;
     }
 
     @Override
-    public ArrayDataMapBuilder init(int range) {
+    public FileBasedDataMapBuilder init(int range) {
         return readFile(range, shuffle);
     }
 
     @Override
     public StringBuilder toStringBuilder(int indents) {
-        return new StringBuilder(indentedTitleWithData("Type", "FileBasedDataMap", indents));
+        return new StringBuilder(indentedTitleWithData("Type", "FileBasedDataMap", indents))
+                .append(indentedTitleWithData("File name", filename, indents))
+                .append(indentedTitleWithData("Shuffled", shuffle, indents));
     }
 
-    public ArrayDataMapBuilder setFilename(String filename) {
+    public FileBasedDataMapBuilder setFilename(String filename) {
         this.filename = filename;
         return this;
     }
+
+    public FileBasedDataMapBuilder setShuffleFlag(Boolean shuffle) {
+        this.shuffle = shuffle;
+        return this;
+    }
+
+    public FileBasedDataMapBuilder enableShuffleFlag() {
+        this.shuffle = true;
+        return this;
+    }
+
+    public FileBasedDataMapBuilder disableShuffleFlag() {
+        this.shuffle = false;
+        return this;
+    }
+
+
 }
