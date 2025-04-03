@@ -52,7 +52,7 @@ public class JsonExample {
                         new UniformDistributionBuilder()
                 )
                 .setDataMapBuilder(
-                        new FileBasedDataMapBuilder()
+                        new BinaryFileDataMapBuilder()
                                 .setFilename(new File("test-binary-file").getAbsolutePath())
                                 .setShuffleFlag(false)
                 );
