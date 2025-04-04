@@ -17,33 +17,30 @@ import copy
 
 DEFAULT_OUTPUT_DIR_NAME = "plotter-output"
 
-def parse_json(file_path):
-    try:
-        with open(file_path, 'r') as file:
-            data = json.load(file)
-        
-        if "folder" not in data:
-            print("Please, set up the \"folder\" parameter.")
-            return
-        out_folder = data['folder']
+class JsonStatExtractor(abc.ABC):
+    def __init__(self, **kwargs):
+        self.path = kwargs["path"]
+        assert self.path is not None
 
+    @abc.abstractmethod
+    def extract(self):
+        """Extract stats from json by 'path'."""
 
-        if "json-file-input" not in data:
-            print("Please, set up the \"json-file-input\" parameter.")
-            return
-        param_json = data['json-file-input']
+    @abc.abstractmethod
+    def run_extractor(self):
+        """Run the custom extractor."""
 
-        iterations = 1
-        if "iterations" in data:
-            iterations = data['iterations']
+class PlotterJsonExtractor(JsonStatExtractor):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.out_folder = "folder"
+        self.input_path = "test.json"
+        self.allocator = "libmimalloc"
+        self.iterations = 1
+        self.ylabel = "average_num_operations_total"
 
-        for structs in data['competitors']:
-            ds = structs['name']
-            print(f"Benchmark: {ds}")
-
-            key_names = []
-            for cur_keys in data['keys']:
-                key_names.append(cur_keys['name'])
+        self.xtitle = "NumberofThreads"
+        self.xvalues = []
 
         self.ds = []
         self.settings = defaultdict(dict)
@@ -194,6 +191,7 @@ def set_value(data, path, new_value):
 
 def modify_and_run_second_json(folder, 
                                params, 
+                               allocator,
                                iters,
                                ds,
                                keys,
@@ -201,7 +199,6 @@ def modify_and_run_second_json(folder,
                                title):
     try:
         bench_path = Path.cwd().parent
-        print(bench_path)
 
         with open(params, 'r') as file:
             data = json.load(file)
@@ -217,43 +214,45 @@ def modify_and_run_second_json(folder,
         if not os.path.exists(folder):
             os.makedirs(folder)
 
+        # logger
+        log_file = bench_path / "plotting" / folder / f"log_{ds}_{title}.txt"
+        task_logger = plotter.create_logger("logger_prefix", log_file)
+
         with open(temp_file, 'w') as temp:
             json.dump(temp_data, temp, indent=4)
-
-        allocator = "libmimalloc"   
-        ld_preload = f"LD_PRELOAD= ../lib/{allocator}.so"
+ 
+        ld_preload = f"../lib/{allocator}.so"
 
         inp = f"../plotting/{temp_file}"
-        out = f"../plotting/{temp_file[:-5]}/_benchrestul.json"
-        # + temp_file[:-5] + "_benchresult.json"
+        out = f"../plotting/{folder}/{ds}_{title}.json"
         run_command = f"./bin/{ds}.debra -json-file {inp} -result-file {out}"
 
         # for argument, value in additional: 
         #    run_command += f"-{argument} {value}"
-        
-        # try:
-        env = os.environ.copy()
-        env["LD_PRELOAD"] = ld_preload
-        cp = subprocess.run(
-            run_command.split(),
-            cwd=str(bench_path / "microbench"),
-            env=env,
-            timeout=100000,
-            check=True,
-            capture_output=True,
-            text=True
-        )
-        #     if cp.stderr:
-        #         task_logger.info(f"stderr: {cp.stderr}")
-        #     log = cp.stdout
-        # except subprocess.CalledProcessError as exc:
-        #     task_logger.error(
-        #         f"ProcessError while running command: {exc}")
-        #     log = exc.stdout
-        # except subprocess.TimeoutExpired as exc:
-        #     task_logger.error(
-        #         f"TimeoutExpired while running command: {exc}")
-        #     log = exc.stdout
+
+        try:
+            env = os.environ.copy()
+            env["LD_PRELOAD"] = ld_preload
+            cp = subprocess.run(
+                run_command.split(),
+                cwd=str(bench_path / "microbench"),
+                env=env,
+                timeout=100000,
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            if cp.stderr:
+                task_logger.info(f"stderr: {cp.stderr}")
+                log = cp.stdout
+        except subprocess.CalledProcessError as exc:
+            task_logger.error(
+               f"ProcessError while running command: {exc}")
+            log = exc.stdout
+        except subprocess.TimeoutExpired as exc:
+            task_logger.error(
+               f"TimeoutExpired while running command: {exc}")
+            log = exc.stdout
 
     except FileNotFoundError:
         print(f"Could not open '{input_file}'")
@@ -267,9 +266,10 @@ def modify_and_run_second_json(folder,
     except subprocess.CalledProcessError as e:
         print(f"Could not launch script: {e}")
         sys.exit(1)
-    except Exception as e:
+    except Exception as e:  
         print(f"Error: {e}")
         sys.exit(1)
+
 def main():
     if len(sys.argv) != 2:
         print("Wrong number of arguments")

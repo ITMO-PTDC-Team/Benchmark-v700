@@ -1,6 +1,7 @@
 {
     "folder": "tests-plots",
     "json-file-input": "test.json",
+    "allocator": "",
     "iterations": 5,
     "competitors": [
         {
@@ -8,11 +9,11 @@
             "data-structure-arguments": {
                 "name": "aksenov_splaylist_64"
             }
-        }, 
+        },
         {
-            "name": "srisatava_abtree_pub",
+            "name": "srivastava_abtree_mcs",
             "data-structure-arguments": {
-                "name": "srisatava_abtree_pub"
+                "name": "srivastava_abtree_mcs"
             }
         }
     ],
@@ -26,10 +27,11 @@
             "values": [1, 2, 4, 8]
         },
         {
-            "name": "test.threadNumber",
+            "name": "test.numThreads",
             "values": [2, 4, 8, 16]
         }
     ],
     "key_title": "NumberofThreads",
-    "keys_title": ["2", "4", "8", "16"]
+    "keys_title": ["2", "4", "8", "16"],
+    "y_label": ""
 }
