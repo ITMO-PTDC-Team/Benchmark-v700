@@ -1,0 +1,37 @@
+{
+    "folder": "tests-plots",
+    "json-file-input": "test.json",
+    "allocator": "",
+    "iterations": 5,
+    "competitors": [
+        {
+            "name": "aksenov_splaylist_64",
+            "data-structure-arguments": {
+                "name": "aksenov_splaylist_64"
+            }
+        },
+        {
+            "name": "srivastava_abtree_mcs",
+            "data-structure-arguments": {
+                "name": "srivastava_abtree_mcs"
+            }
+        }
+    ],
+    "keys": [
+        {
+            "name": "test.threadLoopBuilders.0.quantity",
+            "values": [1, 2, 4, 8]
+        },
+        {
+            "name": "test.threadLoopBuilders.1.quantity",
+            "values": [1, 2, 4, 8]
+        },
+        {
+            "name": "test.numThreads",
+            "values": [2, 4, 8, 16]
+        }
+    ],
+    "key_title": "NumberofThreads",
+    "keys_title": ["2", "4", "8", "16"],
+    "y_label": ""
+}
