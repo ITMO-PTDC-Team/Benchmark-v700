@@ -6,6 +6,9 @@
 #define SETBENCH_PARAMETERS_H
 
 #include <vector>
+#include <string>
+#include <iostream>
+#include <sstream>
 #include "workloads/stop_condition/stop_condition.h"
 #include "workloads/stop_condition/impls/timer.h"
 #include "workloads/thread_loops/thread_loop_builder.h"
@@ -19,15 +22,14 @@
 struct ThreadLoopSettings {
     ThreadLoopBuilder *threadLoopBuilder;
     size_t quantity;
-    int *pin;
+    std::string pinPattern;
 
     ThreadLoopSettings(const nlohmann::json &j) {
         quantity = j["quantity"];
-        pin = new int[quantity];
         if (j.contains("pin")) {
-            std::copy(std::begin(j["pin"]), std::end(j["pin"]), pin);
+            pinPattern = j["pin"].get<std::string>();
         } else {
-            pin = nullptr;
+            pinPattern = "";
         }
         threadLoopBuilder = getThreadLoopFromJson(j["threadLoopBuilder"]);
     }
@@ -42,19 +44,18 @@ struct ThreadLoopSettings {
         return this;
     }
 
-    ThreadLoopSettings *setPin(int *_pin) {
-        pin = _pin;
+    ThreadLoopSettings *setPin(std::string& _pinPattern) {
+        pinPattern = _pinPattern;
         return this;
     }
 
     ThreadLoopSettings() {}
 
-    ThreadLoopSettings(ThreadLoopBuilder *threadLoopBuilder, size_t quantity = 1, int *pin = nullptr)
-            : threadLoopBuilder(threadLoopBuilder), quantity(quantity), pin(pin) {}
+    ThreadLoopSettings(ThreadLoopBuilder *threadLoopBuilder, size_t quantity = 1, std::string pinPattern = "")
+            : threadLoopBuilder(threadLoopBuilder), quantity(quantity), pinPattern(pinPattern) {}
 
     ~ThreadLoopSettings() {
         delete threadLoopBuilder;
-        delete pin;
     }
 };
 
@@ -62,20 +63,20 @@ struct ThreadLoopSettings {
 void to_json(nlohmann::json &j, const ThreadLoopSettings &s) {
     j["quantity"] = s.quantity;
     j["threadLoopBuilder"] = *s.threadLoopBuilder;
-    if (s.pin != nullptr) {
-        for (size_t i = 0; i < s.quantity; ++i) {
-            j["pin"].push_back(s.pin[i]);
+    if (!s.pinPattern.empty()) {
+        for (auto chr : s.pinPattern) {
+            j["pin"].push_back(chr);
         }
     }
 }
 
 void from_json(const nlohmann::json &j, ThreadLoopSettings &s) {
     s.quantity = j["quantity"];
-    s.pin = new int[s.quantity];
+    s.pinPattern = "";
     if (j.contains("pin")) {
-        std::copy(std::begin(j["pin"]), std::end(j["pin"]), s.pin);
+        s.pinPattern = j["pin"].get<std::string>();
     } else {
-        std::fill(s.pin, s.pin + s.quantity, -1);
+        s.pinPattern = "~" + std::to_string(s.quantity);
     }
     s.threadLoopBuilder = getThreadLoopFromJson(j["threadLoopBuilder"]);
 }
@@ -83,6 +84,43 @@ void from_json(const nlohmann::json &j, ThreadLoopSettings &s) {
 class Parameters {
     size_t numThreads;
     std::vector<int> pin;
+
+    void parseBinding(std::string& pinPattern) {
+        std::istringstream iss(pinPattern);
+        char c;
+        int num;
+        
+        while (iss >> c) {
+            if (c == '~') {  
+                if (iss >> num) {
+                    pin.insert(pin.end(), num, -1);
+                }
+            } 
+            else if (isdigit(c)) {  
+                iss.putback(c);
+                if (iss >> num) {
+                    char next = iss.peek();
+                    if (next == '-') {  
+                        iss >> c;  
+                        int end;
+                        if (iss >> end) {
+                            for (int i = num; i <= end; ++i) {
+                                pin.push_back(i);
+                            }
+                        }
+                    } else {  
+                        pin.push_back(num);
+                    }
+                }
+            }
+        }
+
+        for (auto u: pin) {
+            std::cout << u << ' ';
+        }
+        std::cout << '\n';
+    }
+
 public:
     StopCondition *stopCondition;
 
@@ -114,22 +152,25 @@ public:
     Parameters *addThreadLoopBuilder(ThreadLoopSettings *_threadLoopSettings) {
         threadLoopBuilders.push_back(_threadLoopSettings);
         numThreads += _threadLoopSettings->quantity;
-        if (_threadLoopSettings->pin != nullptr) {
-            for (size_t i = 0; i < _threadLoopSettings->quantity; ++i) {
-                pin.push_back(_threadLoopSettings->pin[i]);
-            }
+        if (_threadLoopSettings && !_threadLoopSettings->pinPattern.empty()) {
+            parseBinding(_threadLoopSettings->pinPattern);
         } else {
             for (size_t i = 0; i < _threadLoopSettings->quantity; ++i) {
                 pin.push_back(-1);
             }
         }
+        for(auto u : pin) {
+            std::cout << u << ' ';
+        }
+        std::cout << '\n';
+        assert(numThreads == pin.size());
         return this;
     }
 
     Parameters *addThreadLoopBuilder(ThreadLoopBuilder *_threadLoopBuilder,
                                      size_t quantity = 1,
-                                     int *_pin = nullptr) {
-        return addThreadLoopBuilder(new ThreadLoopSettings(_threadLoopBuilder, quantity, _pin));
+                                     std::string _pinPattern = "") {
+        return addThreadLoopBuilder(new ThreadLoopSettings(_threadLoopBuilder, quantity, _pinPattern));
     }
 
     Parameters *init(int range) {
@@ -194,13 +235,8 @@ public:
         for (auto tls: threadLoopBuilders) {
             result += indented_title_with_data("quantity", tls->quantity, indents + 1);
 
-            if (tls->pin != nullptr) {
-                pin_string = std::to_string(tls->pin[0]);
-                for (size_t i = 1; i < tls->quantity; ++i) {
-                    pin_string += "," + std::to_string(tls->pin[i]);
-                }
-
-                result += indented_title_with_str_data("pin", pin_string, indents + 1);
+            if (!tls->pinPattern.empty()) {
+                result += indented_title_with_str_data("pin", tls->pinPattern, indents + 1);
             }
 
             result += tls->threadLoopBuilder->toString(indents + 2);
