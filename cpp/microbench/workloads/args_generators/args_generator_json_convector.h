@@ -9,6 +9,7 @@
 #include "json/single_include/nlohmann/json.hpp"
 #include "args_generator_builder.h"
 #include "workloads/args_generators/impls/default_args_generator.h"
+#include "workloads/args_generators/impls/generalized_args_generator.h"
 #include "workloads/args_generators/impls/skewed_sets_args_generator.h"
 #include "workloads/args_generators/impls/skewed_insert_args_generator.h"
 #include "workloads/args_generators/impls/creakers_and_wave_args_generator.h"
@@ -33,6 +34,8 @@ ArgsGeneratorBuilder *getArgsGeneratorFromJson(const nlohmann::json &j) {
         argsGeneratorBuilder = new LeafsHandshakeArgsGeneratorBuilder();
     } else if (className == "SkewedInsertArgsGeneratorBuilder") {
         argsGeneratorBuilder = new SkewedInsertArgsGeneratorBuilder();
+    } else if (className == "GeneralizedArgsGeneratorBuilder") {
+        argsGeneratorBuilder = new GeneralizedArgsGeneratorBuilder();
     } else {
         setbench_error("JSON PARSER: Unknown class name ArgsGeneratorBuilder -- " + className)
     }
@@ -40,5 +43,7 @@ ArgsGeneratorBuilder *getArgsGeneratorFromJson(const nlohmann::json &j) {
     argsGeneratorBuilder->fromJson(j);
     return argsGeneratorBuilder;
 }
+
+#include "workloads/args_generators/impls/generalized_args_generator_impl.h"
 
 #endif //SETBENCH_ARGS_GENERATOR_JSON_CONVECTOR_H
