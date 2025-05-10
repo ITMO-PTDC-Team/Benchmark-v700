@@ -28,7 +28,7 @@ public class ReadWriteArgsGeneratorBuilder implements ArgsGeneratorBuilder {
     @Override
     public ReadWriteArgsGeneratorBuilder init(int range) {
         this.range = range;
-        dataMapBuilder.init(range);
+        // dataMapBuilder.init(range);
         return this;
     }
 

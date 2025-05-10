@@ -36,6 +36,14 @@ public class ThreadStatistic {
     public long notFoundLogicalTraversed;
     public long failedLockAcquire;
 
+    public long foundCnt;
+    public long foundTreeTraversed;
+    public long foundLogicalTraversed;
+    public long notFoundCnt;
+    public long notFoundTreeTraversed;
+    public long notFoundLogicalTraversed;
+    public long failedLockAcquire;
+
     public long structMods;
     public long getCount;
 

@@ -23,6 +23,10 @@ jar {
     }
 }
 
+run {
+    jvmArgs = ["-Xmx20G"]
+}
+
 application {
     mainClassName = 'contention.benchmark.Test'
 }
