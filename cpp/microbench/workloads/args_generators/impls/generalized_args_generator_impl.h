@@ -6,6 +6,7 @@ void GeneralizedArgsGeneratorBuilder::fromJson(const nlohmann::json &j) {
         return;
     }
 
+    size_t current_id = 0;
     for (const auto& item : j["builders"]) {
 
         if (!item.contains("opers") || !item.contains("argsGeneratorBuilder")) {
@@ -13,23 +14,25 @@ void GeneralizedArgsGeneratorBuilder::fromJson(const nlohmann::json &j) {
             continue;
         }
 
+        if (item.contains("id")) {
+            _ids.push_back(item["id"]); 
+        } else {
+            _ids.push_back(current_id++);
+        }
+
         const auto& operationsList = item["opers"];
         std::shared_ptr<ArgsGeneratorBuilder> aux;
         aux.reset(getArgsGeneratorFromJson(item["argsGeneratorBuilder"]));
-        aux->init(_range);
-        for (const auto& opName : operationsList) {
-            if (opName == "get") {
-                getArgsGeneratorBuilder = aux;
-            } else if (opName == "insert") {
-                insertArgsGeneratorBuilder = aux;
-            } else if (opName == "remove") {
-                removeArgsGeneratorBuilder = aux;
-            } else if (opName == "rangeQuery") {
-                rangeQueryArgsGeneratorBuilder = aux;
-            } else {
+        std::for_each(operationsList.begin(), operationsList.end(), [](const std::string& oper_type) {
+            if (oper_type != "get" && oper_type != "insert" && oper_type != "remove" && oper_type != "rangeQuery") {
                 setbench_error("Wrong operation type to support");
             }
-        }
-        aux.reset();
+        });
+        
+        // TODO: Check
+        // aux->init(_range);
+        args_generator_builders.push_back(
+            std::make_pair(operationsList, aux)
+        );
     }
 }

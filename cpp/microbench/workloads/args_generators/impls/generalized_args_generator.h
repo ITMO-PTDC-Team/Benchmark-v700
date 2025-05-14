@@ -1,9 +1,9 @@
-//
-// Created by Ravil Galiev on 30.08.2022.
-//
-
 #ifndef SETBENCH_GENERALIZED_ARGS_GENERATOR_H
 #define SETBENCH_GENERALIZED_ARGS_GENERATOR_H
+
+#include <vector>
+#include <utility>
+#include <map>
 
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/distributions/distribution.h"
@@ -12,41 +12,36 @@
 template<typename K>
 class GeneralizedArgsGenerator : public ArgsGenerator<K> {
 private:
-    ArgsGenerator<K> * _getGenerator;
-    ArgsGenerator<K> * _insertGenerator;
-    ArgsGenerator<K> * _removeGenerator;
-    ArgsGenerator<K> * _rangeGenerator;
+    std::shared_ptr<ArgsGenerator<K>> _get_generator;
+    std::shared_ptr<ArgsGenerator<K>> _insert_generator;
+    std::shared_ptr<ArgsGenerator<K>> _remove_generator;
+    std::shared_ptr<ArgsGenerator<K>> _range_generator;
 
 public:
-    GeneralizedArgsGenerator(ArgsGenerator<K> * getGenerator, 
-                             ArgsGenerator<K> * insertGenerator,
-                             ArgsGenerator<K> * removeGenerator,
-                             ArgsGenerator<K> * rangeGenerator)
-            : _getGenerator(getGenerator), _insertGenerator(insertGenerator), _removeGenerator(removeGenerator), _rangeGenerator(rangeGenerator) {}
+    GeneralizedArgsGenerator(std::shared_ptr<ArgsGenerator<K>>& get_gen, 
+                             std::shared_ptr<ArgsGenerator<K>>& insert_gen,
+                             std::shared_ptr<ArgsGenerator<K>>& remove_gen,
+                             std::shared_ptr<ArgsGenerator<K>>& range_gen)
+            : _get_generator(get_gen), _insert_generator(insert_gen), _remove_generator(remove_gen), _range_generator(range_gen) {}
 
 
     K nextGet() {
-        return _getGenerator->nextGet();
+        return _get_generator->nextGet();
     }
 
     K nextInsert() {
-        return _insertGenerator->nextInsert();
+        return _insert_generator->nextInsert();
     }
 
     K nextRemove() {
-        return _removeGenerator->nextRemove();
+        return _remove_generator->nextRemove();
     }
 
     std::pair<K, K> nextRange() {
-        return _rangeGenerator->nextRange();
+        return _range_generator->nextRange();
     }
 
-    ~GeneralizedArgsGenerator() {
-        delete _getGenerator;
-        delete _insertGenerator;
-        delete _removeGenerator;
-        delete _rangeGenerator;
-    }
+    ~GeneralizedArgsGenerator() = default;
 };
 
 
@@ -64,10 +59,11 @@ public:
 class GeneralizedArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 private:
     size_t _range;
-    std::shared_ptr<ArgsGeneratorBuilder> getArgsGeneratorBuilder;
-    std::shared_ptr<ArgsGeneratorBuilder> insertArgsGeneratorBuilder;
-    std::shared_ptr<ArgsGeneratorBuilder> removeArgsGeneratorBuilder;
-    std::shared_ptr<ArgsGeneratorBuilder> rangeQueryArgsGeneratorBuilder;
+    std::vector<size_t> _ids;
+    std::vector<
+        std::pair<std::vector<std::string>,
+                  std::shared_ptr<ArgsGeneratorBuilder>
+                  >> args_generator_builders;
 public:
 
     GeneralizedArgsGeneratorBuilder *init(size_t range) override {
@@ -76,31 +72,50 @@ public:
     }
 
     GeneralizedArgsGenerator<K> *build(Random64 &_rng) override {
-        return new GeneralizedArgsGenerator<K>(
-                                            getArgsGeneratorBuilder->build(_rng),
-                                            insertArgsGeneratorBuilder->build(_rng),
-                                            removeArgsGeneratorBuilder->build(_rng),
-                                            rangeQueryArgsGeneratorBuilder->build(_rng));
+        std::map<std::string, std::shared_ptr<ArgsGenerator<K>>> builded;
+        for (auto& current_pair : args_generator_builders) {
+            std::shared_ptr<ArgsGenerator<K>> u;
+            u.reset(current_pair.second->build(_rng));
+            for (auto& oper_type : current_pair.first) {
+                builded.insert(std::make_pair(oper_type, u));
+            }
+        };
+        return new GeneralizedArgsGenerator<K>(builded["get"],
+                                               builded["insert"],
+                                               builded["remove"],
+                                               builded["rangeQuery"]);
     }
 
     void toJson(nlohmann::json &j) const override {
         j["ClassName"] = "GeneralizedArgsGeneratorBuilder";
+        size_t current_id = 0;
+        for (auto& current_pair : args_generator_builders) {
+            for (auto& oper_type : current_pair.first) {
+                j[oper_type + "id"] = std::to_string(_ids[current_id]);
+                j[oper_type + "argsGenerator"] = *current_pair.second;
+            }
+            ++current_id;
+        }
     }
 
     void fromJson(const nlohmann::json &j) override;
 
     std::string toString(size_t indents = 1) override {
         std::string res;
-        res += indented_title_with_str_data("Type", "Generalized", indents);
+        res += indented_title_with_str_data("Type", "GENERALIZED", indents);
+        size_t current_id = 0;
+        for (auto& current_pair : args_generator_builders) {
+            for (auto& oper_type : current_pair.first) {
+                res += indented_title_with_str_data("ArgsGeneratorBuilder", "Type: " + oper_type, indents);
+                res += indented_title_with_str_data("ArgsGeneratorID", std::to_string(_ids[current_id]), indents);
+                res += current_pair.second->toString(indents + 1);
+            }
+            ++current_id;
+        }
         return res;
     }
 
-    ~GeneralizedArgsGeneratorBuilder() override {
-        getArgsGeneratorBuilder.reset();
-        insertArgsGeneratorBuilder.reset();
-        removeArgsGeneratorBuilder.reset();
-        rangeQueryArgsGeneratorBuilder.reset();
-    };
+    ~GeneralizedArgsGeneratorBuilder() override = default;
 
 };
 
