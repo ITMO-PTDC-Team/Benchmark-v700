@@ -1,4 +1,8 @@
+#ifndef SETBENCH_GENERALIZED_ARGS_GENERATOR_IMPL_H
+#define SETBENCH_GENERALIZED_ARGS_GENERATOR_IMPL_H
+
 #include "generalized_args_generator.h"
+#include "workloads/args_generators/args_generator_json_convector.h"
 
 void GeneralizedArgsGeneratorBuilder::fromJson(const nlohmann::json &j) {
     if (!j.contains("builders") || !j["builders"].is_array()) {
@@ -29,10 +33,10 @@ void GeneralizedArgsGeneratorBuilder::fromJson(const nlohmann::json &j) {
             }
         });
         
-        // TODO: Check
-        // aux->init(_range);
         args_generator_builders.push_back(
             std::make_pair(operationsList, aux)
         );
     }
 }
+
+#endif //SETBENCH_GENERALIZED_ARGS_GENERATOR_IMPL_H

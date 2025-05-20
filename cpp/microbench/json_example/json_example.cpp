@@ -10,6 +10,7 @@
 #include "json/single_include/nlohmann/json.hpp"
 
 #include "workloads/args_generators/impls/default_args_generator.h"
+#include "workloads/args_generators/impls/generalized_args_generator_impl.h"
 #include "workloads/thread_loops/impls/default_thread_loop.h"
 #include "workloads/bench_parameters.h"
 
@@ -72,6 +73,14 @@ Parameters* getCreakersAndWavePrefiller(size_t range,
                                    ->setArgsGeneratorBuilder(prefillArgsGeneratorBuilder))
         ->setStopCondition(
             new OperationCounter(prefillArgsGeneratorBuilder->getPrefillLength(range)));
+}
+
+ArgsGeneratorBuilder* getGeneralizedArgsGeneratorBuilder() {
+    std::vector<std::string> operations{"get", "insert", "remove"};
+    return (new GeneralizedArgsGeneratorBuilder())
+        ->addGeneratorBuilder(operations, (new DefaultArgsGeneratorBuilder())
+        ->setDistributionBuilder((new ZipfianDistributionBuilder())->setAlpha(1.0))
+        ->setDataMapBuilder(new ArrayDataMapBuilder()));
 }
 
 int main() {

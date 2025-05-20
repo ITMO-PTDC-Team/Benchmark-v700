@@ -1,131 +1,61 @@
-//
-// Created by Ravil Galiev on 30.08.2022.
-//
-
 #ifndef SETBENCH_NULL_ARGS_GENERATOR_H
 #define SETBENCH_NULL_ARGS_GENERATOR_H
 
 #include "workloads/args_generators/args_generator.h"
-#include "workloads/distributions/distribution.h"
-#include "workloads/data_maps/data_map.h"
 
 template<typename K>
 class NullArgsGenerator : public ArgsGenerator<K> {
-private:
-//    PAD;
-    Distribution *distribution;
-    DataMap<K> *data;
-//    PAD;
-
-    K next() {
-        size_t index = distribution->next();
-        return data->get(index);
-    }
-
 public:
-    DefaultArgsGenerator(DataMap<K> *_data, Distribution *_distribution)
-            : data(_data), distribution(_distribution) {}
-
+    NullArgsGenerator() = default;
 
     K nextGet() {
-        return next();
+        setbench_error("Operation not supported");
     }
 
     K nextInsert() {
-        return next();
+        setbench_error("Operation not supported");
     }
 
     K nextRemove() {
-        return next();
+        setbench_error("Operation not supported");
     }
 
     std::pair<K, K> nextRange() {
-        K left = nextGet();
-        K right = nextGet();
-        if (left > right) {
-            std::swap(left, right);
-        }
-        return {left, right};
+        setbench_error("Operation not supported");
     }
 
-    ~DefaultArgsGenerator() {
-        delete distribution;
-        delete data;
-    }
+    ~NullArgsGenerator() = default;
 };
 
-
-#include "workloads/distributions/distribution_builder.h"
-#include "workloads/data_maps/data_map_builder.h"
-#include "workloads/distributions/builders/uniform_distribution_builder.h"
-#include "workloads/data_maps/builders/id_data_map_builder.h"
 #include "workloads/args_generators/args_generator_builder.h"
-#include "workloads/distributions/distribution_json_convector.h"
-#include "workloads/data_maps/data_map_json_convector.h"
 #include "globals_extern.h"
 
 //template<typename K>
-class DefaultArgsGeneratorBuilder : public ArgsGeneratorBuilder {
-private:
-    size_t range;
+class NullArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 public:
-    DistributionBuilder *distributionBuilder = new UniformDistributionBuilder();
-    DataMapBuilder *dataMapBuilder = new IdDataMapBuilder();
-
-    DefaultArgsGeneratorBuilder *setDistributionBuilder(DistributionBuilder *_distributionBuilder) {
-        distributionBuilder = _distributionBuilder;
-        return this;
-    }
-
-    DefaultArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
-        dataMapBuilder = _dataMapBuilder;
-        return this;
-    }
-
-    DefaultArgsGeneratorBuilder *init(size_t _range) override {
-        range = _range;
+    NullArgsGeneratorBuilder *init(size_t _range) override {
 //        dataMapBuilder->init(_range);
         return this;
     }
 
-    DefaultArgsGenerator<K> *build(Random64 &_rng) override {
-        return new DefaultArgsGenerator<K>(dataMapBuilder->build(),
-                                           distributionBuilder->build(_rng, range));
+    NullArgsGenerator<K> *build(Random64 &_rng) override {
+        return new NullArgsGenerator<K>();
     }
 
     void toJson(nlohmann::json &j) const override {
-        j["ClassName"] = "DefaultArgsGeneratorBuilder";
-        j["distributionBuilder"] = *distributionBuilder;
-        j["dataMapBuilder"] = *dataMapBuilder;
+        j["ClassName"] = "NullArgsGeneratorBuilder";
     }
 
-    void fromJson(const nlohmann::json &j) override {
-        distributionBuilder = getDistributionFromJson(j["distributionBuilder"]);
-        dataMapBuilder = getDataMapFromJson(j["dataMapBuilder"]);
-    }
+    void fromJson(const nlohmann::json &j) override { }
 
     std::string toString(size_t indents = 1) override {
         std::string res;
-        res += indented_title_with_str_data("Type", "DEFAULT", indents);
-        res += indented_title("Distribution", indents);
-        res += distributionBuilder->toString(indents + 1);
-        res += indented_title("Data Map", indents);
-        res += dataMapBuilder->toString(indents + 1);
-return res;
-
-//        return indented_title_with_str_data("Type", "DEFAULT", indents)
-//               + indented_title("Distribution", indents)
-//               + distributionBuilder->toString(indents + 1)
-//               + indented_title("Data Map", indents)
-//               + dataMapBuilder->toString(indents + 1);
+        res += indented_title_with_str_data("Type", "NULL", indents);
+        return res;
     }
 
-    ~DefaultArgsGeneratorBuilder() override {
-        delete distributionBuilder;
-//        delete dataMapBuilder; //TODO may delete twice
-    };
-
+    ~NullArgsGeneratorBuilder() override = default;
 };
 
 
-#endif //SETBENCH_DEFAULT_ARGS_GENERATOR_H
+#endif //SETBENCH_NULL_ARGS_GENERATOR_H

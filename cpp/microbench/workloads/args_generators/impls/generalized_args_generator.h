@@ -25,34 +25,30 @@ public:
             : _get_generator(get_gen), _insert_generator(insert_gen), _remove_generator(remove_gen), _range_generator(range_gen) {}
 
 
-    K nextGet() {
+    K nextGet() override {
         return _get_generator->nextGet();
     }
 
-    K nextInsert() {
+    K nextInsert() override {
         return _insert_generator->nextInsert();
     }
 
-    K nextRemove() {
+    K nextRemove() override {
         return _remove_generator->nextRemove();
     }
 
-    std::pair<K, K> nextRange() {
+    std::pair<K, K> nextRange() override {
         return _range_generator->nextRange();
     }
 
     ~GeneralizedArgsGenerator() = default;
 };
 
-
-#include "workloads/distributions/distribution_builder.h"
 #include "workloads/data_maps/data_map_builder.h"
-#include "workloads/distributions/builders/uniform_distribution_builder.h"
 #include "workloads/data_maps/builders/id_data_map_builder.h"
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/distributions/distribution_json_convector.h"
 #include "workloads/data_maps/data_map_json_convector.h"
-#include "workloads/args_generators/args_generator_json_convector.h"
 #include "globals_extern.h"
 
 //template<typename K>
@@ -65,9 +61,20 @@ private:
                   std::shared_ptr<ArgsGeneratorBuilder>
                   >> args_generator_builders;
 public:
+    GeneralizedArgsGeneratorBuilder() = default;
 
     GeneralizedArgsGeneratorBuilder *init(size_t range) override {
         _range = _range;
+        return this;
+    }
+
+    GeneralizedArgsGeneratorBuilder *addGeneratorBuilder(const std::vector<std::string>& opers, 
+                                                         ArgsGeneratorBuilder *_distributionBuilder,
+                                                        size_t id = 1) {
+        std::shared_ptr<ArgsGeneratorBuilder> new_builder;
+        new_builder.reset(_distributionBuilder);
+        args_generator_builders.push_back({opers, new_builder});
+        _ids.push_back(id);
         return this;
     }
 
@@ -88,14 +95,22 @@ public:
 
     void toJson(nlohmann::json &j) const override {
         j["ClassName"] = "GeneralizedArgsGeneratorBuilder";
+        nlohmann::json builders = nlohmann::json::array();
         size_t current_id = 0;
-        for (auto& current_pair : args_generator_builders) {
-            for (auto& oper_type : current_pair.first) {
-                j[oper_type + "id"] = std::to_string(_ids[current_id]);
-                j[oper_type + "argsGenerator"] = *current_pair.second;
+        for (size_t id = 0; id<args_generator_builders.size(); ++id) {
+            nlohmann::json current_builder;
+
+            nlohmann::json opers = nlohmann::json::array();
+            for (auto& oper_name : args_generator_builders[id].first) {
+                opers.push_back(oper_name);
             }
-            ++current_id;
-        }
+            current_builder["opers"] = opers;
+            current_builder["id"] = _ids[id];
+            current_builder["argsGeneratorBuilder"] = *(args_generator_builders[id].second);
+            
+            builders.push_back(current_builder);
+        };
+        j["builders"] = builders;
     }
 
     void fromJson(const nlohmann::json &j) override;
