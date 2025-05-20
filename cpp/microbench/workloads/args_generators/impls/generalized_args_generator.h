@@ -65,6 +65,9 @@ public:
 
     GeneralizedArgsGeneratorBuilder *init(size_t range) override {
         _range = _range;
+        for (auto& current_pair : args_generator_builders) {
+            current_pair.second->init(range);
+        };
         return this;
     }
 
