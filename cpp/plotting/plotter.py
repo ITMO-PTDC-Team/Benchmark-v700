@@ -381,13 +381,10 @@ def start(args):
         args.color = get_colors(args.ds)
 
     tasks = []
-    for insdelrq in args.insdelrq:
-        ip, dp, rp = map(float, insdelrq.split("/"))
-        fp = round(1 - ip - dp - rp, 2)
-        for workload, workload_name in zip(args.workload, args.workload_name):
-            top_dir = args.output_dir / to_file_name(workload_name) / to_file_name(insdelrq)
+    for ds in args.ds:
+        for num_threads in args.num_threads:
+            top_dir = args.output_dir / to_file_name(ds) / to_file_name(num_threads)
             top_dir.mkdir(parents=True, exist_ok=True)
-            stats = [stat for stat in args.stat if not ((rp + fp == 1) and stat in ONLY_INS_DEL_STATS)]
             tasks.append((top_dir, ip, dp, rp, fp, workload, workload_name, stats, args))
 
     print("START PLOTTING")
@@ -413,10 +410,8 @@ def check_args(args):
         raise ValueError("timeout must be > 0")
     if args.time <= 0:
         raise ValueError("time must be > 0")
-    if args.nwork <= 0:
-        raise ValueError("nwork must be > 0")
-    if args.nprefill <= 0:
-        raise ValueError("nprefill must be > 0")
+    if args.prefill != "" & args.defprefill == True:
+        raise ValueError("Cannot invoke with both prefill and create defaul prefill")
     if args.color and len(args.color) != len(args.ds):
         raise ValueError(
             "if color specified then must be: len(color) == len(ds)")
@@ -427,6 +422,24 @@ def check_args(args):
         raise ValueError(
             "if workload_name specified then must be: len(workload_name) == len(workload)")
 
+def generate_json_configs(base_config, num_threads_list, work_time_list):
+    generated_files = []
+    for num_threads in num_threads_list:
+        for work_time in work_time_list:
+            # Копируем базовый JSON
+            new_json = json.loads(json.dumps(base_config))
+            
+            # Меняем параметры
+            new_json["test"]["numThreads"] = num_threads
+            new_json["test"]["stopCondition"]["workTime"] = work_time
+            
+            # Сохраняем в файл
+            filename = f"config_{num_threads}_threads_{work_time}_worktime.json"
+            with open(filename, 'w') as f:
+                json.dump(new_json, f, indent=4)
+            
+            generated_files.append(filename)
+    return generated_files
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="""
@@ -436,6 +449,7 @@ if __name__ == "__main__":
     """)
     plotter_group = parser.add_argument_group("plotter args")
     plotter_group.add_argument("--stat", nargs="+", required=True, choices=[*AGGREGATOR_BY_STAT], help="Stats to plot.")
+    plotter_group.add_argument("--num-threads", nargs="+", required=True, action="extend", help="Number of threads for JSON config")
     plotter_group.add_argument("-o", "--output-dir", type=Path, default=Path.cwd() / DEFAULT_OUTPUT_DIR_NAME, help="Directory where results will be stored")
     plotter_group.add_argument("-s", "--setbench-dir", type=Path, default=Path.cwd().parent, help="Directory where setbench is located")
     plotter_group.add_argument("--nprocess", type=int, default=1, help="Specifies how many processes will be spawned to run benchmarks. Recommendation: nproccess * nwork <= cpu_count")
@@ -445,19 +459,35 @@ if __name__ == "__main__":
     plotter_group.add_argument("--fig-size", type=str, default=DEFAULT_FIG_SIZE, help="figsize of plots")
 
     setbench_group = parser.add_argument_group("setbench args")
+    # graph parameters
     setbench_group.add_argument("--ds", nargs="+", required=True, action="extend", help="Data structures to benchmark")
-    setbench_group.add_argument("--workload", nargs="+", required=True, action="extend", help="Workloads' params to benchmark")
-    setbench_group.add_argument("--workload-name", nargs="*", action="extend", help="Specifies workloads' names (used together with --workload)")
-    setbench_group.add_argument("--insdelrq", nargs="+", required=True, help="inserts + deletes + rq + finds = 1. If insdelrq==0.3/0.3/0.3 then inserts == 0.3, deletes == 0.3, rq == 0.3 and finds == 0.1")
-    setbench_group.add_argument("-k", "--key", nargs="+", required=True, type=int, action="extend", help="Stands for -k setbench arg")
-    setbench_group.add_argument("-ps", "--prefill-size", nargs="+", required=True, type=int, action="extend", help="Stands for -prefillsize setbench arg")
-    setbench_group.add_argument("-t", "--time", required=True, type=int, help="How long to run each benchmark? (ms) Stands for -t setbench arg")
-    setbench_group.add_argument("--nwork", type=int, default=1, help="How many threads will do operations on each data structure at the same time? Stands for -nwork setbench arg")
-    setbench_group.add_argument("--nprefill", type=int, default=1, help="How many threads will prefill each data structure? Stands for -nprefill setbench arg")
-    setbench_group.add_argument("--prefill-strategy", choices=[*PREFILL_STRATEGY_MAPPER], default=PREFILL_STRATEGY_INSERT, help="Strategy to use to prefill each DS")
-    setbench_group.add_argument("--non-shuffle", action="store_true", help="-non-shuffle setbench arg")
-    setbench_group.add_argument("--prefill-sequential", action="store_true", help="-prefill-sequential setbench arg")
+    setbench_group.add_argument("--iter", nargs="+", required=True, action="extend", help="Numbr of iterations for benchmark")
     setbench_group.add_argument("--allocator", default="libjemalloc", help="Allocator used while benchmarking")
+
+    # main parameters
+    #setbench_group.add_argument("--workload", nargs="+", required=True, action="extend", help="Workloads' params to benchmark")
+    #setbench_group.add_argument("--workload-name", nargs="*", action="extend", help="Specifies workloads' names (used together with --workload)")
+    #setbench_group.add_argument("--insdelrq", nargs="+", required=True, help="inserts + deletes + rq + finds = 1. If insdelrq==0.3/0.3/0.3 then inserts == 0.3, deletes == 0.3, rq == 0.3 and finds == 0.1")
+    #setbench_group.add_argument("-k", "--key", nargs="+", required=True, type=int, action="extend", help="Stands for -k setbench arg")
+    #setbench_group.add_argument("-ps", "--prefill-size", nargs="+", required=True, type=int, action="extend", help="Stands for -prefillsize setbench arg")
+    #setbench_group.add_argument("-t", "--time", required=True, type=int, help="How long to run each benchmark? (ms) Stands for -t setbench arg")
+    #setbench_group.add_argument("--nwork", type=int, default=1, help="How many threads will do operations on each data structure at the same time? Stands for -nwork setbench arg")
+    #setbench_group.add_argument("--nprefill", type=int, default=1, help="How many threads will prefill each data structure? Stands for -nprefill setbench arg")
+    #setbench_group.add_argument("--prefill-strategy", choices=[*PREFILL_STRATEGY_MAPPER], default=PREFILL_STRATEGY_INSERT, help="Strategy to use to prefill each DS")
+    #setbench_group.add_argument("--non-shuffle", action="store_true", help="-non-shuffle setbench arg")
+    #setbench_group.add_argument("--prefill-sequential", action="store_true", help="-prefill-sequential setbench arg")
+    #setbench_group.add_argument("--allocator", default="libjemalloc", help="Allocator used while benchmarking")
+
+    setbench_group.add_argument("--json-file", nargs="+", required=True, action="extend", help="File with launch parameters in the json format.", dest="ifile")
+    setbench_group.add_argument("--result-file", nargs="+", action="extend", help="File to output the results in the json format.", dest="ofile")
+
+    # optional part
+    setbench_group.add_argument("--range", nargs="+", action="extend", help="Key range.")
+    setbench_group.add_argument("--prefill", nargs="+", action="extend", help="File with prefill stage parameters in json format.")
+    setbench_group.add_argument("--test", nargs="+", action="extend", help="File with test stage parameters in json format.")
+    setbench_group.add_argument("--warm-up", nargs="+", action="extend", help="File with warm up stage parameters in json format.", dest="warmup")
+    # ignore in check_args
+    setbench_group.add_argument("--create-default-prefill", nargs="+", action="extend", help="Create a default prefill: fill the data structure in half.", dest="defprefill")
 
     args = parser.parse_args()
     args.fig_size = eval(args.fig_size)
