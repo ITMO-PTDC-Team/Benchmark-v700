@@ -1,6 +1,6 @@
 # PLOTTING
 
-Use [plotter.py](plotting/plotter.py) to benchmark and then plot results. If you want to look into results as a table, consider [exp_table_builder.py](plotting/exp_table_builder.py) and [all_exp_table_builder.py](plotting/all_exp_table_builder.py).
+Use [argument_reader.py](plotting/argument_reader.py) to benchmark and then plot results.
 
 Before launching the scripts - install required dependecies via command:
 
@@ -46,25 +46,11 @@ The script support following flags:
 | `--pathg, -pg`       | Path for the resulting graph                                                     | `./tests-plots/graph`                               |        
 | `-no-run`            | Store-only flag for benchmark running before plot. Use to omit run               | `-----`                           |
 
-plotter.py: (uniform and x/y distributions):
 ```shell
 python3 argument_reader.py -f plotter_example.json
 ```
 
-plotter.py (zipf distribution):
-```shell
-python3 plotter.py --stat find-throughput update-throughput total-throughput rq-throughput --nprocess 3 --ds redis_zset redis_sait redis_sabt redis_sabpt redis_salt --workload "dist-zipf 1" --workload-name zipf-1 --insdelrq 0.0/0.0/1.0 0.3/0.3/0.4 0.2/0.2/0.6 0.0/0.0/0.0 0.3/0.3/0.0 0.2/0.2/0.0  --key 10000 100000 1000000 5000000 --prefill-size 5000 50000 500000 2500000 --prefill-sequential --time 20000 --fig-size 6,6 --color blue green red purple orange -o plotter-output-root --avg 5
-```
-
-exp_table_builder.py:
-```shell
-python3 exp_table_builder.py -pod plotter-output-root -s total_throughput -ds redis_zset redis_sait redis_sabt redis_sabpt redis_salt -w uniform 70-30 80-20 90-10 95-05 99-01 zipf-1 -b redis_zset -k 100000 -ops 0.0_0.0_0.0
-```
-
-all_exp_table_builder.py:
-```shell
-python3 all_exp_table_builder.py -etb "-pod plotter-output-root -s total_throughput -ds redis_zset redis_sait redis_sabt redis_sabpt redis_salt -w uniform 70-30 80-20 90-10 95-05 99-01 -b redis_zset" -k 10000 100000 1000000 5000000 -ops 0.0_0.0_0.0 0.0_0.0_1.0 0.2_0.2_0.0 0.2_0.2_0.6 0.3_0.3_0.0 0.3_0.3_0.4
-```
+NOTE: the process, that script will launch, will work from `cpp/microbench` directory. Set up your parameters in JSON file accordingly (only affects `compiled-path` currently) according to this.
 
 ## Troubleshooting
 
