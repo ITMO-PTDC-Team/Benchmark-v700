@@ -51,8 +51,8 @@ struct ThreadLoopSettings {
 
     ThreadLoopSettings() {}
 
-    ThreadLoopSettings(ThreadLoopBuilder *threadLoopBuilder, size_t quantity = 1, std::string pinPattern = "")
-            : threadLoopBuilder(threadLoopBuilder), quantity(quantity), pinPattern(pinPattern) {}
+    ThreadLoopSettings(ThreadLoopBuilder *threadLoopBuilder, size_t quantity = 1, const std::string& _pinPattern = "")
+            : threadLoopBuilder(threadLoopBuilder), quantity(quantity), pinPattern(_pinPattern) {}
 
     ~ThreadLoopSettings() {
         delete threadLoopBuilder;
