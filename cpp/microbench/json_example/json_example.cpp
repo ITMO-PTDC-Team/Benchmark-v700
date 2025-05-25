@@ -128,10 +128,7 @@ int main() {
      * to the parameter class indicating the number of threads.
      * You can also optionally specify the cores to which threads should bind (-1 without binding).
      */
-    test->addThreadLoopBuilder(
-                    threadLoopBuilder, 8,
-                    new int[8]{-1, -1, 0, 0, 1, 2, 3, 3}
-            )
+    test->addThreadLoopBuilder(threadLoopBuilder, 8, "~2.0.0.1-3.3")
             ->setStopCondition(stopCondition);
 
     benchParameters.setTest(test)

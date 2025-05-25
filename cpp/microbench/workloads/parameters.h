@@ -44,7 +44,7 @@ struct ThreadLoopSettings {
         return this;
     }
 
-    ThreadLoopSettings *setPin(std::string& _pinPattern) {
+    ThreadLoopSettings *setPin(const std::string& _pinPattern) {
         pinPattern = _pinPattern;
         return this;
     }
@@ -64,9 +64,7 @@ void to_json(nlohmann::json &j, const ThreadLoopSettings &s) {
     j["quantity"] = s.quantity;
     j["threadLoopBuilder"] = *s.threadLoopBuilder;
     if (!s.pinPattern.empty()) {
-        for (auto chr : s.pinPattern) {
-            j["pin"].push_back(chr);
-        }
+        j["pin"] = s.pinPattern;
     }
 }
 
@@ -92,11 +90,13 @@ class Parameters {
         
         while (iss >> c) {
             if (c == '~') {  
-                if (iss >> num) {
+                char next = iss.peek();
+                if (next == '.') {
+                    pin.push_back(-1);
+                } else if (iss >> num) {
                     pin.insert(pin.end(), num, -1);
                 }
-            } 
-            else if (isdigit(c)) {  
+            } else if (isdigit(c)) {  
                 iss.putback(c);
                 if (iss >> num) {
                     char next = iss.peek();
@@ -114,11 +114,6 @@ class Parameters {
                 }
             }
         }
-
-        for (auto u: pin) {
-            std::cout << u << ' ';
-        }
-        std::cout << '\n';
     }
 
 public:
@@ -151,25 +146,27 @@ public:
 
     Parameters *addThreadLoopBuilder(ThreadLoopSettings *_threadLoopSettings) {
         threadLoopBuilders.push_back(_threadLoopSettings);
+        size_t prevSize = pin.size();
         numThreads += _threadLoopSettings->quantity;
         if (_threadLoopSettings && !_threadLoopSettings->pinPattern.empty()) {
             parseBinding(_threadLoopSettings->pinPattern);
+            size_t currentSize = pin.size() - prevSize;
+            // cycling, if threads > read pins
+            for(size_t i = 0; i < _threadLoopSettings->quantity - currentSize; ++i) {
+                pin.push_back(pin[prevSize + i]);
+            }
         } else {
             for (size_t i = 0; i < _threadLoopSettings->quantity; ++i) {
                 pin.push_back(-1);
             }
         }
-        for(auto u : pin) {
-            std::cout << u << ' ';
-        }
-        std::cout << '\n';
         assert(numThreads == pin.size());
         return this;
     }
 
     Parameters *addThreadLoopBuilder(ThreadLoopBuilder *_threadLoopBuilder,
                                      size_t quantity = 1,
-                                     std::string _pinPattern = "") {
+                                     const std::string& _pinPattern = "") {
         return addThreadLoopBuilder(new ThreadLoopSettings(_threadLoopBuilder, quantity, _pinPattern));
     }
 
