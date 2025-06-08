@@ -152,14 +152,20 @@ public:
             parseBinding(_threadLoopSettings->pinPattern);
             size_t currentSize = pin.size() - prevSize;
             // cycling, if threads > read pins
-            for(size_t i = 0; i < _threadLoopSettings->quantity - currentSize; ++i) {
-                pin.push_back(pin[prevSize + i]);
+            if (currentSize < _threadLoopSettings->quantity) {
+                for(size_t i = 0; i < _threadLoopSettings->quantity - currentSize; ++i) {
+                    pin.push_back(pin[prevSize + i]);
+                }
             }
         } else {
             for (size_t i = 0; i < _threadLoopSettings->quantity; ++i) {
                 pin.push_back(-1);
             }
         }
+        // remove comment if you do not care about assert
+        // while(pin.size() > numThreads) {
+        //     pin.pop_back();
+        // }
         assert(numThreads == pin.size());
         return this;
     }
