@@ -83,7 +83,8 @@ class Parameters {
     size_t numThreads;
     std::vector<int> pin;
 
-    void parseBinding(std::string& pinPattern) {
+public:
+    static void parseBinding(std::string& pinPattern, std::vector<int> & resultPin) {
         std::istringstream iss(pinPattern);
         char c;
         int num;
@@ -92,9 +93,9 @@ class Parameters {
             if (c == '~') {  
                 char next = iss.peek();
                 if (next == '.') {
-                    pin.push_back(-1);
+                    resultPin.push_back(-1);
                 } else if (iss >> num) {
-                    pin.insert(pin.end(), num, -1);
+                    resultPin.insert(resultPin.end(), num, -1);
                 }
             } else if (isdigit(c)) {  
                 iss.putback(c);
@@ -105,18 +106,17 @@ class Parameters {
                         int end;
                         if (iss >> end) {
                             for (int i = num; i <= end; ++i) {
-                                pin.push_back(i);
+                                resultPin.push_back(i);
                             }
                         }
                     } else {  
-                        pin.push_back(num);
+                        resultPin.push_back(num);
                     }
                 }
             }
         }
     }
 
-public:
     StopCondition *stopCondition;
 
     std::vector<ThreadLoopSettings *> threadLoopBuilders;
@@ -146,26 +146,16 @@ public:
 
     Parameters *addThreadLoopBuilder(ThreadLoopSettings *_threadLoopSettings) {
         threadLoopBuilders.push_back(_threadLoopSettings);
-        size_t prevSize = pin.size();
         numThreads += _threadLoopSettings->quantity;
         if (_threadLoopSettings && !_threadLoopSettings->pinPattern.empty()) {
-            parseBinding(_threadLoopSettings->pinPattern);
-            size_t currentSize = pin.size() - prevSize;
-            // cycling, if threads > read pins
-            if (currentSize < _threadLoopSettings->quantity) {
-                for(size_t i = 0; i < _threadLoopSettings->quantity - currentSize; ++i) {
-                    pin.push_back(pin[prevSize + i]);
-                }
+            vector<int> curPin;
+            parseBinding(_threadLoopSettings->pinPattern, curPin);
+            for (size_t i = 0; i < _threadLoopSettings->quantity; ++i) {
+                pin.push_back(curPin[i % curPin.size()]);
             }
         } else {
-            for (size_t i = 0; i < _threadLoopSettings->quantity; ++i) {
-                pin.push_back(-1);
-            }
+            pin.resize(numThreads, -1);
         }
-        // remove comment if you do not care about assert
-        // while(pin.size() > numThreads) {
-        //     pin.pop_back();
-        // }
         assert(numThreads == pin.size());
         return this;
     }
