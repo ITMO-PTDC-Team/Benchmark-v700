@@ -75,12 +75,14 @@ Parameters* getCreakersAndWavePrefiller(size_t range,
             new OperationCounter(prefillArgsGeneratorBuilder->getPrefillLength(range)));
 }
 
-ArgsGeneratorBuilder* getGeneralizedArgsGeneratorBuilder() {
-    std::vector<std::string> operations{"get", "insert", "remove"};
+ArgsGeneratorBuilder* getGeneralizedArgsGeneratorBuilder(ArgsGeneratorBuilder* inside) {
+    // std::vector<std::string> operations{"get", "insert", "remove"};
     return (new GeneralizedArgsGeneratorBuilder())
-        ->addGeneratorBuilder(operations, (new DefaultArgsGeneratorBuilder())
-        ->setDistributionBuilder((new ZipfianDistributionBuilder())->setAlpha(1.0))
-        ->setDataMapBuilder(new ArrayDataMapBuilder()));
+        ->addGeneratorBuilder({"get"}, inside)
+        ->addGeneratorBuilder({"insert"}, getCreakersAndWaveArgsGeneratorBuilder())
+        ->addGeneratorBuilder({"remove"}, getDefaultArgsGeneratorBuilder());
+        // ->setDistributionBuilder((new ZipfianDistributionBuilder())->setAlpha(1.0))
+        // ->setDataMapBuilder(new ArrayDataMapBuilder()));
 }
 
 int main() {
@@ -121,9 +123,12 @@ int main() {
      */
     ArgsGeneratorBuilder* argsGeneratorBuilder
                 = getDefaultArgsGeneratorBuilder();
-//                = getCreakersAndWaveArgsGeneratorBuilder();
+//               = getCreakersAndWaveArgsGeneratorBuilder();
 //                = getTemporarySkewedArgsGeneratorBuilder();
-
+    /*
+     * Use this argsGeneratorBuilder for Generalized Testing 
+     */
+//    ArgsGeneratorBuilder*  actualArgsGeneratorBuilde = getGeneralizedArgsGeneratorBuilder(argsGeneratorBuilder);
             /**
              * in addition to the DefaultThreadLoopBuilder,
              * TemporaryOperationThreadLoopBuilder is also presented in the corresponding function
