@@ -16,29 +16,43 @@
 #include "workloads/args_generators/impls/leafs_handshake_args_generator.h"
 #include "errors.h"
 
+class BaseArgsGeneratorBuilderFactory {
+    public:
+        virtual ~BaseArgsGeneratorBuilderFactory() = default;
+        virtual ArgsGeneratorBuilder* create() = 0;
+};  
+    
+template <typename ArgsGeneratorBuilder>
+class ArgsGeneratorBuilderFactory : public BaseArgsGeneratorBuilderFactory {
+    public:
+        ArgsGeneratorBuilder *create() override {
+            return new ArgsGeneratorBuilder();
+        }
+};
+
+inline static std::map<std::string, std::unique_ptr<BaseArgsGeneratorBuilderFactory>> argsGeneratorFactoryMap = [] {
+    std::map<std::string, std::unique_ptr<BaseArgsGeneratorBuilderFactory>> map;
+    map.insert({"DefaultArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<DefaultArgsGeneratorBuilder>>()});
+    map.insert({"SkewedSetsArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<SkewedSetsArgsGeneratorBuilder>>()});
+    map.insert({"TemporarySkewedArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<TemporarySkewedArgsGeneratorBuilder>>()});
+    map.insert({"CreakersAndWaveArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<CreakersAndWaveArgsGeneratorBuilder>>()});
+    map.insert({"CreakersAndWavePrefillArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<CreakersAndWavePrefillArgsGeneratorBuilder>>()});
+    map.insert({"LeafsHandshakeArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<LeafsHandshakeArgsGeneratorBuilder>>()});
+    map.insert({"SkewedInsertArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<SkewedInsertArgsGeneratorBuilder>>()});
+    map.insert({"GeneralizedArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<GeneralizedArgsGeneratorBuilder>>()});
+    map.insert({"NullArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<NullArgsGeneratorBuilder>>()}); 
+    map.insert({"RangeQueryArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<RangeQueryArgsGeneratorBuilder>>()}); 
+    return map;
+}();
+
 ArgsGeneratorBuilder *getArgsGeneratorFromJson(const nlohmann::json &j) {
     std::string className = j["ClassName"];
-    ArgsGeneratorBuilder *argsGeneratorBuilder;
-    if (className == "DefaultArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new DefaultArgsGeneratorBuilder();
-    } else if (className == "SkewedSetsArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new SkewedSetsArgsGeneratorBuilder();
-    } else if (className == "TemporarySkewedArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new TemporarySkewedArgsGeneratorBuilder();
-    } else if (className == "CreakersAndWaveArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new CreakersAndWaveArgsGeneratorBuilder();
-    } else if (className == "CreakersAndWavePrefillArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new CreakersAndWavePrefillArgsGeneratorBuilder();
-    } else if (className == "LeafsHandshakeArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new LeafsHandshakeArgsGeneratorBuilder();
-    } else if (className == "SkewedInsertArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new SkewedInsertArgsGeneratorBuilder();
-    } else {
-        setbench_error("JSON PARSER: Unknown class name ArgsGeneratorBuilder -- " + className)
+    if (argsGeneratorFactoryMap.find(className) != argsGeneratorFactoryMap.end()) {
+        ArgsGeneratorBuilder *argsGeneratorBuilder = argsGeneratorFactoryMap[className]->create();
+        argsGeneratorBuilder->fromJson(j);
+        return argsGeneratorBuilder;
     }
-
-    argsGeneratorBuilder->fromJson(j);
-    return argsGeneratorBuilder;
+    setbench_error("JSON PARSER: Unknown class name ArgsGeneratorBuilder -- " + className);
 }
 
 #endif //SETBENCH_ARGS_GENERATOR_JSON_CONVECTOR_H
