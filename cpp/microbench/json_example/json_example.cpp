@@ -46,11 +46,33 @@ ArgsGeneratorBuilder* getCreakersAndWaveArgsGeneratorBuilder() {
         ->setDataMapBuilder(new IdDataMapBuilder());
 }
 
+ArgsGeneratorBuilder* getNullArgsGeneratorBuilder() {
+    return (new NullArgsGeneratorBuilder());
+}
+
+ArgsGeneratorBuilder* getRangeQueryArgsGeneratorBuilder() {
+    return (new RangeQueryArgsGeneratorBuilder())
+    ->setDistributionBuilder((new ZipfianDistributionBuilder())->setAlpha(1.0))
+    ->setDataMapBuilder(new ArrayDataMapBuilder())
+    ->setInterval(100);
+}
+
+ArgsGeneratorBuilder* getGeneralizedArgsGeneratorBuilder(ArgsGeneratorBuilder* inside) {
+    // std::vector<std::string> operations{"get", "insert", "remove"};
+    return (new GeneralizedArgsGeneratorBuilder())
+        ->addGeneratorBuilder({"get"}, inside)
+        ->addGeneratorBuilder({"insert"}, getCreakersAndWaveArgsGeneratorBuilder())
+        ->addGeneratorBuilder({"remove"}, getDefaultArgsGeneratorBuilder())
+        ->addGeneratorBuilder({"rangeQuery"}, getRangeQueryArgsGeneratorBuilder());
+        // ->setDistributionBuilder((new ZipfianDistributionBuilder())->setAlpha(1.0))
+        // ->setDataMapBuilder(new ArrayDataMapBuilder()));
+}
+
 ThreadLoopBuilder* getDefaultThreadLoopBuilder(ArgsGeneratorBuilder* argsGeneratorBuilder) {
     return (new DefaultThreadLoopBuilder())
-        ->setInsRatio(0.1)
+        ->setInsRatio(0)
         ->setRemRatio(0.1)
-        ->setRqRatio(0)
+        ->setRqRatio(0.2)
         ->setArgsGeneratorBuilder(argsGeneratorBuilder);
 }
 
@@ -73,16 +95,6 @@ Parameters* getCreakersAndWavePrefiller(size_t range,
                                    ->setArgsGeneratorBuilder(prefillArgsGeneratorBuilder))
         ->setStopCondition(
             new OperationCounter(prefillArgsGeneratorBuilder->getPrefillLength(range)));
-}
-
-ArgsGeneratorBuilder* getGeneralizedArgsGeneratorBuilder(ArgsGeneratorBuilder* inside) {
-    // std::vector<std::string> operations{"get", "insert", "remove"};
-    return (new GeneralizedArgsGeneratorBuilder())
-        ->addGeneratorBuilder({"get"}, inside)
-        ->addGeneratorBuilder({"insert"}, getCreakersAndWaveArgsGeneratorBuilder())
-        ->addGeneratorBuilder({"remove"}, getDefaultArgsGeneratorBuilder());
-        // ->setDistributionBuilder((new ZipfianDistributionBuilder())->setAlpha(1.0))
-        // ->setDataMapBuilder(new ArrayDataMapBuilder()));
 }
 
 int main() {
