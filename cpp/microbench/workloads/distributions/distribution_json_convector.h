@@ -11,21 +11,36 @@
 #include "workloads/distributions/builders/skewed_uniform_distribution_builder.h"
 #include "errors.h"
 
+class BaseDistributionBuilderFactory {
+    public:
+        virtual ~BaseDistributionBuilderFactory() = default;
+        virtual DistributionBuilder* create() = 0;
+};
+    
+template <typename DistributionBuilder>
+class DistributionBuilderFactory : public BaseDistributionBuilderFactory {
+    public:
+    DistributionBuilder *create() override {
+        return new DistributionBuilder();
+    }
+};
+
+inline static std::map<std::string, std::unique_ptr<BaseDistributionBuilderFactory>> distributionFactoryMap = [] {
+    std::map<std::string, std::unique_ptr<BaseDistributionBuilderFactory>> map;
+    map.insert({"UniformDistributionBuilder", std::make_unique<DistributionBuilderFactory<UniformDistributionBuilder>>()});
+    map.insert({"ZipfianDistributionBuilder", std::make_unique<DistributionBuilderFactory<ZipfianDistributionBuilder>>()});
+    map.insert({"SkewedUniformDistributionBuilder", std::make_unique<DistributionBuilderFactory<SkewedUniformDistributionBuilder>>()});
+    return map;
+}();
+
 DistributionBuilder *getDistributionFromJson(const nlohmann::json &j) {
     std::string className = j["ClassName"];
-    DistributionBuilder *distributionBuilder;
-    if (className == "UniformDistributionBuilder") {
-        distributionBuilder = new UniformDistributionBuilder();
-    } else if (className == "ZipfianDistributionBuilder") {
-        distributionBuilder = new ZipfianDistributionBuilder();
-    } else if (className == "SkewedUniformDistributionBuilder") {
-        distributionBuilder = new SkewedUniformDistributionBuilder();
-    } else {
-        setbench_error("JSON PARSER: Unknown class name DistributionBuilder -- " + className)
+    if (distributionFactoryMap.find(className) != distributionFactoryMap.end()) {
+        DistributionBuilder *distributionBuilder = distributionFactoryMap[className]->create();
+        distributionBuilder->fromJson(j);
+        return distributionBuilder;
     }
-
-    distributionBuilder->fromJson(j);
-    return distributionBuilder;
+    setbench_error("JSON PARSER: Unknown class name DistributionBuilder -- " + className)
 }
 
 MutableDistributionBuilder *getMutableDistributionFromJson(const nlohmann::json &j) {

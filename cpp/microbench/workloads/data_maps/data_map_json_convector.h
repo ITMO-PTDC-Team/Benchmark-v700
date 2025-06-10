@@ -11,7 +11,28 @@
 #include "workloads/data_maps/builders/array_data_map_builder.h"
 #include "errors.h"
 
+class BaseDataMapBuilderFactory {
+    public:
+        virtual ~BaseDataMapBuilderFactory() = default;
+        virtual DataMapBuilder* create() = 0;
+};
+    
+template <typename DataMapBuilder>
+class DataMapBuilderFactory : public BaseDataMapBuilderFactory {
+    public:
+    DataMapBuilder *create() override {
+        return new DataMapBuilder();
+    }
+};
+
 std::map<size_t, DataMapBuilder *> dataMapBuilders;
+inline static std::map<std::string, std::unique_ptr<BaseDataMapBuilderFactory>> dataMapFactoryMap = [] {
+    std::map<std::string, std::unique_ptr<BaseDataMapBuilderFactory>> map;
+    map.emplace("IdDataMapBuilder", std::make_unique<DataMapBuilderFactory<IdDataMapBuilder>>());
+    map.emplace("ArrayDataMapBuilder", std::make_unique<DataMapBuilderFactory<ArrayDataMapBuilder>>());
+    // map.emplace("HashDataMapBuilder", std::make_unique<DataMapBuilderFactory<HashDataMapBuilder>>());
+    return map;
+}();
 
 DataMapBuilder *getDataMapFromJson(const nlohmann::json &j) {
     size_t id = j["id"];
@@ -22,21 +43,14 @@ DataMapBuilder *getDataMapFromJson(const nlohmann::json &j) {
     }
 
     std::string className = j["ClassName"];
-    DataMapBuilder *dataMapBuilder;
-    if (className == "IdDataMapBuilder") {
-        dataMapBuilder = new IdDataMapBuilder();
-    } else if (className == "ArrayDataMapBuilder") {
-            dataMapBuilder = new ArrayDataMapBuilder();
-    } else if (className == "HashDataMapBuilder") {
-
-    } else {
-        setbench_error("JSON PARSER: Unknown class name DataMapBuilder -- " + className)
+    if (dataMapFactoryMap.find(className) != dataMapFactoryMap.end()) {
+        DataMapBuilder *dataMapBuilder = dataMapFactoryMap[className]->create();
+        dataMapBuilder->fromJson(j);
+        dataMapBuilders.insert({id, dataMapBuilder});
+        DataMapBuilder::id_counter = std::max(DataMapBuilder::id_counter, id + 1);
+        return dataMapBuilder;
     }
-
-    dataMapBuilder->fromJson(j);
-    dataMapBuilders.insert({id, dataMapBuilder});
-    DataMapBuilder::id_counter = std::max(DataMapBuilder::id_counter, id + 1);
-    return dataMapBuilder;
+    setbench_error("JSON PARSER: Unknown class name DataMapBuilder -- " + className)
 }
 
 void deleteDataMapBuilders() {
