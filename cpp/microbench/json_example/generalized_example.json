@@ -30,7 +30,7 @@
         "numThreads": 8,
         "stopCondition": {
             "ClassName": "Timer",
-            "workTime": 10000
+            "workTime": 5000
         },
         "threadLoopBuilders": [
             {
@@ -52,7 +52,6 @@
                         "builders": [
                             {
                                 "opers": ["get", "insert", "remove"], 
-                                "id": 1,
                                 "argsGeneratorBuilder": {
                                     "ClassName": "DefaultArgsGeneratorBuilder",
                                     "dataMapBuilder": {

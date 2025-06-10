@@ -10,7 +10,7 @@
 #include "json/single_include/nlohmann/json.hpp"
 
 #include "workloads/args_generators/impls/default_args_generator.h"
-#include "workloads/args_generators/impls/generalized_args_generator_impl.h"
+#include "workloads/args_generators/impls/generalized_args_generator.h"
 #include "workloads/thread_loops/impls/default_thread_loop.h"
 #include "workloads/bench_parameters.h"
 
@@ -60,19 +60,19 @@ ArgsGeneratorBuilder* getRangeQueryArgsGeneratorBuilder() {
 ArgsGeneratorBuilder* getGeneralizedArgsGeneratorBuilder(ArgsGeneratorBuilder* inside) {
     // std::vector<std::string> operations{"get", "insert", "remove"};
     return (new GeneralizedArgsGeneratorBuilder())
-        ->addGeneratorBuilder({"get"}, inside)
-        ->addGeneratorBuilder({"insert"}, getCreakersAndWaveArgsGeneratorBuilder())
-        ->addGeneratorBuilder({"remove"}, getDefaultArgsGeneratorBuilder())
-        ->addGeneratorBuilder({"rangeQuery"}, getRangeQueryArgsGeneratorBuilder());
+        ->addArgsGeneratorBuilder({"get"}, inside)
+        ->addArgsGeneratorBuilder({"insert"}, getCreakersAndWaveArgsGeneratorBuilder())
+        ->addArgsGeneratorBuilder({"remove"}, getDefaultArgsGeneratorBuilder())
+        ->addArgsGeneratorBuilder({"rangeQuery"}, getRangeQueryArgsGeneratorBuilder());
         // ->setDistributionBuilder((new ZipfianDistributionBuilder())->setAlpha(1.0))
         // ->setDataMapBuilder(new ArrayDataMapBuilder()));
 }
 
 ThreadLoopBuilder* getDefaultThreadLoopBuilder(ArgsGeneratorBuilder* argsGeneratorBuilder) {
     return (new DefaultThreadLoopBuilder())
-        ->setInsRatio(0)
+        ->setInsRatio(0.1)
         ->setRemRatio(0.1)
-        ->setRqRatio(0.2)
+        ->setRqRatio(0)
         ->setArgsGeneratorBuilder(argsGeneratorBuilder);
 }
 

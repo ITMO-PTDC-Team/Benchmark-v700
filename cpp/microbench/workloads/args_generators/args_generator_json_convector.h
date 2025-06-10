@@ -50,6 +50,5 @@ ArgsGeneratorBuilder *getArgsGeneratorFromJson(const nlohmann::json &j) {
     return argsGeneratorBuilder;
 }
 
-#include "workloads/args_generators/impls/generalized_args_generator_impl.h"
 
 #endif //SETBENCH_ARGS_GENERATOR_JSON_CONVECTOR_H
