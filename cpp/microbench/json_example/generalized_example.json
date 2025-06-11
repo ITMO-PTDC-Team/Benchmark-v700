@@ -1,0 +1,85 @@
+{
+    "prefill": {
+        "numThreads": 1,
+        "stopCondition": {
+            "ClassName": "OperationCounter",
+            "commonOperationLimit": 1024
+        },
+        "threadLoopBuilders": [
+            {
+                "quantity": 1,
+                "threadLoopBuilder": {
+                    "ClassName": "PrefillInsertThreadLoopBuilder",
+                    "argsGeneratorBuilder": {
+                        "ClassName": "DefaultArgsGeneratorBuilder",
+                        "dataMapBuilder": {
+                            "ClassName": "IdDataMapBuilder",
+                            "id": 4
+                        },
+                        "distributionBuilder": {
+                            "ClassName": "UniformDistributionBuilder"
+                        }
+                    },
+                    "numberOfAttempts": 10000000
+                }
+            }
+        ]
+    },
+    "range": 2048,
+    "test": {
+        "numThreads": 8,
+        "stopCondition": {
+            "ClassName": "Timer",
+            "workTime": 5000
+        },
+        "threadLoopBuilders": [
+            {
+                "pin": [
+                    -1,
+                    -1,
+                    0,
+                    0,
+                    1,
+                    2,
+                    3,
+                    3
+                ],
+                "quantity": 8,
+                "threadLoopBuilder": {
+                    "ClassName": "DefaultThreadLoopBuilder",
+                    "argsGeneratorBuilder": {
+                        "ClassName": "GeneralizedArgsGeneratorBuilder",
+                        "builders": [
+                            {
+                                "opers": ["get", "insert", "remove"], 
+                                "argsGeneratorBuilder": {
+                                    "ClassName": "DefaultArgsGeneratorBuilder",
+                                    "dataMapBuilder": {
+                                        "ClassName": "ArrayDataMapBuilder",
+                                        "id": 1
+                                    },
+                                    "distributionBuilder": {
+                                        "ClassName": "ZipfianDistributionBuilder",
+                                        "alpha": 1.0
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "parameters": {
+                        "insertRatio": 0.1,
+                        "removeRatio": 0.1,
+                        "rqRatio": 0.0
+                    }
+                }
+            }
+        ]
+    },
+    "warmUp": {
+        "numThreads": 0,
+        "stopCondition": {
+            "ClassName": "Timer",
+            "workTime": 5000
+        }
+    }
+}

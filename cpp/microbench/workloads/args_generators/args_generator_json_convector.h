@@ -14,6 +14,9 @@
 #include "workloads/args_generators/impls/creakers_and_wave_args_generator.h"
 #include "workloads/args_generators/impls/temporary_skewed_args_generator.h"
 #include "workloads/args_generators/impls/leafs_handshake_args_generator.h"
+#include "workloads/args_generators/impls/generalized_args_generator.h"
+#include "workloads/args_generators/impls/null_args_generator.h"
+#include "workloads/args_generators/impls/range_query_args_generator.h"
 #include "errors.h"
 
 ArgsGeneratorBuilder *getArgsGeneratorFromJson(const nlohmann::json &j) {
@@ -33,6 +36,12 @@ ArgsGeneratorBuilder *getArgsGeneratorFromJson(const nlohmann::json &j) {
         argsGeneratorBuilder = new LeafsHandshakeArgsGeneratorBuilder();
     } else if (className == "SkewedInsertArgsGeneratorBuilder") {
         argsGeneratorBuilder = new SkewedInsertArgsGeneratorBuilder();
+    } else if (className == "GeneralizedArgsGeneratorBuilder") {
+        argsGeneratorBuilder = new GeneralizedArgsGeneratorBuilder();
+    } else if (className == "NullArgsGeneratorBuilder") {
+        argsGeneratorBuilder = new NullArgsGeneratorBuilder();
+    } else if (className == "RangeQueryArgsGeneratorBuilder") {
+        argsGeneratorBuilder = new RangeQueryArgsGeneratorBuilder();
     } else {
         setbench_error("JSON PARSER: Unknown class name ArgsGeneratorBuilder -- " + className)
     }
@@ -40,5 +49,6 @@ ArgsGeneratorBuilder *getArgsGeneratorFromJson(const nlohmann::json &j) {
     argsGeneratorBuilder->fromJson(j);
     return argsGeneratorBuilder;
 }
+
 
 #endif //SETBENCH_ARGS_GENERATOR_JSON_CONVECTOR_H

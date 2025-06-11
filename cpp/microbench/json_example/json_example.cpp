@@ -10,6 +10,7 @@
 #include "json/single_include/nlohmann/json.hpp"
 
 #include "workloads/args_generators/impls/default_args_generator.h"
+#include "workloads/args_generators/impls/generalized_args_generator.h"
 #include "workloads/thread_loops/impls/default_thread_loop.h"
 #include "workloads/bench_parameters.h"
 
@@ -43,6 +44,28 @@ ArgsGeneratorBuilder* getCreakersAndWaveArgsGeneratorBuilder() {
         ->setWaveSize(0.2)
         ->setCreakersSize(0.1)
         ->setDataMapBuilder(new IdDataMapBuilder());
+}
+
+ArgsGeneratorBuilder* getNullArgsGeneratorBuilder() {
+    return (new NullArgsGeneratorBuilder());
+}
+
+ArgsGeneratorBuilder* getRangeQueryArgsGeneratorBuilder() {
+    return (new RangeQueryArgsGeneratorBuilder())
+    ->setDistributionBuilder((new ZipfianDistributionBuilder())->setAlpha(1.0))
+    ->setDataMapBuilder(new ArrayDataMapBuilder())
+    ->setInterval(100);
+}
+
+ArgsGeneratorBuilder* getGeneralizedArgsGeneratorBuilder(ArgsGeneratorBuilder* inside) {
+    // std::vector<std::string> operations{"get", "insert", "remove"};
+    return (new GeneralizedArgsGeneratorBuilder())
+        ->addArgsGeneratorBuilder({"get"}, inside)
+        ->addArgsGeneratorBuilder({"insert"}, getCreakersAndWaveArgsGeneratorBuilder())
+        ->addArgsGeneratorBuilder({"remove"}, getDefaultArgsGeneratorBuilder())
+        ->addArgsGeneratorBuilder({"rangeQuery"}, getRangeQueryArgsGeneratorBuilder());
+        // ->setDistributionBuilder((new ZipfianDistributionBuilder())->setAlpha(1.0))
+        // ->setDataMapBuilder(new ArrayDataMapBuilder()));
 }
 
 ThreadLoopBuilder* getDefaultThreadLoopBuilder(ArgsGeneratorBuilder* argsGeneratorBuilder) {
@@ -112,9 +135,12 @@ int main() {
      */
     ArgsGeneratorBuilder* argsGeneratorBuilder
                 = getDefaultArgsGeneratorBuilder();
-//                = getCreakersAndWaveArgsGeneratorBuilder();
+//               = getCreakersAndWaveArgsGeneratorBuilder();
 //                = getTemporarySkewedArgsGeneratorBuilder();
-
+    /*
+     * Use this argsGeneratorBuilder for Generalized Testing 
+     */
+//    ArgsGeneratorBuilder*  actualArgsGeneratorBuilde = getGeneralizedArgsGeneratorBuilder(argsGeneratorBuilder);
             /**
              * in addition to the DefaultThreadLoopBuilder,
              * TemporaryOperationThreadLoopBuilder is also presented in the corresponding function
