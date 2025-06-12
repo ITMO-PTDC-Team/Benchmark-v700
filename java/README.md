@@ -1,17 +1,28 @@
-# Java Synchrobench
+[//]: # (# Java )
 
-Synchrobench is a micro-benchmark suite used to evaluate synchronization
-techniques on data structures. Synchrobench is written in C/java and Java and
-currently includes arrays, binary trees, hash tables, linked lists, queues and
-skip lists that are synchronized with copy-on-write, locks, read-modify-write,
-read-copy-update and transactional memory. A non-synchronized version of these
-data structures is proposed in each language as a baseline to measure the
-performance gain on multi-(/many-)core machines.
+[//]: # (Java version Benchmark-v700 based on [Synchrobench]&#40;https://github.com/gramoli/synchrobench&#41;.)
+
+[//]: # (Synchrobench is a micro-benchmark suite used to evaluate synchronization)
+
+[//]: # (techniques on data structures. Synchrobench is written in C/java and Java and)
+
+[//]: # (currently includes arrays, binary trees, hash tables, linked lists, queues and)
+
+[//]: # (skip lists that are synchronized with copy-on-write, locks, read-modify-write,)
+
+[//]: # (read-copy-update and transactional memory. A non-synchronized version of these)
+
+[//]: # (data structures is proposed in each language as a baseline to measure the)
+
+[//]: # (performance gain on multi-&#40;/many-&#41;core machines.)
 
 ## Data structures in Java
 
-The Java version of synchrobench (synchrobench-java) provides variants of the
-algorithms presented in these papers:
+[//]: # (The Java version of synchrobench &#40;synchrobench-java&#41; provides variants of the)
+[//]: # (algorithms presented in these papers:)
+
+The Java version provides the same algorithm variants as those implemented in [Synchrobench](https://github.com/gramoli/synchrobench). 
+They are presented in these papers:
 - V. Aksenov, V. Gramoli, P. Kuznetsov, A. Malova, S. Ravi. A Concurrency-Optimal Binary Search Tree.
   In Euro-Par, 2017. arXiv:1705.02851
 - V. Gramoli, P. Kuznetsov, S. Ravi, D. Shang. A Concurrency-Optimal List-Based Set. arXiv:1502.01633, 2015.

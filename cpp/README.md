@@ -24,8 +24,13 @@ The project has the following structure:
 ```
 
 The main folders to pay attention to are [ds](ds) and [microbench](microbench/).  
-The first one stands for data structures - all available for benchmarking data structures are stored there
-The latter stands for launching benchmarks and there you can specify many arguments.
+The first folder is for data structures. It contains all the data structures available for benchmarking
+that were implemented in [SetBench](https://gitlab.com/trbot86/setbench).  
+The second folder contains the benchmark with various workloads.
+
+[//]: # (The first one stands for data structures - all available for benchmarking data structures are stored there  )
+
+[//]: # (The latter stands for launching benchmarks and there you can specify many arguments.)
 
 [//]: # (in particular, [different workloads]&#40;WORKLOADS.md&#41;.  )
 
@@ -43,8 +48,9 @@ cd setbench/microbench
 make -j
 ```
 
-You can read about the redis implementation in [REDIS](gsat/REDIS.md) 
-and about other tree implementations in [TREES_IMPLEMENTATION](gsat/TREES_IMPLEMENTATION.md).
+[//]: # (You can read about the redis implementation in [REDIS]&#40;gsat/REDIS.md&#41; )
+
+[//]: # (and about other tree implementations in [TREES_IMPLEMENTATION]&#40;gsat/TREES_IMPLEMENTATION.md&#41;.)
 
 
 # LAUNCH

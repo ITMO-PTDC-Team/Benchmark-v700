@@ -1,7 +1,14 @@
 # Benchmark-v700
 
 Benchmark-v700 is an open-source benchmarking framework
-for concurrent data structures in [Java](./java) and [C++](./cpp).
+for concurrent data structures in [Java](./java) and [C++](./cpp) 
+(heavily based on
+[Synchrobench](https://github.com/gramoli/synchrobench)
+and
+[SetBench](https://gitlab.com/trbot86/setbench)
+respectively).
+
+# SETUP.
 
 ##### Note
 The `C++` version uses submodules, so it's necessary to clone the repository with them:
