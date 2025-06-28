@@ -136,17 +136,11 @@ foreach (DS ${DATA_STRUCTURES})
         target_link_libraries(${DS_RUN} PUBLIC dragonfly_static)
     endif ()
 
-    if (${DS} MATCHES "verlib*")
+    if (${DS} MATCHES "verlib.*")
 
         message(DS="${DS} || verlib type")
 
-        target_include_directories(${DS_RUN} PUBLIC 
-            "${DS_DIR}/verlib_structs/include"
-        )
-
-        #target_link_libraries(${DS_RUN} PUBLIC verlib)
-        #target_link_libraries(${DS_RUN} PUBLIC parlay)
-        #target_link_libraries(${DS_RUN} PUBLIC flock)
+        target_include_directories(${DS_RUN} PUBLIC parlay)
     endif ()
 endforeach ()
 

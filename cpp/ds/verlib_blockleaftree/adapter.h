@@ -1,5 +1,5 @@
-#ifndef ARTTREE_ADAPTER_H
-#define ARTTREE_ADAPTER_H
+#ifndef VERLIB_BLOCKLEAF_TREE_ADAPTER_H
+#define VERLIB_BLOCKLEAF_TREE_ADAPTER_H
 
 #include <iostream>
 #include "errors.h"
@@ -13,6 +13,7 @@ class ds_adapter {
 private:
     ordered_map<K, V>* tree;
     const V NO_VALUE;
+    
 public:
     ds_adapter(const int NUM_THREADS,
                const K& unused1,
@@ -32,10 +33,11 @@ public:
     }
 
     void initThread(const int tid) {
-        // Not needed
+        // Not needed for this implementation
     }
+    
     void deinitThread(const int tid) {
-        // not needed
+        // Not needed for this implementation
     }
 
     bool contains(const int tid, const K& key) {
@@ -76,60 +78,92 @@ public:
     }
 
     int rangeQuery(const int tid, const K& lo, const K& hi, K * const resultKeys, V * const resultValues) {
-        return 0;
+        setbench_error("RQ functionality not implemented for this data structure");
     }
 
     void printSummary() {
-        std::cout << "ART-Tree summary" << std::endl;
+        std::cout << "Verlib blockleaf tree summary" << std::endl;
         tree->print();
     }
     
     bool validateStructure() {
-        return true;
+        return tree->check() >= 0;
     }
 
-    void printObjectSizes() {}
+    void printObjectSizes() {
+        tree->stats();
+    }
 
-    void debugGCSingleThreaded() {}
+    void debugGCSingleThreaded() {
+        // Not applicable for this implementation
+    }
 
 #ifdef USE_TREE_STATS
     class NodeHandler {
     public:
-        typedef int * NodePtrType;
+        typedef typename ordered_map<K,V>::node* NodePtrType;
 
         NodeHandler(const K& _minKey, const K& _maxKey) {}
 
         class ChildIterator {
+        private:
+            NodePtrType left, right;
+            bool visitedLeft;
         public:
-            ChildIterator(NodePtrType _node) {}
+            ChildIterator(NodePtrType node) 
+                : left(node ? node->left.load() : nullptr), 
+                  right(node ? node->right.load() : nullptr),
+                  visitedLeft(false) {}
+            
             bool hasNext() {
-                return false;
+                return (!visitedLeft && left) || (visitedLeft && right);
             }
+            
             NodePtrType next() {
-                return NULL;
+                if (!visitedLeft && left) {
+                    visitedLeft = true;
+                    return left;
+                }
+                if (visitedLeft && right) {
+                    return right;
+                }
+                return nullptr;
             }
         };
 
         bool isLeaf(NodePtrType node) {
-            return false;
+            return node && node->is_leaf;
         }
+        
         size_t getNumChildren(NodePtrType node) {
-            return 0;
+            if (!node || node->is_leaf) return 0;
+            return (node->left.load() ? 1 : 0) + (node->right.load() ? 1 : 0);
         }
+        
         size_t getNumKeys(NodePtrType node) {
-            return 0;
+            if (!node || !node->is_leaf) return 0;
+            return static_cast<ordered_map<K,V>::leaf*>(node)->size;
         }
+        
         size_t getSumOfKeys(NodePtrType node) {
-            return 0;
+            if (!node || !node->is_leaf) return 0;
+            auto leaf = static_cast<ordered_map<K,V>::leaf*>(node);
+            size_t sum = 0;
+            for (int i = 0; i < leaf->size; i++) {
+                sum += leaf->keyvals[i].key;
+            }
+            return sum;
         }
+        
         ChildIterator getChildIterator(NodePtrType node) {
             return ChildIterator(node);
         }
     };
+    
     TreeStats<NodeHandler> * createTreeStats(const K& _minKey, const K& _maxKey) {
-        return new TreeStats<NodeHandler>(new NodeHandler(_minKey, _maxKey), NULL, true);
+        return new TreeStats<NodeHandler>(new NodeHandler(_minKey, _maxKey), tree->root, true);
     }
 #endif
 };
 
-#endif
+#endif // VERLIB_BLOCKLEAF_TREE_ADAPTER_H

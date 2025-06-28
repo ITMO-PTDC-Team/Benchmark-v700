@@ -1,5 +1,5 @@
-#ifndef ARTTREE_ADAPTER_H
-#define ARTTREE_ADAPTER_H
+#ifndef VERLIB_ARTTREE2_ADAPTER_H
+#define VERLIB_ARTTREE2_ADAPTER_H
 
 #include <iostream>
 #include "errors.h"
@@ -11,19 +11,23 @@
 template <typename K, typename V, class Reclaim = reclaimer_debra<K>, class Alloc = allocator_new<K>, class Pool = pool_none<K>>
 class ds_adapter {
 private:
-    ordered_map<K, V>* tree;
+    Set<K, V>* tree;
+    typename Set<K, V>::node* root;
     const V NO_VALUE;
+    
 public:
     ds_adapter(const int NUM_THREADS,
                const K& unused1,
                const K& unused2,
                const V& unused3,
                Random64 * const unused4)
-    : tree(new ordered_map<K, V>())
+    : tree(new Set<K, V>())
+    , root(tree->empty())
     , NO_VALUE(unused3)
     {}
 
     ~ds_adapter() {
+        tree->retire(root);
         delete tree;
     }
 
@@ -32,70 +36,84 @@ public:
     }
 
     void initThread(const int tid) {
-        // Not needed
+        // Not needed for this implementation
     }
+    
     void deinitThread(const int tid) {
-        // not needed
+        // Not needed for this implementation
     }
 
     bool contains(const int tid, const K& key) {
-        return tree->find(key).has_value();
+        return tree->find(root, key).has_value();
     }
 
     V insert(const int tid, const K& key, const V& val) {
-        if (tree->insert(key, val)) {
+        if (tree->insert(root, key, val)) {
             return val; 
         }
         return NO_VALUE; 
     }
 
     V insertIfAbsent(const int tid, const K& key, const V& val) {
-        auto result = tree->find(key);
+        auto result = tree->find(root, key);
         if (result.has_value()) {
             return result.value(); 
         }
-        if (tree->insert(key, val)) {
+        if (tree->insert(root, key, val)) {
             return val; 
         }
-        return NO_VALUE; 
+        return NO_VALUE;
     }
 
     V erase(const int tid, const K& key) {
-        auto result = tree->find(key);
+        auto result = tree->find(root, key);
         if (result.has_value()) {
-            if (tree->remove(key)) {
+            if (tree->remove(root, key)) {
                 return result.value(); 
             }
         }
-        return NO_VALUE; 
+        return NO_VALUE;
     }
 
     V find(const int tid, const K& key) {
-        auto result = tree->find(key);
+        auto result = tree->find(root, key);
         return result.has_value() ? result.value() : NO_VALUE;
     }
 
     int rangeQuery(const int tid, const K& lo, const K& hi, K * const resultKeys, V * const resultValues) {
-        return 0;
+        int count = 0;
+        auto add = [&](const K& key, const V& val) {
+            if (count < MAX_RANGE_QUERY_SIZE) {
+                resultKeys[count] = key;
+                resultValues[count] = val;
+                count++;
+            }
+        };
+        tree->range_(root, add, lo, hi);
+        return count;
     }
 
     void printSummary() {
-        std::cout << "ART-Tree summary" << std::endl;
-        tree->print();
+        std::cout << "Radix Tree summary" << std::endl;
+        tree->print(root);
     }
     
     bool validateStructure() {
-        return true;
+        return true; 
     }
 
-    void printObjectSizes() {}
+    void printObjectSizes() {
+        // Could implement memory usage reporting
+    }
 
-    void debugGCSingleThreaded() {}
+    void debugGCSingleThreaded() {
+        // Not applicable for this implementation
+    }
 
 #ifdef USE_TREE_STATS
     class NodeHandler {
     public:
-        typedef int * NodePtrType;
+        typedef typename Set<K,V>::node* NodePtrType;
 
         NodeHandler(const K& _minKey, const K& _maxKey) {}
 
@@ -106,30 +124,41 @@ public:
                 return false;
             }
             NodePtrType next() {
-                return NULL;
+                return nullptr;
             }
         };
 
         bool isLeaf(NodePtrType node) {
-            return false;
+            return node && node->nt == Set<K,V>::Leaf;
         }
+        
         size_t getNumChildren(NodePtrType node) {
-            return 0;
+            if (!node) return 0;
+            switch(node->nt) {
+                case Set<K,V>::Full: return 256;
+                case Set<K,V>::Indirect: return ((Set<K,V>::indirect_node*)node)->num_used;
+                case Set<K,V>::Sparse: return ((Set<K,V>::sparse_node*)node)->num_used;
+                default: return 0;
+            }
         }
+        
         size_t getNumKeys(NodePtrType node) {
-            return 0;
+            return isLeaf(node) ? 1 : 0;
         }
+        
         size_t getSumOfKeys(NodePtrType node) {
-            return 0;
+            return isLeaf(node) ? ((Set<K,V>::leaf*)node)->key : 0;
         }
+        
         ChildIterator getChildIterator(NodePtrType node) {
             return ChildIterator(node);
         }
     };
+    
     TreeStats<NodeHandler> * createTreeStats(const K& _minKey, const K& _maxKey) {
-        return new TreeStats<NodeHandler>(new NodeHandler(_minKey, _maxKey), NULL, true);
+        return new TreeStats<NodeHandler>(new NodeHandler(_minKey, _maxKey), nullptr, true);
     }
 #endif
 };
 
-#endif
+#endif // VERLIB_ARTTREE2_ADAPTER_H
