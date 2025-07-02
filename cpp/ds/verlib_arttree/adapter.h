@@ -76,7 +76,7 @@ public:
     }
 
     int rangeQuery(const int tid, const K& lo, const K& hi, K * const resultKeys, V * const resultValues) {
-        return 0;
+        setbench_error("RQ functionality not implemented for this data structure");
     }
 
     void printSummary() {
