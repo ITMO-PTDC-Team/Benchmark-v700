@@ -25,11 +25,14 @@ class DistributionBuilderFactory : public BaseDistributionBuilderFactory {
     }
 };
 
+#define REGISTER_DISTRIBUTION_BUILDER(className) \
+    map.insert({#className, std::make_unique<DistributionBuilderFactory<className>>()})
+    
 inline static std::map<std::string, std::unique_ptr<BaseDistributionBuilderFactory>> distributionFactoryMap = [] {
     std::map<std::string, std::unique_ptr<BaseDistributionBuilderFactory>> map;
-    map.insert({"UniformDistributionBuilder", std::make_unique<DistributionBuilderFactory<UniformDistributionBuilder>>()});
-    map.insert({"ZipfianDistributionBuilder", std::make_unique<DistributionBuilderFactory<ZipfianDistributionBuilder>>()});
-    map.insert({"SkewedUniformDistributionBuilder", std::make_unique<DistributionBuilderFactory<SkewedUniformDistributionBuilder>>()});
+    REGISTER_DISTRIBUTION_BUILDER(UniformDistributionBuilder);
+    REGISTER_DISTRIBUTION_BUILDER(ZipfianDistributionBuilder);
+    REGISTER_DISTRIBUTION_BUILDER(SkewedUniformDistributionBuilder);
     return map;
 }();
 

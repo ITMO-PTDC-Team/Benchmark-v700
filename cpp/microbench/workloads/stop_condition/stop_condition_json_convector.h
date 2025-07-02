@@ -24,11 +24,14 @@ class StopConditionFactory : public BaseStopConditionFactory {
         return new StopCondition();
     }
 };
-   
+
+#define REGISTER_STOP_CONDITION_BUILDER(className) \
+    map.insert({#className, std::make_unique<StopConditionFactory<className>>()})
+
 inline static std::map<std::string, std::unique_ptr<BaseStopConditionFactory>> stopConditionFactoryMap = [] {
     std::map<std::string, std::unique_ptr<BaseStopConditionFactory>> map;
-    map.insert({"Timer", std::make_unique<StopConditionFactory<Timer>>()});
-    map.insert({"OperationCounter", std::make_unique<StopConditionFactory<OperationCounter>>()});
+    REGISTER_STOP_CONDITION_BUILDER(Timer);
+    REGISTER_STOP_CONDITION_BUILDER(OperationCounter);
     return map;
 }();
 

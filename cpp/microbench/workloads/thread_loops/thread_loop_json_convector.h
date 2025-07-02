@@ -25,11 +25,14 @@ class ThreadLoopBuilderFactory : public BaseThreadLoopBuilderFactory {
     }
 };
 
+#define REGISTER_THREAD_LOOP_BUILDER(className) \
+    map.insert({#className, std::make_unique<ThreadLoopBuilderFactory<className>>()})
+
 inline static std::map<std::string, std::unique_ptr<BaseThreadLoopBuilderFactory>> threadLoopFactoryMap = [] {
     std::map<std::string, std::unique_ptr<BaseThreadLoopBuilderFactory>> map;
-    map.insert({"DefaultThreadLoopBuilder", std::make_unique<ThreadLoopBuilderFactory<DefaultThreadLoopBuilder>>()});
-    map.insert({"TemporaryOperationsThreadLoopBuilder", std::make_unique<ThreadLoopBuilderFactory<TemporaryOperationsThreadLoopBuilder>>()});
-    map.insert({"PrefillInsertThreadLoopBuilder", std::make_unique<ThreadLoopBuilderFactory<PrefillInsertThreadLoopBuilder>>()});
+    REGISTER_THREAD_LOOP_BUILDER(DefaultThreadLoopBuilder);
+    REGISTER_THREAD_LOOP_BUILDER(TemporaryOperationsThreadLoopBuilder);
+    REGISTER_THREAD_LOOP_BUILDER(PrefillInsertThreadLoopBuilder);
     return map;
 }();
 

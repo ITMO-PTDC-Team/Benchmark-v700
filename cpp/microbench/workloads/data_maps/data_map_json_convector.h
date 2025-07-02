@@ -25,12 +25,15 @@ class DataMapBuilderFactory : public BaseDataMapBuilderFactory {
     }
 };
 
+#define REGISTER_DATA_MAP_BUILDER(className) \
+    map.insert({#className, std::make_unique<DataMapBuilderFactory<className>>()})
+
 std::map<size_t, DataMapBuilder *> dataMapBuilders;
 inline static std::map<std::string, std::unique_ptr<BaseDataMapBuilderFactory>> dataMapFactoryMap = [] {
     std::map<std::string, std::unique_ptr<BaseDataMapBuilderFactory>> map;
-    map.emplace("IdDataMapBuilder", std::make_unique<DataMapBuilderFactory<IdDataMapBuilder>>());
-    map.emplace("ArrayDataMapBuilder", std::make_unique<DataMapBuilderFactory<ArrayDataMapBuilder>>());
-    // map.emplace("HashDataMapBuilder", std::make_unique<DataMapBuilderFactory<HashDataMapBuilder>>());
+    REGISTER_DATA_MAP_BUILDER(IdDataMapBuilder);
+    REGISTER_DATA_MAP_BUILDER(ArrayDataMapBuilder);
+    //REGISTER_DATA_MAP_BUILDER(HashDataMapBuilder);
     return map;
 }();
 

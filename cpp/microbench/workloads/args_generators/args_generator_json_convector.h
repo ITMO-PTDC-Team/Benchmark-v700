@@ -30,18 +30,21 @@ class ArgsGeneratorBuilderFactory : public BaseArgsGeneratorBuilderFactory {
         }
 };
 
+#define REGISTER_ARGS_GENERATOR_BUILDER(className) \
+    map.insert({#className, std::make_unique<ArgsGeneratorBuilderFactory<className>>()})
+
 inline static std::map<std::string, std::unique_ptr<BaseArgsGeneratorBuilderFactory>> argsGeneratorFactoryMap = [] {
     std::map<std::string, std::unique_ptr<BaseArgsGeneratorBuilderFactory>> map;
-    map.insert({"DefaultArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<DefaultArgsGeneratorBuilder>>()});
-    map.insert({"SkewedSetsArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<SkewedSetsArgsGeneratorBuilder>>()});
-    map.insert({"TemporarySkewedArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<TemporarySkewedArgsGeneratorBuilder>>()});
-    map.insert({"CreakersAndWaveArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<CreakersAndWaveArgsGeneratorBuilder>>()});
-    map.insert({"CreakersAndWavePrefillArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<CreakersAndWavePrefillArgsGeneratorBuilder>>()});
-    map.insert({"LeafsHandshakeArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<LeafsHandshakeArgsGeneratorBuilder>>()});
-    map.insert({"SkewedInsertArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<SkewedInsertArgsGeneratorBuilder>>()});
-    map.insert({"GeneralizedArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<GeneralizedArgsGeneratorBuilder>>()});
-    map.insert({"NullArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<NullArgsGeneratorBuilder>>()}); 
-    map.insert({"RangeQueryArgsGeneratorBuilder", std::make_unique<ArgsGeneratorBuilderFactory<RangeQueryArgsGeneratorBuilder>>()}); 
+    REGISTER_ARGS_GENERATOR_BUILDER(DefaultArgsGeneratorBuilder);
+    REGISTER_ARGS_GENERATOR_BUILDER(SkewedSetsArgsGeneratorBuilder);
+    REGISTER_ARGS_GENERATOR_BUILDER(TemporarySkewedArgsGeneratorBuilder);
+    REGISTER_ARGS_GENERATOR_BUILDER(CreakersAndWaveArgsGeneratorBuilder);
+    REGISTER_ARGS_GENERATOR_BUILDER(CreakersAndWavePrefillArgsGeneratorBuilder);
+    REGISTER_ARGS_GENERATOR_BUILDER(LeafsHandshakeArgsGeneratorBuilder);
+    REGISTER_ARGS_GENERATOR_BUILDER(SkewedInsertArgsGeneratorBuilder);
+    REGISTER_ARGS_GENERATOR_BUILDER(GeneralizedArgsGeneratorBuilder);
+    REGISTER_ARGS_GENERATOR_BUILDER(NullArgsGeneratorBuilder);
+    REGISTER_ARGS_GENERATOR_BUILDER(RangeQueryArgsGeneratorBuilder);
     return map;
 }();
 
