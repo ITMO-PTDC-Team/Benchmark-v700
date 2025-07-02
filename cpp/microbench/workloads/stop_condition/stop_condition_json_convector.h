@@ -11,19 +11,38 @@
 #include "workloads/stop_condition/impls/operation_counter.h"
 #include "errors.h"
 
+class BaseStopConditionFactory {
+    public:
+        virtual ~BaseStopConditionFactory() = default;
+        virtual StopCondition* create() = 0;
+};
+    
+template <typename StopCondition>
+class StopConditionFactory : public BaseStopConditionFactory {
+    public:
+    StopCondition *create() override {
+        return new StopCondition();
+    }
+};
+
+#define REGISTER_STOP_CONDITION_BUILDER(className) \
+    map.insert({#className, std::make_unique<StopConditionFactory<className>>()})
+
+inline static std::map<std::string, std::unique_ptr<BaseStopConditionFactory>> stopConditionFactoryMap = [] {
+    std::map<std::string, std::unique_ptr<BaseStopConditionFactory>> map;
+    REGISTER_STOP_CONDITION_BUILDER(Timer);
+    REGISTER_STOP_CONDITION_BUILDER(OperationCounter);
+    return map;
+}();
+
 StopCondition *getStopConditionFromJson(const nlohmann::json &j) {
     std::string className = j["ClassName"];
-    StopCondition *stopCondition;
-    if (className == "Timer") {
-        stopCondition = new Timer();
-    } else if (className == "OperationCounter") {
-        stopCondition = new OperationCounter();
-    } else {
-        setbench_error("JSON PARSER: Unknown class name StopCondition -- " + className)
+    if (stopConditionFactoryMap.find(className) != stopConditionFactoryMap.end()) {
+        StopCondition *stopCondition = stopConditionFactoryMap[className]->create();
+        stopCondition->fromJson(j);
+        return stopCondition;
     }
-
-    stopCondition->fromJson(j);
-    return stopCondition;
+    setbench_error("JSON PARSER: Unknown class name StopCondition -- " + className);
 }
 
 #endif //SETBENCH_STOP_CONDITION_JSON_CONVECTOR_H

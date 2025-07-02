@@ -16,29 +16,46 @@
 #include "workloads/args_generators/impls/leafs_handshake_args_generator.h"
 #include "errors.h"
 
+class BaseArgsGeneratorBuilderFactory {
+    public:
+        virtual ~BaseArgsGeneratorBuilderFactory() = default;
+        virtual ArgsGeneratorBuilder* create() = 0;
+};  
+    
+template <typename ArgsGeneratorBuilder>
+class ArgsGeneratorBuilderFactory : public BaseArgsGeneratorBuilderFactory {
+    public:
+        ArgsGeneratorBuilder *create() override {
+            return new ArgsGeneratorBuilder();
+        }
+};
+
+#define REGISTER_ARGS_GENERATOR_BUILDER(className) \
+    map.insert({#className, std::make_unique<ArgsGeneratorBuilderFactory<className>>()})
+
+inline static std::map<std::string, std::unique_ptr<BaseArgsGeneratorBuilderFactory>> argsGeneratorFactoryMap = [] {
+    std::map<std::string, std::unique_ptr<BaseArgsGeneratorBuilderFactory>> map;
+    REGISTER_ARGS_GENERATOR_BUILDER(DefaultArgsGeneratorBuilder);
+    REGISTER_ARGS_GENERATOR_BUILDER(SkewedSetsArgsGeneratorBuilder);
+    REGISTER_ARGS_GENERATOR_BUILDER(TemporarySkewedArgsGeneratorBuilder);
+    REGISTER_ARGS_GENERATOR_BUILDER(CreakersAndWaveArgsGeneratorBuilder);
+    REGISTER_ARGS_GENERATOR_BUILDER(CreakersAndWavePrefillArgsGeneratorBuilder);
+    REGISTER_ARGS_GENERATOR_BUILDER(LeafsHandshakeArgsGeneratorBuilder);
+    REGISTER_ARGS_GENERATOR_BUILDER(SkewedInsertArgsGeneratorBuilder);
+    REGISTER_ARGS_GENERATOR_BUILDER(GeneralizedArgsGeneratorBuilder);
+    REGISTER_ARGS_GENERATOR_BUILDER(NullArgsGeneratorBuilder);
+    REGISTER_ARGS_GENERATOR_BUILDER(RangeQueryArgsGeneratorBuilder);
+    return map;
+}();
+
 ArgsGeneratorBuilder *getArgsGeneratorFromJson(const nlohmann::json &j) {
     std::string className = j["ClassName"];
-    ArgsGeneratorBuilder *argsGeneratorBuilder;
-    if (className == "DefaultArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new DefaultArgsGeneratorBuilder();
-    } else if (className == "SkewedSetsArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new SkewedSetsArgsGeneratorBuilder();
-    } else if (className == "TemporarySkewedArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new TemporarySkewedArgsGeneratorBuilder();
-    } else if (className == "CreakersAndWaveArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new CreakersAndWaveArgsGeneratorBuilder();
-    } else if (className == "CreakersAndWavePrefillArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new CreakersAndWavePrefillArgsGeneratorBuilder();
-    } else if (className == "LeafsHandshakeArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new LeafsHandshakeArgsGeneratorBuilder();
-    } else if (className == "SkewedInsertArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new SkewedInsertArgsGeneratorBuilder();
-    } else {
-        setbench_error("JSON PARSER: Unknown class name ArgsGeneratorBuilder -- " + className)
+    if (argsGeneratorFactoryMap.find(className) != argsGeneratorFactoryMap.end()) {
+        ArgsGeneratorBuilder *argsGeneratorBuilder = argsGeneratorFactoryMap[className]->create();
+        argsGeneratorBuilder->fromJson(j);
+        return argsGeneratorBuilder;
     }
-
-    argsGeneratorBuilder->fromJson(j);
-    return argsGeneratorBuilder;
+    setbench_error("JSON PARSER: Unknown class name ArgsGeneratorBuilder -- " + className);
 }
 
 #endif //SETBENCH_ARGS_GENERATOR_JSON_CONVECTOR_H
