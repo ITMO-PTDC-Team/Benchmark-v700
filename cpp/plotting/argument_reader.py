@@ -233,7 +233,19 @@ def modify_and_run_second_json(folder,
 
         for key, key_path in zip(keys, path_to_keys):
             # TEMP JSON
+            #print(key, " ", key_path)
             set_value(temp_data, key_path, key)
+
+            # if (key_path == "test.threadLoopBuilders.1.quantity"):
+            #     if (key == 1):
+            #         set_value(temp_data, "test.threadLoopBuilders.0.pin", [0])
+            #         set_value(temp_data, "test.threadLoopBuilders.1.pin", [1])
+            #     if (key == 3):
+            #         set_value(temp_data, "test.threadLoopBuilders.0.pin", [0])
+            #         set_value(temp_data, "test.threadLoopBuilders.1.pin", [1, 2, 3])
+            #     if (key == 5):
+            #         set_value(temp_data, "test.threadLoopBuilders.0.pin", [0])
+            #         set_value(temp_data, "test.threadLoopBuilders.1.pin", [1, 2, 3, 4, 5])
 
         temp_file = os.path.join(folder, f"temp_config_{ds}_{title}.json")
 

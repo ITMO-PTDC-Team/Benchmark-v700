@@ -59,3 +59,9 @@ If some errors occur while launching because of OS, try this:
 ```shell
 sudo sysctl kernel.perf_event_paranoid=1
 ```
+
+# TESTING
+
+```shell
+python3 -m pytest run_tests.py -v
+```
