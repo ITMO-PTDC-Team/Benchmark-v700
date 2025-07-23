@@ -1,0 +1,148 @@
+name: C++ CI
+
+on: [push]
+# :
+#     branches: [ main, cpp-develop ]
+#     paths: [ 'cpp/**' ] 
+#   pull_request:
+#     branches: [ main, cpp-develop ]
+#     paths: [ 'cpp/**' ]
+
+env:
+  MAKE_JOBS: ${{ github.runner.os == 'Linux' && '$(nproc)' || '4' }}
+
+jobs:
+  # ==================== BUILD STAGE ====================
+  build_benchmark:
+    name: "Build Microbench"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive' 
+
+      - name: Install dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libpapi-dev libnuma-dev
+      
+      - name: Upload Submodules
+        uses: actions/upload-artifact@v4
+        with:
+          name: submodules
+          path: |
+            .git/modules
+            .gitmodules
+
+      - name: Build Microbench
+        working-directory: ./cpp/microbench
+        run: make -j${{ env.MAKE_JOBS }}
+
+      - name: Upload Microbench Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: microbench-bin
+          path: cpp/microbench/bin
+
+  # ==================== TEST STAGE ====================
+  test_benchmark_options:
+    name: "Test Microbench (Build Options)"
+    runs-on: ubuntu-latest
+    needs: build_benchmark
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: microbench-bin
+          path: cpp/microbench/bin
+      - uses: actions/download-artifact@v4
+        with:
+          name: submodules 
+          path: .git 
+
+
+      - name: Test Different Build Flags
+        working-directory: ./cpp/microbench
+        run: |
+          echo "#########################################################"
+          echo "## make"
+          echo "#########################################################"
+          make -j${{ env.MAKE_JOBS }} || exit 1
+
+          echo "#########################################################"
+          echo "## use_asserts=1"
+          echo "#########################################################"
+          make use_asserts=1 -j${{ env.MAKE_JOBS }} || exit 1
+
+          echo "#########################################################"
+          echo "## use_asserts=1 use_timelines=1"
+          echo "#########################################################"
+          make use_asserts=1 use_timelines=1 -j${{ env.MAKE_JOBS }} || exit 1
+
+          echo "#########################################################"
+          echo "## has_libpapi=0"
+          echo "#########################################################"
+          make has_libpapi=0 -j${{ env.MAKE_JOBS }} || exit 1
+
+          echo "#########################################################"
+          echo "## has_libpapi=0 has_libnuma=0"
+          echo "#########################################################"
+          make has_libnuma=0 has_libpapi=0 -j${{ env.MAKE_JOBS }} || exit 1
+
+          echo "#########################################################"
+          echo "## has_libpapi=0 has_libnuma=0 use_openmp=0"
+          echo "#########################################################"
+          make has_libnuma=0 has_libpapi=0 use_openmp=0 -j${{ env.MAKE_JOBS }} || exit 1
+
+  test_benchmark_targets:
+    name: "Test Microbench (Targets)"
+    runs-on: ubuntu-latest
+    needs: build_benchmark
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: microbench-bin
+          path: cpp/microbench/bin
+      - uses: actions/download-artifact@v4
+        with:
+          name: submodules 
+          path: .git 
+      
+
+      - name: Test Specific Targets
+        working-directory: ./cpp/microbench
+        run: |
+          echo "#########################################################"
+          echo "## make ds-reclaim-pool"
+          echo "#########################################################"
+          make ds-reclaim-pool -j${{ env.MAKE_JOBS }} || exit 1
+
+          echo "#########################################################"
+          echo "## make all (deprecated build path)"
+          echo "#########################################################"
+          make all -j${{ env.MAKE_JOBS }} || exit 1
+
+  test_benchmark_recordmanagers:
+    name: "Test Microbench (Record Managers)"
+    runs-on: ubuntu-latest
+    needs: build_benchmark
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: microbench-bin
+          path: cpp/microbench/bin
+      - uses: actions/download-artifact@v4
+        with:
+          name: submodules 
+          path: .git 
+
+      - name: Test Reclaimers and Pools
+        working-directory: ./cpp/microbench
+        run: |
+          make all DATA_STRUCTURES="brown_ext_abtree_lf" \
+            RECLAIMERS="none debra debracap ebr_token ebr_tree hazardptr" \
+            POOLS="none numa" \
+            -j${{ env.MAKE_JOBS }}=
