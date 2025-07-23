@@ -10,6 +10,9 @@ on: [push]
 
 env:
   MAKE_JOBS: ${{ github.runner.os == 'Linux' && '$(nproc)' || '4' }}
+  BUILD_JOBS: ${{ github.runner.os == 'Linux' && '$(nproc)' || '4' }}
+  BUILD_DIR: cpp/build
+  CMAKE_ARGS: -DCMAKE_BUILD_TYPE=Release
 
 jobs:
   # ==================== BUILD STAGE ====================
@@ -35,9 +38,21 @@ jobs:
             .git/modules
             .gitmodules
 
+      # - name: Build Microbench
+      #   working-directory: ./cpp/microbench
+      #   run: make -j${{ env.MAKE_JOBS }}
+
+      - name: Create build directory
+        working-directory: ./cpp
+        run: mkdir -p build
+
+      - name: Configure CMake
+        working-directory: ./cpp/build
+        run: cmake $GITHUB_WORKSPACE/cpp ${CMAKE_ARGS}
+
       - name: Build Microbench
-        working-directory: ./cpp/microbench
-        run: make -j${{ env.MAKE_JOBS }}
+        working-directory: ./cpp/build
+        run: cmake --build . --parallel ${{ env.BUILD_JOBS }}
 
       - name: Upload Microbench Artifacts
         uses: actions/upload-artifact@v4
@@ -68,32 +83,37 @@ jobs:
           echo "#########################################################"
           echo "## make"
           echo "#########################################################"
-          make -j${{ env.MAKE_JOBS }} || exit 1
+          cmake --build . --parallel ${{ env.BUILD_JOBS }}
 
           echo "#########################################################"
           echo "## use_asserts=1"
           echo "#########################################################"
-          make use_asserts=1 -j${{ env.MAKE_JOBS }} || exit 1
+          cmake -DUSE_ASSERTS=ON ..
+          cmake --build . --parallel ${{ env.BUILD_JOBS }}
 
           echo "#########################################################"
           echo "## use_asserts=1 use_timelines=1"
           echo "#########################################################"
-          make use_asserts=1 use_timelines=1 -j${{ env.MAKE_JOBS }} || exit 1
+          cmake -DUSE_ASSERTS=ON -DUSE_TIMELINES=ON ..
+          cmake --build . --parallel ${{ env.BUILD_JOBS }}
 
           echo "#########################################################"
           echo "## has_libpapi=0"
           echo "#########################################################"
-          make has_libpapi=0 -j${{ env.MAKE_JOBS }} || exit 1
+          cmake -DHAS_LIBPAPI=OFF ..
+          cmake --build . --parallel ${{ env.BUILD_JOBS }}
 
           echo "#########################################################"
           echo "## has_libpapi=0 has_libnuma=0"
           echo "#########################################################"
-          make has_libnuma=0 has_libpapi=0 -j${{ env.MAKE_JOBS }} || exit 1
+          cmake -DHAS_LIBPAPI=OFF -DHAS_LIBNUMA=OFF ..
+          cmake --build . --parallel ${{ env.BUILD_JOBS }}
 
           echo "#########################################################"
           echo "## has_libpapi=0 has_libnuma=0 use_openmp=0"
           echo "#########################################################"
-          make has_libnuma=0 has_libpapi=0 use_openmp=0 -j${{ env.MAKE_JOBS }} || exit 1
+          cmake -DHAS_LIBPAPI=OFF -DHAS_LIBNUMA=OFF -DUSE_OPENMP=OFF ..
+          cmake --build . --parallel ${{ env.BUILD_JOBS }}
 
   test_benchmark_targets:
     name: "Test Microbench (Targets)"
@@ -117,12 +137,7 @@ jobs:
           echo "#########################################################"
           echo "## make ds-reclaim-pool"
           echo "#########################################################"
-          make ds-reclaim-pool -j${{ env.MAKE_JOBS }} || exit 1
-
-          echo "#########################################################"
-          echo "## make all (deprecated build path)"
-          echo "#########################################################"
-          make all -j${{ env.MAKE_JOBS }} || exit 1
+          cmake --build . --target ds-reclaim-pool --parallel ${{ env.BUILD_JOBS }}
 
   test_benchmark_recordmanagers:
     name: "Test Microbench (Record Managers)"
@@ -140,9 +155,9 @@ jobs:
           path: .git 
 
       - name: Test Reclaimers and Pools
-        working-directory: ./cpp/microbench
+        working-directory: ./cpp/build
         run: |
-          make all DATA_STRUCTURES="brown_ext_abtree_lf" \
-            RECLAIMERS="none debra debracap ebr_token ebr_tree hazardptr" \
-            POOLS="none numa" \
-            -j${{ env.MAKE_JOBS }}=
+          cmake -DDATA_STRUCTURES="brown_ext_abtree_lf" \
+                -DRECLAIMERS="none;debra;debracap;ebr_token;ebr_tree;hazardptr" \
+                -DPOOLS="none;numa" ..
+          cmake --build . --parallel ${{ env.BUILD_JOBS }}
