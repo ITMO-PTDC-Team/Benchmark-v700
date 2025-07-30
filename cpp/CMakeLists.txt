@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
 project(Benchmark-v700)
 
+find_package(GTest REQUIRED)
+include(GoogleTest)
+include(CTest)
+
+enable_testing() 
 set(CMAKE_CXX_STANDARD 20)
 set(BENCH_DIR "microbench")
 set(DS_DIR "ds")
@@ -89,9 +94,8 @@ include_directories(common/urcu)
 
 include_directories(${BENCH_DIR})
 
-
-
 set(SOURCE_EXE ${BENCH_DIR}/main.cpp)
+set(TEST_SOURCE_EXE ${BENCH_DIR}/tests/adapters/main.cpp)
 
 #include_directories(dragonfly_table)
 #add_subdirectory(dragonfly_table)
@@ -105,8 +109,6 @@ foreach (DATA_STRUCTURE ${RAW_DATA_STRUCTURES})
     string(REPLACE "\/" "" DS ${DS})
     list(APPEND DATA_STRUCTURES ${DS})
 endforeach ()
-
-
 
 foreach (DS ${DATA_STRUCTURES})
 
@@ -135,6 +137,23 @@ foreach (DS ${DATA_STRUCTURES})
 
         target_link_libraries(${DS_RUN} PUBLIC dragonfly_static)
     endif ()
+#   _tests${RECLAIM}
+        set (DS_TEST ${DS}_test${RECLAIM})
+
+        add_executable(${DS_TEST} ${TEST_SOURCE_EXE})
+
+        target_include_directories(${DS_TEST} PUBLIC ${DS_DIR}/${DS})
+
+        target_link_libraries(${DS_TEST} PUBLIC ${CXX_LIBS_LIST})
+
+        target_link_libraries(${DS_TEST} PRIVATE GTest::GTest GTest::Main)
+
+        gtest_discover_tests(${DS_TEST} 
+            PROPERTIES 
+                LABELS "Unit Tests for ${DS_TEST}"
+                TIMEOUT 30
+                TEST_SUFFIX _${DS_RUN}   
+        )
 endforeach ()
 
 #message(ADAPTERS="${ADAPTERS}")
