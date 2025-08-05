@@ -65,3 +65,5 @@ sudo sysctl kernel.perf_event_paranoid=1
 ```shell
 python3 -m pytest run_tests.py -v
 ```
+
+NOTE: For the final test, you must have `aksenov_splaylist_64.debra` built and located in `microbench/bin` directory

@@ -11,6 +11,18 @@ from plotter import run, PlotterJsonExtractor, ResultJsonExtractor, IterationsJs
 
 matplotlib.use('Agg')
 
+def check_error(args, capsys, error_string): 
+    with pytest.raises(SystemExit) as excinfo:
+        run(args)
+    
+    # Check the exit code is 1
+    assert excinfo.value.code == 1
+    
+    # Check the error message
+    captured = capsys.readouterr()
+    assert error_string in captured.out
+
+# Test fixture
 @pytest.fixture(scope="module")
 def test_dirs():
     base_dir = Path("tests")
@@ -22,69 +34,104 @@ def test_dirs():
     
     yield dirs
 
-# Helper functions
-def create_test_json(path, content):
-    with open(path, 'w') as f:
-        json.dump(content, f)
-
 # --------------------------
 # tests_break - Tests that should fail on bad input
 # --------------------------
 def test_missing_required_fields(test_dirs, capsys):
     """Test that missing required fields prints error message"""
-    test_file = test_dirs["break"] / "missing_fields.json"
+    test_dict = {
+        "missing_folder.json":     "Unexpected error: Please, set up the \"folder\" parameter.",
+        "missing_input.json":      "Unexpected error: Please, set up the \"json-file-input\" parameter.",
+        "missing_key_title.json":  "Unexpected error: Please, set up the \"key_title\" parameter.",
+        "missing_keys_title.json": "Unexpected error: Please, set up the \"keys_title\" parameter.",
+    }
     
-    plotter = PlotterJsonExtractor(path=test_file, no_run="false")
-    plotter.extract()
-    
-    captured = capsys.readouterr()
-    
-    assert "Please, set up the \"folder\" parameter." in captured.out
+
+    for file_path, msg in test_dict.items():
+        test_file = test_dirs["break"] / file_path
+
+        args = argparse.Namespace(
+            file=str(test_file),
+            title="Test Plot",
+            pathg=str(test_dirs["break"] / "plot.png"),
+            no_run=False
+        )
+        
+        check_error(args, capsys, msg)
 
 # --------------------------
 # tests_no_run - Tests for correct plotting without running benchmarks
 # --------------------------
-def test_plotting_without_running(test_dirs):
+def test_no_run_no_files(test_dirs, capsys):
     """Test that plotting works with pre-generated data"""
     test_file = test_dirs["no_run"] / "plot_config.json"
     output_dir = test_dirs["no_run"] / "output"
-    output_dir.mkdir(exist_ok=True)
-    
-    # Create test config
-    create_test_json(test_file, {
-        "folder": str(output_dir),
-        "json-file-input": str(test_dirs["no_run"] / "bench_config.json"),
-        "key_title": "threads",
-        "keys_title": ["1", "2", "4"],
-        "competitors": [
-            {"name": "ds1", "display-name": "DS1"},
-            {"name": "ds2", "display-name": "DS2"}
-        ],
-        "keys": [
-            {"name": "test.numThreads", "values": ["1", "2", "4"]}
-        ],
-        "aggregate_stat": "ops",
-        "y_label": "Operations",
-        "y_scale": "log"
-    })
-    
-    # Create pre-generated result files
-    for ds in ["ds1", "ds2"]:
-        for threads in ["1", "2", "4"]:
-            result_file = output_dir / f"{ds}_threads_{threads}_1.json"
-            create_test_json(result_file, {"ops": int(threads) * 1000})
-    
-    # Create a mock args object
+
+    for filename in os.listdir(output_dir):
+        if not os.path.isdir(output_dir / filename):
+            os.remove(output_dir / filename)
+
     args = argparse.Namespace(
         file=str(test_file),
         title="Test Plot",
         pathg=str(output_dir / "plot.png"),
         no_run=True
     )
+
+    check_error(args, capsys, "File not found")
+
+def test_no_run_delete_files(test_dirs, capsys):
+    """Test plotting workflow with file deletion simulation"""
+    test_file = test_dirs["no_run"] / "plot_config.json"
+    output_dir = test_dirs["no_run"] / "output"
     
-    # Test plotting
-    run(args)
+    # mock functions
+    def mock_run_extractor(self):
+        for ds in ["ds1", "ds2"]:
+            for threads in ["1", "2", "4"]:
+                result_file = output_dir / f"{ds}_threads_{threads}_1.json"
+                with open(result_file, 'w') as f:
+                    json.dump({"ops": int(threads) * 1000}, f)
+                
+                agg_file = output_dir / f"{ds}_threads_{threads}_aggregated.json"
+                with open(agg_file, 'w') as f:
+                    json.dump({"ops": int(threads) * 1000}, f)
+
+    def mock_extract_extractor(self):
+        return True
     
+    with patch('plotter.IterationsJsonAggregator.run_extractor', mock_run_extractor), \
+         patch('plotter.IterationsJsonAggregator.extract', mock_extract_extractor):
+        
+        from plotter import run
+        args_before = MagicMock(
+            file=str(test_file),
+            title="Test Plot",
+            pathg=str(output_dir / "plot.png"),
+            no_run=True
+        )
+        
+        run(args_before)
+        
+        assert (output_dir / "plot.png").exists()
+    
+        assert (output_dir / "ds1_threads_1_1.json").exists()
+        assert (output_dir / "ds1_threads_1_aggregated.json").exists()
+        assert (output_dir / "ds2_threads_4_1.json").exists()
+        assert (output_dir / "ds2_threads_4_aggregated.json").exists()
+
+    for filename in os.listdir(output_dir):
+        if 'aggregated' in filename or filename == 'plot.png':
+            os.remove(output_dir / filename)
+
+    args_after = argparse.Namespace(
+        file=str(test_file),
+        title="Test Plot",
+        pathg=str(output_dir / "plot.png"),
+        no_run=True
+    )
+
+    run(args_after)
     assert (output_dir / "plot.png").exists()
 
 # --------------------------
@@ -95,35 +142,6 @@ def test_full_workflow(test_dirs):
     test_file = test_dirs["complete"] / "full_config.json"
     output_dir = test_dirs["complete"] / "full_output"
     output_dir.mkdir(exist_ok=True)
-    
-    # Create test config
-    create_test_json(test_file, {
-        "folder": str(output_dir),
-        "json-file-input": str(test_dirs["complete"] / "bench_config.json"),
-        "key_title": "threads",
-        "keys_title": ["1", "2"],
-        "competitors": [
-            {"name": "aksenov_splaylist_64", "display-name": "aksenov_splaylist"}
-        ],
-        "keys": [
-            {
-                "name": "test.threadLoopBuilders.0.quantity",
-                "values": [1, 2]
-            },
-            {
-                "name": "test.threadLoopBuilders.1.quantity",
-                "values": [1, 2]
-            },
-            {
-                "name": "test.numThreads",
-                "values": [2, 4]
-            }
-        ],
-        "iterations": 2,
-        "aggregate_stat": "average_num_operations_total",
-        "y_label": "Operations",
-        "y_scale": "log"
-    })
     
     # Create args object
     args = argparse.Namespace(

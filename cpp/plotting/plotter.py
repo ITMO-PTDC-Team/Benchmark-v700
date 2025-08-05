@@ -79,23 +79,19 @@ class PlotterJsonExtractor(JsonStatExtractor):
             
             # necessary
             if "folder" not in data:
-                print("Please, set up the \"folder\" parameter.")
-                return
+                raise Exception("Please, set up the \"folder\" parameter.")
             self.out_folder = data['folder']
 
             if "json-file-input" not in data:
-                print("Please, set up the \"json-file-input\" parameter.")
-                return
+                raise Exception("Please, set up the \"json-file-input\" parameter.")
             self.input_path = data['json-file-input']
 
             if "key_title" not in data:
-                print("Please, set up the \"key_title\" parameter.")
-                return
+                raise Exception("Please, set up the \"key_title\" parameter.")
             self.xtitle = data['key_title']
 
             if "keys_title" not in data:
-                print("Please, set up the \"keys_title\" parameter.")
-                return
+                raise Exception("Please, set up the \"keys_title\" parameter.")
             self.xvalues = data['keys_title']
 
             # optional
@@ -132,11 +128,11 @@ class PlotterJsonExtractor(JsonStatExtractor):
         if not (self.no_run):
             folder_path = f"../plotting/{self.out_folder}/"
             if os.path.exists(folder_path):
-                files = glob.glob(os.path.join(folder_path, "*"))  # Получаем список всех файлов
+                files = glob.glob(os.path.join(folder_path, "*")) 
                 for f in files:
                     try:
                         if os.path.isfile(f):
-                            os.remove(f)  # Удаляем каждый файл
+                            os.remove(f)  
                     except Exception as e:
                         print(f"Ошибка при удалении файла {f}: {e}")
 
@@ -297,6 +293,8 @@ def modify_and_run_second_json(folder,
                 except subprocess.TimeoutExpired as exc:
                     print(f"Timeout in subprocess {exc}")
                     task_logger.error(f"TimeoutExpired while running command: {exc}")
+                except Exception as e:
+                    handle_file_error(e, out)
         
         # Aggregate
         aggregator = IterationsJsonAggregator(file_name=file_name, iters=iters, stats=[agg_stat], path=folder)
