@@ -17,18 +17,41 @@ env:
 jobs:
   # ==================== BUILD STAGE ====================
   build_benchmark:
-    name: "Build Microbench"
-    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        toolchain:
+          - { name: Linux/GCC,   os: ubuntu-24.04, compiler: gcc }
+          # - { name: Linux/Clang, os: ubuntu-24.04, compiler: clang }
+        
+    name: "Build Microbench with ${{ matrix.toolchain.name }}"
+
+    runs-on: ${{matrix.toolchain.os}}
+
+    container:
+      image:
+        ${{
+        contains(matrix.toolchain.os, 'ubuntu') &&
+        format('ghcr.io/altickium/benchmark-{0}:latest', matrix.toolchain.compiler) ||
+        null
+        }}
+      options:
+        --security-opt seccomp=unconfined
+
+    defaults:
+      run:
+        shell: bash
+
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: 'recursive' 
 
-      - name: Install dependencies
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential cmake libpapi-dev libnuma-dev
+      # - name: Install dependencies
+      #   if: runner.os == 'Linux'
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y build-essential cmake libpapi-dev libnuma-dev
       
       - name: Upload Submodules
         uses: actions/upload-artifact@v4
