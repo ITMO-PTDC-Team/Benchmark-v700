@@ -15,16 +15,15 @@ env:
   CMAKE_ARGS: -DCMAKE_BUILD_TYPE=Release
 
 jobs:
-  # ==================== BUILD STAGE ====================
-  build_benchmark:
+  # ==================== CONFIGURE STAGE ====================
+  configure_benchmark:
+    name: "Configure CMAKE, download submodules and Linter"
 
     strategy:
       matrix:
         toolchain:
-          - { name: Linux/GCC,   os: ubuntu-24.04, compiler: gcc }
-          # - { name: Linux/Clang, os: ubuntu-24.04, compiler: clang }
-        
-    name: "Build Microbench with ${{ matrix.toolchain.name }}"
+          - { name: Linux/GCC,   os: ubuntu-24.04, compiler: gcc:15 }
+          - { name: Linux/Clang, os: ubuntu-24.04, compiler: clang:18 }
 
     runs-on: ${{matrix.toolchain.os}}
 
@@ -32,7 +31,7 @@ jobs:
       image:
         ${{
         contains(matrix.toolchain.os, 'ubuntu') &&
-        format('ghcr.io/altickium/benchmark-{0}:latest', matrix.toolchain.compiler) ||
+        format('ghcr.io/altickium/benchmark-{0}', matrix.toolchain.compiler) ||
         null
         }}
       options:
@@ -46,12 +45,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: 'recursive' 
-
-      # - name: Install dependencies
-      #   if: runner.os == 'Linux'
-      #   run: |
-      #     sudo apt-get update
-      #     sudo apt-get install -y build-essential cmake libpapi-dev libnuma-dev
       
       - name: Upload Submodules
         uses: actions/upload-artifact@v4
@@ -61,10 +54,6 @@ jobs:
             .git/modules
             .gitmodules
 
-      # - name: Build Microbench
-      #   working-directory: ./cpp/microbench
-      #   run: make -j${{ env.MAKE_JOBS }}
-
       - name: Create build directory
         working-directory: ./cpp
         run: mkdir -p build
@@ -72,10 +61,6 @@ jobs:
       - name: Configure CMake
         working-directory: ./cpp/build
         run: cmake $GITHUB_WORKSPACE/cpp ${CMAKE_ARGS}
-
-      - name: Build Microbench
-        working-directory: ./cpp/build
-        run: cmake --build . --parallel ${{ env.BUILD_JOBS }}
 
       - name: Upload Microbench Artifacts
         uses: actions/upload-artifact@v4
@@ -86,8 +71,36 @@ jobs:
   # ==================== TEST STAGE ====================
   test_benchmark_options:
     name: "Test Microbench (Build Options)"
-    runs-on: ubuntu-latest
-    needs: build_benchmark
+
+    strategy:
+      matrix:
+        toolchain:
+          - { name: Linux/GCC,   os: ubuntu-24.04, compiler: gcc:15 }
+          - { name: Linux/Clang, os: ubuntu-24.04, compiler: clang:18 }
+        use_asserts: ["ON", "OFF"]
+        use_timelines: ["ON", "OFF"]
+        has_libpapi: ["ON", "OFF"]
+        has_libnuma: ["ON", "OFF"]
+        use_openmp: ["ON", "OFF"]
+        exclude:
+          - use_timelines: "ON"
+            use_openmp: "OFF"
+          - has_libpapi: "OFF"
+            use_timelines: "ON"
+
+    container:
+      image:
+        ${{
+        contains(matrix.toolchain.os, 'ubuntu') &&
+        format('ghcr.io/altickium/benchmark-{0}', matrix.toolchain.compiler) ||
+        null
+        }}
+      options:
+        --security-opt seccomp=unconfined
+
+    runs-on: ${{matrix.toolchain.os}}
+
+    needs: configure_benchmark
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -98,89 +111,72 @@ jobs:
         with:
           name: submodules 
           path: .git 
-
 
       - name: Test Different Build Flags
         working-directory: ./cpp/microbench
         run: |
           echo "#########################################################"
-          echo "## make"
+          echo "## Building with flags:"
+          echo "##   USE_ASSERTS=${{ matrix.use_asserts }}"
+          echo "##   USE_TIMELINES=${{ matrix.use_timelines }}"
+          echo "##   HAS_LIBPAPI=${{ matrix.has_libpapi }}"
+          echo "##   HAS_LIBNUMA=${{ matrix.has_libnuma }}"
+          echo "##   USE_OPENMP=${{ matrix.use_openmp }}"
           echo "#########################################################"
-          cmake --build . --parallel ${{ env.BUILD_JOBS }}
+          cmake -B build \
+            -DCMAKE_C_COMPILER=${{ matrix.toolchain.compiler.split(':')[0] }}-${{ matrix.toolchain.compiler.split(':')[1] }} \
+            -DCMAKE_CXX_COMPILER=${{ matrix.toolchain.compiler.split(':')[0] }}-${{ matrix.toolchain.compiler.split(':')[1] }} \
+            -DUSE_ASSERTS=${{ matrix.use_asserts }} \
+            -DUSE_TIMELINES=${{ matrix.use_timelines }} \
+            -DHAS_LIBPAPI=${{ matrix.has_libpapi }} \
+            -DHAS_LIBNUMA=${{ matrix.has_libnuma }} \
+            -DUSE_OPENMP=${{ matrix.use_openmp }}
 
-          echo "#########################################################"
-          echo "## use_asserts=1"
-          echo "#########################################################"
-          cmake -DUSE_ASSERTS=ON ..
-          cmake --build . --parallel ${{ env.BUILD_JOBS }}
+          cmake --build . --parallel ${{ env.BUILD_JOBS }}  
 
-          echo "#########################################################"
-          echo "## use_asserts=1 use_timelines=1"
-          echo "#########################################################"
-          cmake -DUSE_ASSERTS=ON -DUSE_TIMELINES=ON ..
-          cmake --build . --parallel ${{ env.BUILD_JOBS }}
-
-          echo "#########################################################"
-          echo "## has_libpapi=0"
-          echo "#########################################################"
-          cmake -DHAS_LIBPAPI=OFF ..
-          cmake --build . --parallel ${{ env.BUILD_JOBS }}
-
-          echo "#########################################################"
-          echo "## has_libpapi=0 has_libnuma=0"
-          echo "#########################################################"
-          cmake -DHAS_LIBPAPI=OFF -DHAS_LIBNUMA=OFF ..
-          cmake --build . --parallel ${{ env.BUILD_JOBS }}
-
-          echo "#########################################################"
-          echo "## has_libpapi=0 has_libnuma=0 use_openmp=0"
-          echo "#########################################################"
-          cmake -DHAS_LIBPAPI=OFF -DHAS_LIBNUMA=OFF -DUSE_OPENMP=OFF ..
-          cmake --build . --parallel ${{ env.BUILD_JOBS }}
-
-  test_benchmark_targets:
-    name: "Test Microbench (Targets)"
-    runs-on: ubuntu-latest
-    needs: build_benchmark
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: microbench-bin
-          path: cpp/microbench/bin
-      - uses: actions/download-artifact@v4
-        with:
-          name: submodules 
-          path: .git 
+  # test_benchmark_targets:
+  #   name: "Test Microbench (Targets)"
+  #   runs-on: ubuntu-latest
+  #   needs: build_benchmark
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         name: microbench-bin
+  #         path: cpp/microbench/bin
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         name: submodules 
+  #         path: .git 
       
 
-      - name: Test Specific Targets
-        working-directory: ./cpp/microbench
-        run: |
-          echo "#########################################################"
-          echo "## make ds-reclaim-pool"
-          echo "#########################################################"
-          cmake --build . --target ds-reclaim-pool --parallel ${{ env.BUILD_JOBS }}
+  #     - name: Test Specific Targets
+  #       working-directory: ./cpp/microbench
+  #       run: |
+  #         echo "#########################################################"
+  #         echo "## make ds-reclaim-pool"
+  #         echo "#########################################################"
+  #         cmake --build . --target ds-reclaim-pool --parallel ${{ env.BUILD_JOBS }}
 
-  test_benchmark_recordmanagers:
-    name: "Test Microbench (Record Managers)"
-    runs-on: ubuntu-latest
-    needs: build_benchmark
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: microbench-bin
-          path: cpp/microbench/bin
-      - uses: actions/download-artifact@v4
-        with:
-          name: submodules 
-          path: .git 
+  # test_benchmark_recordmanagers:
+  #   name: "Test Microbench (Record Managers)"
+  #   runs-on: ubuntu-latest
+  #   needs: build_benchmark
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         name: microbench-bin
+  #         path: cpp/microbench/bin
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         name: submodules 
+  #         path: .git 
 
-      - name: Test Reclaimers and Pools
-        working-directory: ./cpp/build
-        run: |
-          cmake -DDATA_STRUCTURES="brown_ext_abtree_lf" \
-                -DRECLAIMERS="none;debra;debracap;ebr_token;ebr_tree;hazardptr" \
-                -DPOOLS="none;numa" ..
-          cmake --build . --parallel ${{ env.BUILD_JOBS }}
+  #     - name: Test Reclaimers and Pools
+  #       working-directory: ./cpp/build
+  #       run: |
+  #         cmake -DDATA_STRUCTURES="brown_ext_abtree_lf" \
+  #               -DRECLAIMERS="none;debra;debracap;ebr_token;ebr_tree;hazardptr" \
+  #               -DPOOLS="none;numa" ..
+  #         cmake --build . --parallel ${{ env.BUILD_JOBS }}
