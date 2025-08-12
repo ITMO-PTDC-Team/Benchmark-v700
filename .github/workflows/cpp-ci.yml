@@ -56,17 +56,22 @@ jobs:
 
       - name: Create build directory
         working-directory: ./cpp
-        run: mkdir -p build
+        run: |
+          mkdir -p cpp/build
+          mkdir -p cpp/microbench/bin
 
       - name: Configure CMake
         working-directory: ./cpp/build
-        run: cmake $GITHUB_WORKSPACE/cpp ${CMAKE_ARGS}
+        run: |
+          cmake $GITHUB_WORKSPACE/cpp ${CMAKE_ARGS}
+          cmake --build . --target microbench --parallel $(nproc)
 
       - name: Upload Microbench Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: microbench-bin
-          path: cpp/microbench/bin
+          name: microbench-bin-${{ matrix.toolchain.name }}
+          path: cpp/microbench/bin/*
+          retention-days: 1
 
   # ==================== TEST STAGE ====================
   test_benchmark_options:
