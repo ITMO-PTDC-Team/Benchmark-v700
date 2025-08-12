@@ -63,7 +63,9 @@ jobs:
       - name: Configure CMake
         working-directory: ./cpp/build
         run: |
-          cmake $GITHUB_WORKSPACE/cpp ${CMAKE_ARGS}
+          cd $GITHUB_WORKSPACE/cpp/build
+          cmake .. ${CMAKE_ARGS}
+        shell: bash
 
       - name: Upload Microbench Artifacts
         uses: actions/upload-artifact@v4
