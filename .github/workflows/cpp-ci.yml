@@ -22,8 +22,8 @@ jobs:
     strategy:
       matrix:
         toolchain:
-          - { name: Linux/GCC,   os: ubuntu-24.04, compiler: gcc:15 }
-          - { name: Linux/Clang, os: ubuntu-24.04, compiler: clang:18 }
+          - { name: Linux/GCC,   os: ubuntu-24.04, compiler: gcc , compiler_version: 15}
+          - { name: Linux/Clang, os: ubuntu-24.04, compiler: clang, compiler_version: 18 }
 
     runs-on: ${{matrix.toolchain.os}}
 
@@ -31,7 +31,7 @@ jobs:
       image:
         ${{
         contains(matrix.toolchain.os, 'ubuntu') &&
-        format('ghcr.io/altickium/benchmark-{0}', matrix.toolchain.compiler) ||
+        format('ghcr.io/altickium/benchmark-{0}:{1}', matrix.toolchain.compiler, matrix.toolchain.compiler_version) ||
         null
         }}
       options:
@@ -75,8 +75,8 @@ jobs:
     strategy:
       matrix:
         toolchain:
-          - { name: Linux/GCC,   os: ubuntu-24.04, compiler: gcc:15 }
-          - { name: Linux/Clang, os: ubuntu-24.04, compiler: clang:18 }
+          - { name: Linux/GCC,   os: ubuntu-24.04, compiler: gcc , compiler_version: 15}
+          - { name: Linux/Clang, os: ubuntu-24.04, compiler: clang, compiler_version: 18 }
         use_asserts: ["ON", "OFF"]
         use_timelines: ["ON", "OFF"]
         has_libpapi: ["ON", "OFF"]
@@ -92,7 +92,7 @@ jobs:
       image:
         ${{
         contains(matrix.toolchain.os, 'ubuntu') &&
-        format('ghcr.io/altickium/benchmark-{0}', matrix.toolchain.compiler) ||
+        format('ghcr.io/altickium/benchmark-{0}:{1}', matrix.toolchain.compiler, matrix.toolchain.compiler_version) ||
         null
         }}
       options:
@@ -124,8 +124,8 @@ jobs:
           echo "##   USE_OPENMP=${{ matrix.use_openmp }}"
           echo "#########################################################"
           cmake -B build \
-            -DCMAKE_C_COMPILER=${{ matrix.toolchain.compiler.split(':')[0] }}-${{ matrix.toolchain.compiler.split(':')[1] }} \
-            -DCMAKE_CXX_COMPILER=${{ matrix.toolchain.compiler.split(':')[0] }}-${{ matrix.toolchain.compiler.split(':')[1] }} \
+            -DCMAKE_C_COMPILER=${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.compiler_version }} \
+            -DCMAKE_CXX_COMPILER=${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.compiler_version }} \
             -DUSE_ASSERTS=${{ matrix.use_asserts }} \
             -DUSE_TIMELINES=${{ matrix.use_timelines }} \
             -DHAS_LIBPAPI=${{ matrix.has_libpapi }} \
