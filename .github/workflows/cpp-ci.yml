@@ -56,13 +56,11 @@ jobs:
             .gitmodules
 
       - name: Create build directory
-        working-directory: ./cpp
         run: |
           mkdir -p cpp/build
           mkdir -p cpp/microbench/bin
 
       - name: Configure CMake
-        working-directory: ./cpp/build
         run: |
           cd cpp/build
           cmake .. ${CMAKE_ARGS}
