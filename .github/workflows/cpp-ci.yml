@@ -44,8 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: 'recursive' 
-          path: 'github/workspace'
+          submodules: 'recursive'
       
       - name: Upload Submodules
         uses: actions/upload-artifact@v4
