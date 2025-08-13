@@ -65,12 +65,12 @@ jobs:
           cmake .. ${CMAKE_ARGS}
         shell: bash
 
-      - name: Upload Microbench Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: microbench-bin-${{ matrix.toolchain.name }}
-          path: cpp/microbench/bin
-          retention-days: 1
+      # - name: Upload Microbench Artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: microbench-bin-${{ matrix.toolchain.name }}
+      #     path: cpp/microbench/bin
+      #     retention-days: 1
 
   # ==================== TEST STAGE ====================
   test_benchmark_options:
@@ -100,21 +100,21 @@ jobs:
         null
         }}
       options:
-        --security-opt seccomp=unconfined
+        --workdir /github/workspace --security-opt seccomp=unconfined
 
     runs-on: ${{matrix.toolchain.os}}
 
     needs: configure_benchmark
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: microbench-bin
-          path: cpp/microbench/bin
-      - uses: actions/download-artifact@v4
-        with:
-          name: submodules 
-          path: .git 
+      # - uses: actions/download-artifact@v4
+      #   with:
+      #     name: microbench-bin-${{ matrix.toolchain.name }}
+      #     path: cpp/microbench/bin
+      # - uses: actions/download-artifact@v4
+      #   with:
+      #     name: submodules 
+      #     path: .git 
 
       - name: Test Different Build Flags
         working-directory: ./cpp/microbench
