@@ -117,7 +117,7 @@ jobs:
       #     path: .git 
 
       - name: Test Different Build Flags
-        working-directory: ./cpp/microbench
+        working-directory: ./cpp
         run: |
           echo "#########################################################"
           echo "## Building with flags:"
