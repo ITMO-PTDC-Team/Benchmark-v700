@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         toolchain:
-          - { name: Linux/GCC,   os: ubuntu-24.04, compiler: gcc , compiler_version: 15}
+          - { name: Linux/GCC,   os: ubuntu-24.04, compiler: gcc , compiler_version: 13}
           - { name: Linux/Clang, os: ubuntu-24.04, compiler: clang, compiler_version: 18 }
 
     runs-on: ${{matrix.toolchain.os}}
@@ -79,7 +79,7 @@ jobs:
     strategy:
       matrix:
         toolchain:
-          - { name: Linux/GCC,   os: ubuntu-24.04, compiler: gcc , compiler_version: 15}
+          - { name: Linux/GCC,   os: ubuntu-24.04, compiler: gcc , compiler_version: 13}
           - { name: Linux/Clang, os: ubuntu-24.04, compiler: clang, compiler_version: 18 }
         use_asserts: ["ON", "OFF"]
         use_timelines: ["ON", "OFF"]
