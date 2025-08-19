@@ -15,62 +15,6 @@ env:
   CMAKE_ARGS: -DCMAKE_BUILD_TYPE=Release
 
 jobs:
-  # ==================== CONFIGURE STAGE ====================
-  configure_benchmark:
-    name: "Configure CMAKE, download submodules and Linter"
-
-    strategy:
-      matrix:
-        toolchain:
-          - { name: Linux/GCC,   os: ubuntu-24.04, compiler: gcc , compiler_version: 13}
-          - { name: Linux/Clang, os: ubuntu-24.04, compiler: clang, compiler_version: 18 }
-
-    runs-on: ${{matrix.toolchain.os}}
-
-    container:
-      image:
-        ${{
-        contains(matrix.toolchain.os, 'ubuntu') &&
-        format('ghcr.io/altickium/benchmark-{0}:{1}', matrix.toolchain.compiler, matrix.toolchain.compiler_version) ||
-        null
-        }}
-      options:
-        --workdir /github/workspace --security-opt seccomp=unconfined
-
-    defaults:
-      run:
-        shell: bash
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: 'recursive'
-      
-      # - name: Upload Submodules
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: submodules-${{}}
-      #     path: |
-      #       .git/modules
-      #       .gitmodules
-
-      - name: Create build directory
-        run: |
-          mkdir -p cpp/build
-          mkdir -p cpp/microbench/bin
-
-      - name: Configure CMake
-        run: |
-          cd cpp/build
-          cmake .. ${CMAKE_ARGS}
-        shell: bash
-
-      # - name: Upload Microbench Artifacts
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: microbench-bin-${{ matrix.toolchain.name }}
-      #     path: cpp/microbench/bin
-      #     retention-days: 1
 
   # ==================== TEST STAGE ====================
   test_benchmark_options:
@@ -79,18 +23,20 @@ jobs:
     strategy:
       matrix:
         toolchain:
-          - { name: Linux/GCC,   os: ubuntu-24.04, compiler: gcc , compiler_version: 13}
-          - { name: Linux/Clang, os: ubuntu-24.04, compiler: clang, compiler_version: 18 }
-        use_asserts: ["ON", "OFF"]
-        use_timelines: ["ON", "OFF"]
-        has_libpapi: ["ON", "OFF"]
-        has_libnuma: ["ON", "OFF"]
-        use_openmp: ["ON", "OFF"]
-        exclude:
-          - use_timelines: "ON"
-            use_openmp: "OFF"
-          - has_libpapi: "OFF"
-            use_timelines: "ON"
+          - { name: Linux/GCC,   os: ubuntu-24.04, compiler: gcc , compiler_version: 13, c_compiler: "gcc", cxx_compiler: "g++"}
+          - { name: Linux/Clang, os: ubuntu-24.04, compiler: clang, compiler_version: 18, c_compiler: "clang", cxx_compiler: "clang++" }
+        # use_asserts: ["ON", "OFF"]
+        # use_timelines: ["ON", "OFF"]
+        # has_libpapi: ["ON", "OFF"]
+        # has_libnuma: ["ON", "OFF"]
+        # use_openmp: ["ON", "OFF"]
+        # exclude:
+        #   - use_timelines: "ON"
+        #     use_openmp: "OFF"
+        #   - has_libpapi: "OFF"
+        #     use_timelines: "ON"
+        #   - toolchain: {compiler: clang}
+        #     use_openmp: "ON"
 
     container:
       image:
@@ -104,83 +50,53 @@ jobs:
 
     runs-on: ${{matrix.toolchain.os}}
 
-    needs: configure_benchmark
     steps:
       - uses: actions/checkout@v4
-      # - uses: actions/download-artifact@v4
-      #   with:
-      #     name: microbench-bin-${{ matrix.toolchain.name }}
-      #     path: cpp/microbench/bin
-      # - uses: actions/download-artifact@v4
-      #   with:
-      #     name: submodules 
-      #     path: .git 
+        with:
+          submodules: 'recursive'
 
-      - name: Test Different Build Flags
-        working-directory: ./cpp
+      # - name: Test Different Build Flags
+      #   working-directory: ./cpp/build
+      #   run: |
+      #     echo "#########################################################"
+      #     echo "## Building with flags:"
+      #     echo "##   USE_ASSERTS=${{ matrix.use_asserts }}"
+      #     echo "##   USE_TIMELINES=${{ matrix.use_timelines }}"
+      #     echo "##   HAS_LIBPAPI=${{ matrix.has_libpapi }}"
+      #     echo "##   HAS_LIBNUMA=${{ matrix.has_libnuma }}"
+      #     echo "##   USE_OPENMP=${{ matrix.use_openmp }}"
+      #     echo "##   C_COMPILER=${{ matrix.toolchain.c_compiler }}"
+      #     echo "##   CXX_COMPILER=${{ matrix.toolchain.cxx_compiler }}"
+      #     echo "#########################################################"
+      #     cmake -B build \
+      #       -DCMAKE_C_COMPILER=${{ matrix.toolchain.c_compiler }} \
+      #       -DCMAKE_CXX_COMPILER=${{ matrix.toolchain.cxx_compiler }} \
+      #       -DUSE_ASSERTS=${{ matrix.use_asserts }} \
+      #       -DUSE_TIMELINES=${{ matrix.use_timelines }} \
+      #       -DHAS_LIBPAPI=${{ matrix.has_libpapi }} \
+      #       -DHAS_LIBNUMA=${{ matrix.has_libnuma }} \
+      #       -DUSE_OPENMP=${{ matrix.use_openmp }}
+
+      #     cmake --build .. --parallel ${{ env.BUILD_JOBS }}
+
+
+      # - name: Test Reclaimers and Pools
+      #   working-directory: ./cpp/build
+      #   run: |
+      #     cmake -DDATA_STRUCTURES="brown_ext_abtree_lf_reclaimers" \
+      #           -DRECLAIM="none;debra;debracap;ebr_token;ebr_tree;hazardptr" \
+      #           -DPOOLS="none;numa" ..
+      #     cmake --build . --parallel ${{ env.BUILD_JOBS }}
+
+      - name: Simple Test
+        working-directory: ./cpp/build
         run: |
-          echo "#########################################################"
-          echo "## Building with flags:"
-          echo "##   USE_ASSERTS=${{ matrix.use_asserts }}"
-          echo "##   USE_TIMELINES=${{ matrix.use_timelines }}"
-          echo "##   HAS_LIBPAPI=${{ matrix.has_libpapi }}"
-          echo "##   HAS_LIBNUMA=${{ matrix.has_libnuma }}"
-          echo "##   USE_OPENMP=${{ matrix.use_openmp }}"
-          echo "#########################################################"
-          cmake -B build \
-            -DCMAKE_C_COMPILER=${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.compiler_version }} \
-            -DCMAKE_CXX_COMPILER=${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.compiler_version }} \
-            -DUSE_ASSERTS=${{ matrix.use_asserts }} \
-            -DUSE_TIMELINES=${{ matrix.use_timelines }} \
-            -DHAS_LIBPAPI=${{ matrix.has_libpapi }} \
-            -DHAS_LIBNUMA=${{ matrix.has_libnuma }} \
-            -DUSE_OPENMP=${{ matrix.use_openmp }}
+          cmake -B . .. \
+            -DCMAKE_C_COMPILER=${{ matrix.toolchain.c_compiler }} \
+            -DCMAKE_CXX_COMPILER=${{ matrix.toolchain.cxx_compiler }}
 
-          cmake --build . --parallel ${{ env.BUILD_JOBS }}  
+          cmake --build . --target aksenov_splaylist_64.debra --parallel ${{ env.BUILD_JOBS }}
+          cd ../microbench
+          LD_PRELOAD=../lib/libmimalloc.so ../build/aksenov_splaylist_64.debra -json-file json_example/example.json -result-file json_example/result.json 
 
-  # test_benchmark_targets:
-  #   name: "Test Microbench (Targets)"
-  #   runs-on: ubuntu-latest
-  #   needs: build_benchmark
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/download-artifact@v4
-  #       with:
-  #         name: microbench-bin
-  #         path: cpp/microbench/bin
-  #     - uses: actions/download-artifact@v4
-  #       with:
-  #         name: submodules 
-  #         path: .git 
-      
-
-  #     - name: Test Specific Targets
-  #       working-directory: ./cpp/microbench
-  #       run: |
-  #         echo "#########################################################"
-  #         echo "## make ds-reclaim-pool"
-  #         echo "#########################################################"
-  #         cmake --build . --target ds-reclaim-pool --parallel ${{ env.BUILD_JOBS }}
-
-  # test_benchmark_recordmanagers:
-  #   name: "Test Microbench (Record Managers)"
-  #   runs-on: ubuntu-latest
-  #   needs: build_benchmark
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/download-artifact@v4
-  #       with:
-  #         name: microbench-bin
-  #         path: cpp/microbench/bin
-  #     - uses: actions/download-artifact@v4
-  #       with:
-  #         name: submodules 
-  #         path: .git 
-
-  #     - name: Test Reclaimers and Pools
-  #       working-directory: ./cpp/build
-  #       run: |
-  #         cmake -DDATA_STRUCTURES="brown_ext_abtree_lf" \
-  #               -DRECLAIMERS="none;debra;debracap;ebr_token;ebr_tree;hazardptr" \
-  #               -DPOOLS="none;numa" ..
-  #         cmake --build . --parallel ${{ env.BUILD_JOBS }}
+    
