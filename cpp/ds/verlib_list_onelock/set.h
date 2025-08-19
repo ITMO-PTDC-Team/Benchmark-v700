@@ -17,7 +17,7 @@ template <typename K,
 	  typename V,
 	  typename Compare = std::less<K>>
 struct Set {
-  static auto less = Compare{};
+  static constexpr auto less = Compare{};
 
   struct alignas(32) node : verlib::versioned {
     verlib::versioned_ptr<node> next;

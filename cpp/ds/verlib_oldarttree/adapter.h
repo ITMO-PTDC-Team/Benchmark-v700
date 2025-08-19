@@ -46,7 +46,7 @@ public:
 
     V insert(const int tid, const K& key, const V& val) {
         if (tree->insert(root, key, val)) {
-            return val;
+            return NO_VALUE;
         }
         return NO_VALUE;
     }
@@ -57,7 +57,7 @@ public:
             return result.value();
         }
         if (tree->insert(root, key, val)) {
-            return val;
+            return NO_VALUE;
         }
         return NO_VALUE;
     }
@@ -78,16 +78,18 @@ public:
     }
 
     int rangeQuery(const int tid, const K& lo, const K& hi, K* const resultKeys, V* const resultValues) {
-        int count = 0;
-        auto add = [&](const K& key, const V& val) {
-            if (count < MAX_RANGE_QUERY_SIZE) {
-                resultKeys[count] = key;
-                resultValues[count] = val;
-                count++;
-            }
-        };
-        tree->range_(root, add, lo, hi);
-        return count;
+        return verlib::with_snapshot([&] {
+            int count = 0;
+            auto add = [&](const K& key, const V& val) {
+                if (count < MAX_RANGE_QUERY_SIZE) {
+                    resultKeys[count] = key;
+                    resultValues[count] = val;
+                    count++;
+                }
+            };
+            tree->range_(root, add, lo, hi);
+            return count;
+        });
     }
 
     void printSummary() {

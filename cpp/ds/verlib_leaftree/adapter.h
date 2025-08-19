@@ -42,7 +42,7 @@ public:
 
     V insert(const int tid, const K& key, const V& val) {
         if (tree->insert(key, val)) {
-            return val;
+            return NO_VALUE;
         }
         return NO_VALUE;
     }
@@ -53,7 +53,7 @@ public:
             return result.value();
         }
         if (tree->insert(key, val)) {
-            return val;
+            return NO_VALUE;
         }
         return NO_VALUE;
     }
