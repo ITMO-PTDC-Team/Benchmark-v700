@@ -7,15 +7,14 @@
 
 #include <utility>
 
-template<typename K>
 struct ArgsGenerator {
-    virtual K nextGet() = 0;
+    virtual size_t nextGet() = 0;
 
-    virtual K nextInsert() = 0;
+    virtual size_t nextInsert() = 0;
 
-    virtual K nextRemove() = 0;
+    virtual size_t nextRemove() = 0;
 
-    virtual std::pair<K, K> nextRange() = 0;
+    virtual std::pair<size_t, size_t> nextRange() = 0;
 
     virtual ~ArgsGenerator() = default;
 };

@@ -9,16 +9,16 @@
 
 #include "globals_extern.h"
 
-template<typename K>
-class SkewedSetsArgsGenerator : public ArgsGenerator<K> {
+// template<typename size_t>
+class SkewedSetsArgsGenerator : public ArgsGenerator {
 //    PAD;
     size_t range;
     size_t writeSetBegins;
     Distribution *readDist;
     Distribution *writeDist;
-    DataMap<K> *dataMap;
+    DataMap<long long> *dataMap;
 
-    K nextWrite() {
+    size_t nextWrite() {
         size_t index = writeSetBegins + writeDist->next();
         if (index >= range) {
             index -= range;
@@ -30,26 +30,26 @@ public:
 
     SkewedSetsArgsGenerator(size_t range, size_t writeSetBegins,
                             Distribution *readDist, Distribution *writeDist,
-                            DataMap<K> *dataMap)
+                            DataMap<long long> *dataMap)
             : range(range), writeSetBegins(writeSetBegins),
               readDist(readDist), writeDist(writeDist),
               dataMap(dataMap) {}
 
-    K nextGet() override {
+    size_t nextGet() override {
         return dataMap->get(readDist->next());
     }
 
-    K nextInsert() override {
+    size_t nextInsert() override {
         return nextWrite();
     }
 
-    K nextRemove() override {
+    size_t nextRemove() override {
         return nextWrite();
     }
 
-    std::pair<K, K> nextRange() override {
-        K left = nextGet();
-        K right = nextGet();
+    std::pair<size_t, size_t> nextRange() override {
+        size_t left = nextGet();
+        size_t right = nextGet();
         if (left > right) {
             std::swap(left, right);
         }
@@ -70,7 +70,7 @@ public:
 #include "workloads/data_maps/data_map_builder.h"
 #include "workloads/data_maps/builders/array_data_map_builder.h"
 
-//template<typename K>
+// template<typename size_t>
 class SkewedSetsArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     size_t range;
 
@@ -120,8 +120,8 @@ public:
         return this;
     }
 
-    SkewedSetsArgsGenerator<K> *build(Random64 &_rng) override {
-        return new SkewedSetsArgsGenerator<K>(
+    SkewedSetsArgsGenerator *build(Random64 &_rng) override {
+        return new SkewedSetsArgsGenerator(
                 range, writeSetBegins,
                 readDistBuilder->build(_rng, range),
                 writeDistBuilder->build(_rng, range),

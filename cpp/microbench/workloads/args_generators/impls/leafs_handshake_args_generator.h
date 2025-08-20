@@ -9,8 +9,8 @@
 #include "workloads/distributions/distribution.h"
 #include "workloads/data_maps/data_map.h"
 
-template<typename K>
-class LeafsHandshakeArgsGenerator : public ArgsGenerator<K> {
+// template<typename size_t>
+class LeafsHandshakeArgsGenerator : public ArgsGenerator {
     size_t range;
 
     Distribution *readDistribution;
@@ -21,13 +21,13 @@ class LeafsHandshakeArgsGenerator : public ArgsGenerator<K> {
     std::atomic<size_t> *deletedValue;
     PAD;
 
-    DataMap<K> *readData;
-    DataMap<K> *removeData;
+    DataMap<long long> *readData;
+    DataMap<long long> *removeData;
 
 public:
     LeafsHandshakeArgsGenerator(Random64 &rng, size_t range, std::atomic<size_t> *deletedValue,
                                 Distribution *readDistribution, MutableDistribution *insertDistribution,
-                                Distribution *removeDistribution, DataMap<K> *readData, DataMap<K> *removeData) :
+                                Distribution *removeDistribution, DataMap<long long> *readData, DataMap<long long> *removeData) :
             range(range),
             readDistribution(readDistribution),
             insertDistribution(insertDistribution),
@@ -36,11 +36,11 @@ public:
             readData(readData),
             removeData(removeData) {}
 
-    K nextGet() {
+    size_t nextGet() {
         return readData->get(readDistribution->next());
     }
 
-    K nextInsert() {
+    size_t nextInsert() {
         size_t localDeletedValue = *deletedValue;
 
         size_t value;
@@ -56,7 +56,7 @@ public:
         return value;
     }
 
-    K nextRemove() {
+    size_t nextRemove() {
         size_t localDeletedValue = *deletedValue;
         size_t value = removeData->get(removeDistribution->next());
 
@@ -66,7 +66,7 @@ public:
         return value;
     }
 
-    std::pair<K, K> nextRange() {
+    std::pair<size_t, size_t> nextRange() {
         setbench_error("Unsupported operation -- nextRange")
     }
 
@@ -89,7 +89,7 @@ public:
 #include "workloads/data_maps/data_map_json_convector.h"
 #include "globals_extern.h"
 
-//template<typename K>
+//template<typename size_t>
 class LeafsHandshakeArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 private:
     size_t range;
@@ -139,8 +139,8 @@ public:
         return this;
     }
 
-    LeafsHandshakeArgsGenerator<K> *build(Random64 &_rng) override {
-        return new LeafsHandshakeArgsGenerator<K>(_rng, range, deletedValue,
+    LeafsHandshakeArgsGenerator *build(Random64 &_rng) override {
+        return new LeafsHandshakeArgsGenerator(_rng, range, deletedValue,
                                                   readDistBuilder->build(_rng, range),
                                                   insertDistBuilder->build(_rng),
                                                   removeDistBuilder->build(_rng, range),

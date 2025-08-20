@@ -22,15 +22,15 @@
           // rt — если relax time всегда одинаковый
           // rti — relax time после горячей работы с i-ым множеством
  */
-template<typename K>
-class TemporarySkewedArgsGenerator : public ArgsGenerator<K> {
+// template<typename size_t>
+class TemporarySkewedArgsGenerator : public ArgsGenerator {
     size_t time;
     size_t pointer;
     bool isRelaxTime;
 
     Distribution **hotDists;
     Distribution *relaxDist;
-    DataMap<K> *dataMap;
+    DataMap<long long> *dataMap;
     PAD;
     long long *hotTimes;
     PAD;
@@ -60,9 +60,9 @@ class TemporarySkewedArgsGenerator : public ArgsGenerator<K> {
         ++time;
     }
 
-    K next() {
+    size_t next() {
         update_pointer();
-        K value;
+        size_t value;
 
         if (isRelaxTime) {
             value = dataMap->get(relaxDist->next());
@@ -81,26 +81,26 @@ class TemporarySkewedArgsGenerator : public ArgsGenerator<K> {
 public:
     TemporarySkewedArgsGenerator(size_t setNumber, size_t range,
                                  long long *hotTimes, long long *relaxTimes, size_t *setBegins,
-                                 Distribution **hotDists, Distribution *relaxDist, DataMap<K> *dataMap)
+                                 Distribution **hotDists, Distribution *relaxDist, DataMap<long long> *dataMap)
             : hotDists(hotDists), relaxDist(relaxDist), dataMap(dataMap), hotTimes(hotTimes), relaxTimes(relaxTimes),
               setBegins(setBegins), setNumber(setNumber), range(range), time(0), pointer(0), isRelaxTime(false) {}
 
-    K nextGet() override {
+    size_t nextGet() override {
         return next();
     }
 
-    K nextInsert() override {
+    size_t nextInsert() override {
         return next();
     }
 
-    K nextRemove() override {
+    size_t nextRemove() override {
         return next();
     }
 
-    std::pair<K, K> nextRange() override {
+    std::pair<size_t, size_t> nextRange() override {
         --time;
-        K left = next();
-        K right = next();
+        size_t left = next();
+        size_t right = next();
 
         if (left > right) {
             std::swap(left, right);
@@ -308,17 +308,17 @@ public:
         return this;
     }
 
-    TemporarySkewedArgsGenerator<K> *build(Random64 &_rng) override {
+    TemporarySkewedArgsGenerator *build(Random64 &_rng) override {
         Distribution **hotDists = new Distribution *[setNumber];
 
         for (size_t i = 0; i < setNumber; ++i) {
             hotDists[i] = hotDistBuilders[i]->build(_rng, range);
         }
 
-        return new TemporarySkewedArgsGenerator<K>(setNumber, range,
-                                                   hotTimes, relaxTimes, setBeginIndexes,
-                                                   hotDists, relaxDistBuilder->build(_rng, range),
-                                                   dataMapBuilder->build());
+        return new TemporarySkewedArgsGenerator(setNumber, range,
+                                                hotTimes, relaxTimes, setBeginIndexes,
+                                                hotDists, relaxDistBuilder->build(_rng, range),
+                                                dataMapBuilder->build());
     }
 
     void toJson(nlohmann::json &j) const override {

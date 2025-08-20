@@ -7,35 +7,35 @@
 
 #include "workloads/args_generators/args_generator.h"
 
-template<typename K>
-class GeneralizedArgsGenerator : public ArgsGenerator<K> {
+// template<typename size_t>
+class GeneralizedArgsGenerator : public ArgsGenerator {
 private:
-    std::shared_ptr<ArgsGenerator<K>> _get_generator;
-    std::shared_ptr<ArgsGenerator<K>> _insert_generator;
-    std::shared_ptr<ArgsGenerator<K>> _remove_generator;
-    std::shared_ptr<ArgsGenerator<K>> _range_generator;
+    std::shared_ptr<ArgsGenerator> _get_generator;
+    std::shared_ptr<ArgsGenerator> _insert_generator;
+    std::shared_ptr<ArgsGenerator> _remove_generator;
+    std::shared_ptr<ArgsGenerator> _range_generator;
 
 public:
-    GeneralizedArgsGenerator(std::shared_ptr<ArgsGenerator<K>> get_gen,
-                             std::shared_ptr<ArgsGenerator<K>> insert_gen,
-                             std::shared_ptr<ArgsGenerator<K>> remove_gen,
-                             std::shared_ptr<ArgsGenerator<K>> range_gen)
+    GeneralizedArgsGenerator(std::shared_ptr<ArgsGenerator> get_gen,
+                             std::shared_ptr<ArgsGenerator> insert_gen,
+                             std::shared_ptr<ArgsGenerator> remove_gen,
+                             std::shared_ptr<ArgsGenerator> range_gen)
             : _get_generator(get_gen), _insert_generator(insert_gen), _remove_generator(remove_gen), _range_generator(range_gen) {}
 
 
-    K nextGet() override {
+    size_t nextGet() override {
         return _get_generator->nextGet();
     }
 
-    K nextInsert() override {
+    size_t nextInsert() override {
         return _insert_generator->nextInsert();
     }
 
-    K nextRemove() override {
+    size_t nextRemove() override {
         return _remove_generator->nextRemove();
     }
 
-    std::pair<K, K> nextRange() override {
+    std::pair<size_t, size_t> nextRange() override {
         return _range_generator->nextRange();
     }
 
@@ -53,7 +53,7 @@ static const std::set<std::string> oper_types{"get", "insert", "remove", "rangeQ
 
 ArgsGeneratorBuilder *getArgsGeneratorFromJson(const nlohmann::json &j);
 
-//template<typename K>
+//template<typename size_t>
 class GeneralizedArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     std::vector<
         std::pair<std::vector<std::string>,
@@ -97,20 +97,20 @@ public:
         return this;
     }
 
-    GeneralizedArgsGenerator<K> *build(Random64 &_rng) override {
-        std::map<std::string, std::shared_ptr<ArgsGenerator<K>>> built;
+    GeneralizedArgsGenerator *build(Random64 &_rng) override {
+        std::map<std::string, std::shared_ptr<ArgsGenerator>> built;
         for (auto& it : args_generator_builders) {
-            std::shared_ptr<ArgsGenerator<K>> u;
+            std::shared_ptr<ArgsGenerator> u;
             u.reset(it.second->build(_rng));
             for (auto& oper_type : it.first) {
                 built.insert({oper_type, u});
             }
         }
 
-        return new GeneralizedArgsGenerator<K>(std::move(built["get"]),
-                                               std::move(built["insert"]),
-                                               std::move(built["remove"]),
-                                               std::move(built["rangeQuery"]));
+        return new GeneralizedArgsGenerator(std::move(built["get"]),
+                                            std::move(built["insert"]),
+                                            std::move(built["remove"]),
+                                            std::move(built["rangeQuery"]));
     }
 
     void toJson(nlohmann::json &j) const override {

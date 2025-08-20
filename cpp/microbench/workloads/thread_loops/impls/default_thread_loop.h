@@ -15,12 +15,12 @@ class DefaultThreadLoop : public ThreadLoop {
     double *cdf;
     Random64 &rng;
     PAD;
-    ArgsGenerator<KEY_TYPE> *argsGenerator;
+    ArgsGenerator *argsGenerator;
     PAD;
 
 public:
     DefaultThreadLoop(globals_t *_g, Random64 &_rng, size_t _threadId, StopCondition *_stopCondition, size_t _RQ_RANGE,
-                      ArgsGenerator<KEY_TYPE> *_argsGenerator,
+                      ArgsGenerator *_argsGenerator,
                       RatioThreadLoopParameters &threadLoopParameters)
             : ThreadLoop(_g, _threadId, _stopCondition, _RQ_RANGE),
               rng(_rng), argsGenerator(_argsGenerator) {

@@ -14,7 +14,7 @@ class TemporaryOperationThreadLoop : public ThreadLoop {
     double **cdf;
     Random64 &rng;
     PAD;
-    ArgsGenerator<KEY_TYPE> *argsGenerator;
+    ArgsGenerator *argsGenerator;
     PAD;
     size_t time;
     size_t pointer;
@@ -39,7 +39,7 @@ public:
                                  size_t _stagesNumber,
                                  size_t *_stagesDurations,
                                  RatioThreadLoopParameters **ratios,
-                                 ArgsGenerator<KEY_TYPE> *_argsGenerator)
+                                 ArgsGenerator *_argsGenerator)
             : ThreadLoop(g, threadId, stopCondition, rqRange),
               rng(_rng),
               argsGenerator(_argsGenerator),

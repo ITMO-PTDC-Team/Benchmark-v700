@@ -10,13 +10,11 @@
 #include "random_xoshiro256p.h"
 #include "json/single_include/nlohmann/json.hpp"
 
-typedef long long K;
-
 //template<typename K>
 struct ArgsGeneratorBuilder {
     virtual ArgsGeneratorBuilder * init(size_t range) = 0;
 
-    virtual ArgsGenerator<K> * build(Random64 & _rng) = 0;
+    virtual ArgsGenerator * build(Random64 & _rng) = 0;
 
     virtual void toJson(nlohmann::json &j) const = 0;
 

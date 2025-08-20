@@ -5,35 +5,35 @@
 #include "workloads/distributions/distribution.h"
 #include "workloads/data_maps/data_map.h"
 
-template<typename K>
-class RangeQueryArgsGenerator : public ArgsGenerator<K> {
+// template<typename size_t>
+class RangeQueryArgsGenerator : public ArgsGenerator {
 private:
 //    PAD;
     Distribution *distribution;
-    DataMap<K> *data;
+    DataMap<long long> *data;
     size_t interval;
 //    PAD;
 
 public:
-    RangeQueryArgsGenerator(DataMap<K> *_data, Distribution *_distribution, size_t _interval)
+    RangeQueryArgsGenerator(DataMap<long long> *_data, Distribution *_distribution, size_t _interval)
             : data(_data), distribution(_distribution), interval(_interval) {}
 
-    K nextGet() {
+    size_t nextGet() {
         setbench_error("Operation not supported");
     }
 
-    K nextInsert() {
+    size_t nextInsert() {
         setbench_error("Operation not supported");
     }
 
-    K nextRemove() {
+    size_t nextRemove() {
         setbench_error("Operation not supported");
     }
 
-    std::pair<K, K> nextRange() {
+    std::pair<size_t, size_t> nextRange() {
         size_t index = distribution->next();
-        K left = data->get(index);
-        K right = data->get(index + interval);
+        size_t left = data->get(index);
+        size_t right = data->get(index + interval);
         if (left > right) {
             std::swap(left, right);
         }
@@ -56,7 +56,7 @@ public:
 #include "workloads/data_maps/data_map_json_convector.h"
 #include "globals_extern.h"
 
-//template<typename K>
+//template<typename size_t>
 class RangeQueryArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 private:
     size_t range;
@@ -85,10 +85,10 @@ public:
         return this;
     }
 
-    RangeQueryArgsGenerator<K> *build(Random64 &_rng) override {
-        return new RangeQueryArgsGenerator<K>(dataMapBuilder->build(),
+    RangeQueryArgsGenerator *build(Random64 &_rng) override {
+        return new RangeQueryArgsGenerator(dataMapBuilder->build(),
                                            distributionBuilder->build(_rng, range), interval);
-    }
+    }   
 
     void toJson(nlohmann::json &j) const override {
         j["ClassName"] = "RangeQueryArgsGeneratorBuilder";

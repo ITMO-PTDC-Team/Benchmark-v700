@@ -9,39 +9,39 @@
 #include "workloads/distributions/distribution.h"
 #include "workloads/data_maps/data_map.h"
 
-template<typename K>
-class DefaultArgsGenerator : public ArgsGenerator<K> {
+// template<typename size_t>
+class DefaultArgsGenerator : public ArgsGenerator {
 private:
 //    PAD;
     Distribution *distribution;
-    DataMap<K> *data;
+    DataMap<long long> *data;
 //    PAD;
 
-    K next() {
+    size_t next() {
         size_t index = distribution->next();
         return data->get(index);
     }
 
 public:
-    DefaultArgsGenerator(DataMap<K> *_data, Distribution *_distribution)
+    DefaultArgsGenerator(DataMap<long long> *_data, Distribution *_distribution)
             : data(_data), distribution(_distribution) {}
 
 
-    K nextGet() {
+    size_t nextGet() {
         return next();
     }
 
-    K nextInsert() {
+    size_t nextInsert() {
         return next();
     }
 
-    K nextRemove() {
+    size_t nextRemove() {
         return next();
     }
 
-    std::pair<K, K> nextRange() {
-        K left = nextGet();
-        K right = nextGet();
+    std::pair<size_t, size_t> nextRange() {
+        size_t left = nextGet();
+        size_t right = nextGet();
         if (left > right) {
             std::swap(left, right);
         }
@@ -64,7 +64,7 @@ public:
 #include "workloads/data_maps/data_map_json_convector.h"
 #include "globals_extern.h"
 
-//template<typename K>
+//template<typename size_t>
 class DefaultArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 private:
     size_t range;
@@ -88,9 +88,9 @@ public:
         return this;
     }
 
-    DefaultArgsGenerator<K> *build(Random64 &_rng) override {
-        return new DefaultArgsGenerator<K>(dataMapBuilder->build(),
-                                           distributionBuilder->build(_rng, range));
+    DefaultArgsGenerator *build(Random64 &_rng) override {
+        return new DefaultArgsGenerator(dataMapBuilder->build(),
+                                        distributionBuilder->build(_rng, range));
     }
 
     void toJson(nlohmann::json &j) const override {

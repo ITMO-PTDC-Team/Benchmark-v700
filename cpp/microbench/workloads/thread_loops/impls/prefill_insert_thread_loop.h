@@ -16,14 +16,14 @@ private:
     PAD;
     Random64 &rng;
     PAD;
-    ArgsGenerator<KEY_TYPE> *argsGenerator;
+    ArgsGenerator *argsGenerator;
     PAD;
     size_t number_of_attempts;
 
 public:
     PrefillInsertThreadLoop(globals_t *_g, Random64 &_rng, size_t _threadId,
                             StopCondition *_stopCondition, size_t _RQ_RANGE,
-                            ArgsGenerator<KEY_TYPE> *_argsGenerator, size_t _number_of_attempts)
+                            ArgsGenerator *_argsGenerator, size_t _number_of_attempts)
             : ThreadLoop(_g, _threadId, _stopCondition, _RQ_RANGE),
               rng(_rng), argsGenerator(_argsGenerator), number_of_attempts(_number_of_attempts) {
     }

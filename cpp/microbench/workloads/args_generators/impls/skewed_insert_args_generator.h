@@ -10,28 +10,28 @@
 #include "globals_extern.h"
 #include "errors.h"
 
-template<typename K>
-class SkewedInsertArgsGenerator : public ArgsGenerator<K> {
+// template<typename size_t>
+class SkewedInsertArgsGenerator : public ArgsGenerator {
 //    PAD;
     size_t skewedLength;
     size_t insertedNumber;
     Distribution *distribution;
     PAD;
-    DataMap <K> *dataMap;
+    DataMap <long long> *dataMap;
     PAD;
 
 public:
 
-    SkewedInsertArgsGenerator(size_t skewedLength, Distribution *distribution, DataMap <K> *dataMap)
+    SkewedInsertArgsGenerator(size_t skewedLength, Distribution *distribution, DataMap <long long> *dataMap)
             : insertedNumber(0), skewedLength(skewedLength),
               distribution(distribution), dataMap(dataMap) {}
 
-    K nextGet() override {
+    size_t nextGet() override {
         setbench_error("Unsupported operation -- nextGet")
     }
 
-    K nextInsert() override {
-        K value;
+    size_t nextInsert() override {
+        size_t value;
         if (insertedNumber < skewedLength) {
             value = dataMap->get(insertedNumber++);
         } else {
@@ -40,11 +40,11 @@ public:
         return value;
     }
 
-    K nextRemove() override {
+    size_t nextRemove() override {
         setbench_error("Unsupported operation -- nextGet")
     }
 
-    std::pair <K, K> nextRange() override {
+    std::pair <size_t, size_t> nextRange() override {
         setbench_error("Unsupported operation -- nextGet")
     }
 
@@ -61,7 +61,7 @@ public:
 #include "workloads/data_maps/data_map_builder.h"
 #include "workloads/data_maps/builders/array_data_map_builder.h"
 
-//template<typename K>
+// template<typename size_t>
 class SkewedInsertArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     size_t range;
 
@@ -96,8 +96,8 @@ public:
         return this;
     }
 
-    SkewedInsertArgsGenerator<K> *build(Random64 &_rng) override {
-        return new SkewedInsertArgsGenerator<K>(
+    SkewedInsertArgsGenerator *build(Random64 &_rng) override {
+        return new SkewedInsertArgsGenerator(
                 skewedLength,
                 distBuilder->build(_rng, range - skewedLength),
                 dataMapBuilder->build()

@@ -3,24 +3,24 @@
 
 #include "workloads/args_generators/args_generator.h"
 
-template<typename K>
-class NullArgsGenerator : public ArgsGenerator<K> {
+// template<typename size_t>
+class NullArgsGenerator : public ArgsGenerator {
 public:
     NullArgsGenerator() = default;
 
-    K nextGet() {
+    size_t nextGet() {
         setbench_error("Operation not supported");
     }
 
-    K nextInsert() {
+    size_t nextInsert() {
         setbench_error("Operation not supported");
     }
 
-    K nextRemove() {
+    size_t nextRemove() {
         setbench_error("Operation not supported");
     }
 
-    std::pair<K, K> nextRange() {
+    std::pair<size_t, size_t> nextRange() {
         setbench_error("Operation not supported");
     }
 
@@ -30,7 +30,7 @@ public:
 #include "workloads/args_generators/args_generator_builder.h"
 #include "globals_extern.h"
 
-//template<typename K>
+//template<typename size_t>
 class NullArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 public:
     NullArgsGeneratorBuilder *init(size_t _range) override {
@@ -38,8 +38,8 @@ public:
         return this;
     }
 
-    NullArgsGenerator<K> *build(Random64 &_rng) override {
-        return new NullArgsGenerator<K>();
+    NullArgsGenerator *build(Random64 &_rng) override {
+        return new NullArgsGenerator();
     }
 
     void toJson(nlohmann::json &j) const override {
