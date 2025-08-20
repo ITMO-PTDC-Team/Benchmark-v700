@@ -14,7 +14,7 @@ class TemporaryOperationThreadLoop : public ThreadLoop {
     double **cdf;
     Random64 &rng;
     PAD;
-    ArgsGenerator<K> *argsGenerator;
+    ArgsGenerator<KEY_TYPE> *argsGenerator;
     PAD;
     size_t time;
     size_t pointer;
@@ -39,7 +39,7 @@ public:
                                  size_t _stagesNumber,
                                  size_t *_stagesDurations,
                                  RatioThreadLoopParameters **ratios,
-                                 ArgsGenerator<K> *_argsGenerator)
+                                 ArgsGenerator<KEY_TYPE> *_argsGenerator)
             : ThreadLoop(g, threadId, stopCondition, rqRange),
               rng(_rng),
               argsGenerator(_argsGenerator),
@@ -63,16 +63,16 @@ public:
 
         double op = (double) rng.next() / (double) rng.max_value;
         if (op < cdf[pointer][0]) { // insert
-            K key = this->argsGenerator->nextInsert();
+            size_t key = this->argsGenerator->nextInsert();
             this->executeInsert(key);
         } else if (op < cdf[pointer][1]) { // remove
-            K key = this->argsGenerator->nextRemove();
+            size_t key = this->argsGenerator->nextRemove();
             this->executeRemove(key);
         } else if (op < cdf[pointer][2]) { // range query
-            std::pair<K, K> keys = this->argsGenerator->nextRange();
+            std::pair<size_t, size_t> keys = this->argsGenerator->nextRange();
             this->executeRangeQuery(keys.first, keys.second);
         } else { // read
-            K key = this->argsGenerator->nextGet();
+            size_t key = this->argsGenerator->nextGet();
             this->GET_FUNC(key);
         }
     }

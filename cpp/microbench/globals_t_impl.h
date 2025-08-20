@@ -5,7 +5,7 @@
 #ifndef SETBENCH_GLOBALS_T_IMPL_H
 #define SETBENCH_GLOBALS_T_IMPL_H
 
-typedef long long test_type;
+// typedef long long test_type;
 
 //#ifdef REDIS
 //    #define VALUE_TYPE test_type
@@ -32,8 +32,8 @@ struct globals_t {
     // const
 //    void *const NO_VALUE;
     VALUE_TYPE const NO_VALUE;
-    const test_type KEY_MIN; // must be smaller than any key that can be inserted/deleted
-    const test_type KEY_MAX; // must be less than std::max(), because the snap collector needs a reserved key larger than this! (and larger than any key that can be inserted/deleted)
+    const KEY_TYPE KEY_MIN; // must be smaller than any key that can be inserted/deleted
+    const KEY_TYPE KEY_MAX; // must be less than std::max(), because the snap collector needs a reserved key larger than this! (and larger than any key that can be inserted/deleted)
     const long long PREFILL_INTERVAL_MILLIS;
     PAD;
     // write once
@@ -48,7 +48,7 @@ struct globals_t {
     PAD;
     long elapsedMillisNapping;
     PAD;
-    volatile test_type garbage; // used to prevent optimizing out some code
+    volatile KEY_TYPE garbage; // used to prevent optimizing out some code
     PAD;
     DS_ADAPTER_T *dsAdapter; // the data structure
     PAD;

@@ -12,6 +12,7 @@
 //#define USE_TRACE
 
 #include <string>
+#include "global_types.h"
 
 #ifdef MAIN_BENCH
 
