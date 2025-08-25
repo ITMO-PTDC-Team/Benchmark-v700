@@ -23,9 +23,9 @@ The project has the following structure:
 └── tools
 ```
 
-The main folders to pay attention to are [ds](ds) and [microbench](microbench/).  
+The main folders to pay attention to are [ds](ds) and [microbench](microbench/).
 The first folder is for data structures. It contains all the data structures available for benchmarking
-that were implemented in [SetBench](https://gitlab.com/trbot86/setbench).  
+that were implemented in [SetBench](https://gitlab.com/trbot86/setbench).
 The second folder contains the benchmark with various workloads.
 
 [//]: # (The first one stands for data structures - all available for benchmarking data structures are stored there  )
@@ -34,8 +34,8 @@ The second folder contains the benchmark with various workloads.
 
 [//]: # (in particular, [different workloads]&#40;WORKLOADS.md&#41;.  )
 
-##### NOTE 
-**The software design is described on the [main page](./../README.md#software-design).**  
+##### NOTE
+**The software design is described on the [main page](./../README.md#software-design).**
 **And how to add new workloads is described in [ADDING_NEW_WORKLOAD](ADDING_NEW_WORKLOAD.md).**
 
 
@@ -44,9 +44,26 @@ Before launching benchmarks for different data structures —
 it's necessary to build the project, and it can be done with the following command:
 
 ```shell
-cd setbench/microbench
-make -j
+cmake -S . -B BUILD_DIR \
+  -DSANITIZE=OFF        \
+  -DHARDENING=OFF       \
+  -DPAPI=ON             \
+  -DLIBNUMA=ON          \
+  -DOPENMP=ON           \
+  -DOPTIMIZE=ON         \
+  -DTIMELINES=OFF       \
+  -DSKIP_VALIDATION=OFF \
+  -DTESTING=OFF         \
+  -DMAX_THREADS=512     \
+  -DCPU_FREQ=2.1        \
+  -DKEY_TOTAL_STAT
+cmake --build BUILD_DIR [--target TARGET] [-j N]
 ```
+
+All parameters passed with `-D` can be omitted (in example above parameters listed with default parameters, see [CMakeLists](CMakeLists.txt) for description). You can also run `cmake -LH` for quick description.
+
+You can specify targets via `--target` option (can be repeated) or omit it for building all available targets.
+Number of parallel jobs also can be specified via '-j' option.
 
 [//]: # (You can read about the redis implementation in [REDIS]&#40;gsat/REDIS.md&#41; )
 
@@ -60,7 +77,7 @@ After setting up the project, you can launch benchmarks. Commands to launch have
 ```shell
 cd setbench/microbench
 
-<memory allocator> ./bin/<data_structure_name>.debra <bench_args>
+<memory allocator> ./BUILD_DIR/<data_structure_name>.debra <bench_args>
 ```
 
 [//]: # (FROM SETBENCH WIKI: )
@@ -71,12 +88,12 @@ SetBench includes JEMalloc, TCMalloc, Hoard, Supermalloc and Mimalloc libraries 
 
 [//]: # (For instance, you can plug JEMalloc into the above example, instead of the default allocator, by running:)
 
-**NOTE: I now STRONGLY recommend using mimalloc https://github.com/microsoft/mimalloc 
+**NOTE: I now STRONGLY recommend using mimalloc https://github.com/microsoft/mimalloc
 instead of jemalloc for all of your experiments in concurrent data structures!!**
 
 #### Example:
 ```shell
-LD_PRELOAD=../lib/libmimalloc.so ./bin/aksenov_splaylist_64.debra -json-file json_example/example.json -result-file json_example/result.json 
+LD_PRELOAD=../lib/libmimalloc.so ./bin/aksenov_splaylist_64.debra -json-file json_example/example.json -result-file json_example/result.json
 ```
 
 ## Benchmark arguments
@@ -86,14 +103,14 @@ LD_PRELOAD=../lib/libmimalloc.so ./bin/aksenov_splaylist_64.debra -json-file jso
 
 Benchmarking parameters can also be specified separately
 (a new `BenchParameters` will be created with the specified parameters)
-or additionally 
+or additionally
 (the parameters specified in `-json-file` will be overwritten):
 
 + `-range` — key range;
 + `-prefill <file_name>` — file with prefill stage parameters in json format;
 + `-test <file_name>` — file with test stage parameters in json format;
 + `-warm-up <file_name>` — file with warm up stage parameters in json format;
-+ `-create-default-prefill` — create a default prefill: fill the data structure in half 
++ `-create-default-prefill` — create a default prefill: fill the data structure in half
 (ignored if `-prefill` argument was already specified).
 
 
@@ -145,7 +162,7 @@ There are builders to create each type of entity:
 [DataMapBuilder](microbench/workloads/data_maps/data_map_builder.h).
 
 [//]: # (**The software design is described in [SOFTWARE_DESIGN]&#40;SOFTWARE_DESIGN.md&#41;.**  )
-**The software design is described on the [main page](./../README.md#software-design).**  
+**The software design is described on the [main page](./../README.md#software-design).**
 **And how to add new workloads is described in [ADDING_NEW_WORKLOAD](ADDING_NEW_WORKLOAD.md).**
 
 [//]: # (**How to add new workloads is described [here]&#40;./ADDING_NEW_WORKLOAD.md&#41;.**)
@@ -154,11 +171,11 @@ Let's create a standard workload with Zipf distribution.
 
 At first, we create the DistributionBuilder and DataMapBuilder.
 ```c++
-    DistributionBuilder *distributionBuilder 
+    DistributionBuilder *distributionBuilder
             = (new ZipfianDistributionBuilder())
                     ->setAlpha(1.0);
 
-    DataMapBuilder *dataMapBuilder 
+    DataMapBuilder *dataMapBuilder
             = new ArrayDataMapBuilder();
 ```
 
@@ -170,7 +187,7 @@ The next step is to create the ArgsGeneratorBuilder.
                     ->setDataMapBuilder(dataMapBuilder);
 ```
 
-The last step is to create the ThreadLoopBuilder. 
+The last step is to create the ThreadLoopBuilder.
 We create a DefaultThreadLoop with the probability 0.1 (10%) of calling the insertion and remove operation
 and set our ArgsGeneratorBuilder.
 ```c++
@@ -184,7 +201,7 @@ and set our ArgsGeneratorBuilder.
 Now set the ThreadLoop class to Parameters with the number of threads with this load.
 
 Also, as the third parameter, you can specify the cores to which threads should bind (-1 without binding).
-In our case, the first two threads will not be bound to any core, the 3-th and 4-th threads will bound to the fisrt core, 
+In our case, the first two threads will not be bound to any core, the 3-th and 4-th threads will bound to the fisrt core,
 the 5-th thread will bound to the second core, and so on
 (The first CPU on the system corresponds to a cpu value of 0, the next CPU corresponds to a cpu value of 1, and so on.).
 ```c++
@@ -221,5 +238,3 @@ Convert parameters to json format and output:
 [//]: # (```shell)
 [//]: # (sudo sysctl kernel.perf_event_paranoid=1)
 [//]: # (```)
-
-
