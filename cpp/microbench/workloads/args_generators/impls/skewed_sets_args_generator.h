@@ -14,9 +14,9 @@ class SkewedSetsArgsGenerator : public ArgsGenerator<K> {
 //    PAD;
     size_t range;
     size_t writeSetBegins;
-    Distribution *readDist;
-    Distribution *writeDist;
-    DataMap<K> *dataMap;
+    std::shared_ptr<Distribution> readDist;
+    std::shared_ptr<Distribution> writeDist;
+    std::shared_ptr<DataMap<K>> dataMap;
 
     K nextWrite() {
         size_t index = writeSetBegins + writeDist->next();
@@ -29,8 +29,8 @@ class SkewedSetsArgsGenerator : public ArgsGenerator<K> {
 public:
 
     SkewedSetsArgsGenerator(size_t range, size_t writeSetBegins,
-                            Distribution *readDist, Distribution *writeDist,
-                            DataMap<K> *dataMap)
+                            std::shared_ptr<Distribution> readDist, std::shared_ptr<Distribution> writeDist,
+                            std::shared_ptr<DataMap<K>> dataMap)
             : range(range), writeSetBegins(writeSetBegins),
               readDist(readDist), writeDist(writeDist),
               dataMap(dataMap) {}
@@ -56,12 +56,7 @@ public:
         return {left, right};
     }
 
-    ~SkewedSetsArgsGenerator() override {
-        delete readDist;
-        delete writeDist;
-        delete dataMap;
-    };
-
+    ~SkewedSetsArgsGenerator() override = default;
 
 };
 
@@ -74,10 +69,10 @@ public:
 class SkewedSetsArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     size_t range;
 
-    SkewedUniformDistributionBuilder *readDistBuilder = new SkewedUniformDistributionBuilder();
-    SkewedUniformDistributionBuilder *writeDistBuilder = new SkewedUniformDistributionBuilder();
+    std::shared_ptr<SkewedUniformDistributionBuilder> readDistBuilder = std::make_shared<SkewedUniformDistributionBuilder>();
+    std::shared_ptr<SkewedUniformDistributionBuilder> writeDistBuilder = std::make_shared<SkewedUniformDistributionBuilder>();
 
-    DataMapBuilder *dataMapBuilder = new ArrayDataMapBuilder();
+    std::shared_ptr<DataMapBuilder> dataMapBuilder = std::make_shared<ArrayDataMapBuilder>();
 
     double intersection = 0;
     size_t writeSetBegins;
@@ -103,7 +98,7 @@ public:
         return this;
     }
 
-    SkewedSetsArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
+    SkewedSetsArgsGeneratorBuilder *setDataMapBuilder(std::shared_ptr<DataMapBuilder>_dataMapBuilder) {
         dataMapBuilder = _dataMapBuilder;
         return this;
     }
@@ -120,13 +115,13 @@ public:
         return this;
     }
 
-    SkewedSetsArgsGenerator<K> *build(Random64 &_rng) override {
-        return new SkewedSetsArgsGenerator<K>(
+    std::shared_ptr<ArgsGenerator<K>> build(Random64 &_rng) override {
+        return std::shared_ptr<SkewedSetsArgsGenerator<K>>(new SkewedSetsArgsGenerator<K>(
                 range, writeSetBegins,
                 readDistBuilder->build(_rng, range),
                 writeDistBuilder->build(_rng, range),
                 dataMapBuilder->build()
-        );
+        ));
     }
 
     void toJson(nlohmann::json &j) const override {
@@ -138,10 +133,10 @@ public:
     }
 
     void fromJson(const nlohmann::json &j) override {
-        readDistBuilder = dynamic_cast<SkewedUniformDistributionBuilder *>(
+        readDistBuilder = std::dynamic_pointer_cast<SkewedUniformDistributionBuilder>(
                 getDistributionFromJson(j["readDistBuilder"])
         );
-        writeDistBuilder = dynamic_cast<SkewedUniformDistributionBuilder *>(
+        writeDistBuilder = std::dynamic_pointer_cast<SkewedUniformDistributionBuilder>(
                 getDistributionFromJson(j["writeDistBuilder"])
         );
         intersection = j["intersection"];
@@ -159,12 +154,7 @@ public:
                + dataMapBuilder->toString(indents + 1);
     }
 
-    ~SkewedSetsArgsGeneratorBuilder() override {
-        delete readDistBuilder;
-        delete writeDistBuilder;
-//        delete dataMapBuilder; //TODO may delete twice
-    };
-
+    ~SkewedSetsArgsGeneratorBuilder() override = default;
 };
 
 

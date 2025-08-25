@@ -5,6 +5,7 @@
 #ifndef SETBENCH_DEFAULT_ARGS_GENERATOR_H
 #define SETBENCH_DEFAULT_ARGS_GENERATOR_H
 
+#include <memory>
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/distributions/distribution.h"
 #include "workloads/data_maps/data_map.h"
@@ -13,8 +14,8 @@ template<typename K>
 class DefaultArgsGenerator : public ArgsGenerator<K> {
 private:
 //    PAD;
-    Distribution *distribution;
-    DataMap<K> *data;
+    std::shared_ptr<Distribution> distribution;
+    std::shared_ptr<DataMap<K>> data;
 //    PAD;
 
     K next() {
@@ -23,7 +24,7 @@ private:
     }
 
 public:
-    DefaultArgsGenerator(DataMap<K> *_data, Distribution *_distribution)
+    DefaultArgsGenerator(std::shared_ptr<DataMap<K>> _data, std::shared_ptr<Distribution> _distribution)
             : data(_data), distribution(_distribution) {}
 
 
@@ -48,10 +49,7 @@ public:
         return {left, right};
     }
 
-    ~DefaultArgsGenerator() {
-        delete distribution;
-        delete data;
-    }
+    ~DefaultArgsGenerator() = default;
 };
 
 
@@ -69,15 +67,15 @@ class DefaultArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 private:
     size_t range;
 public:
-    DistributionBuilder *distributionBuilder = new UniformDistributionBuilder();
-    DataMapBuilder *dataMapBuilder = new IdDataMapBuilder();
+    std::shared_ptr<DistributionBuilder> distributionBuilder = std::make_shared<UniformDistributionBuilder>();
+    std::shared_ptr<DataMapBuilder> dataMapBuilder = std::make_shared<IdDataMapBuilder>();
 
-    DefaultArgsGeneratorBuilder *setDistributionBuilder(DistributionBuilder *_distributionBuilder) {
+    DefaultArgsGeneratorBuilder *setDistributionBuilder(std::shared_ptr<DistributionBuilder> _distributionBuilder) {
         distributionBuilder = _distributionBuilder;
         return this;
     }
 
-    DefaultArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
+    DefaultArgsGeneratorBuilder *setDataMapBuilder(std::shared_ptr<DataMapBuilder> _dataMapBuilder) {
         dataMapBuilder = _dataMapBuilder;
         return this;
     }
@@ -88,9 +86,9 @@ public:
         return this;
     }
 
-    DefaultArgsGenerator<K> *build(Random64 &_rng) override {
-        return new DefaultArgsGenerator<K>(dataMapBuilder->build(),
-                                           distributionBuilder->build(_rng, range));
+    std::shared_ptr<ArgsGenerator<K>> build(Random64 &_rng) override {
+        return std::shared_ptr<DefaultArgsGenerator<K>>(new DefaultArgsGenerator<K>(dataMapBuilder->build(),
+                                           distributionBuilder->build(_rng, range)));
     }
 
     void toJson(nlohmann::json &j) const override {
@@ -120,11 +118,7 @@ return res;
 //               + dataMapBuilder->toString(indents + 1);
     }
 
-    ~DefaultArgsGeneratorBuilder() override {
-        delete distributionBuilder;
-//        delete dataMapBuilder; //TODO may delete twice
-    };
-
+    ~DefaultArgsGeneratorBuilder() override = default;
 };
 
 

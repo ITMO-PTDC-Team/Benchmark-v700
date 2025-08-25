@@ -9,13 +9,13 @@ template<typename K>
 class RangeQueryArgsGenerator : public ArgsGenerator<K> {
 private:
 //    PAD;
-    Distribution *distribution;
-    DataMap<K> *data;
+    std::shared_ptr<Distribution> distribution;
+    std::shared_ptr<DataMap<K>> data;
     size_t interval;
 //    PAD;
 
 public:
-    RangeQueryArgsGenerator(DataMap<K> *_data, Distribution *_distribution, size_t _interval)
+    RangeQueryArgsGenerator(std::shared_ptr<DataMap<K>> _data, std::shared_ptr<Distribution> _distribution, size_t _interval)
             : data(_data), distribution(_distribution), interval(_interval) {}
 
     K nextGet() {
@@ -40,10 +40,7 @@ public:
         return {left, right};
     }
 
-    ~RangeQueryArgsGenerator() {
-        delete distribution;
-        delete data;
-    }
+    ~RangeQueryArgsGenerator() = default;
 };
 
 
@@ -62,15 +59,15 @@ private:
     size_t range;
     size_t interval;
 public:
-    DistributionBuilder *distributionBuilder = new UniformDistributionBuilder();
-    DataMapBuilder *dataMapBuilder = new IdDataMapBuilder();
+    std::shared_ptr<DistributionBuilder> distributionBuilder =std::make_shared<UniformDistributionBuilder>();
+    std::shared_ptr<DataMapBuilder> dataMapBuilder = std::make_shared<IdDataMapBuilder>();
 
-    RangeQueryArgsGeneratorBuilder *setDistributionBuilder(DistributionBuilder *_distributionBuilder) {
+    RangeQueryArgsGeneratorBuilder *setDistributionBuilder(std::shared_ptr<DistributionBuilder> _distributionBuilder) {
         distributionBuilder = _distributionBuilder;
         return this;
     }
 
-    RangeQueryArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
+    RangeQueryArgsGeneratorBuilder *setDataMapBuilder(std::shared_ptr<DataMapBuilder> _dataMapBuilder) {
         dataMapBuilder = _dataMapBuilder;
         return this;
     }
@@ -85,9 +82,9 @@ public:
         return this;
     }
 
-    RangeQueryArgsGenerator<K> *build(Random64 &_rng) override {
-        return new RangeQueryArgsGenerator<K>(dataMapBuilder->build(),
-                                           distributionBuilder->build(_rng, range), interval);
+    std::shared_ptr<ArgsGenerator<K>> build(Random64 &_rng) override {
+        return std::shared_ptr<RangeQueryArgsGenerator<K>>(new RangeQueryArgsGenerator<K>(dataMapBuilder->build(),
+                                           distributionBuilder->build(_rng, range), interval));
     }
 
     void toJson(nlohmann::json &j) const override {
@@ -114,10 +111,7 @@ public:
         return res;
     }
 
-    ~RangeQueryArgsGeneratorBuilder() override {
-        delete distributionBuilder;
-//        delete dataMapBuilder; //TODO may delete twice
-    };
+    ~RangeQueryArgsGeneratorBuilder() override = default;
 
 };
 

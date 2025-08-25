@@ -5,6 +5,7 @@
 #ifndef SETBENCH_LEAFS_HANDSHAKE_ARGS_GENERATOR_H
 #define SETBENCH_LEAFS_HANDSHAKE_ARGS_GENERATOR_H
 
+#include <memory>
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/distributions/distribution.h"
 #include "workloads/data_maps/data_map.h"
@@ -13,21 +14,21 @@ template<typename K>
 class LeafsHandshakeArgsGenerator : public ArgsGenerator<K> {
     size_t range;
 
-    Distribution *readDistribution;
-    MutableDistribution *insertDistribution;
-    Distribution *removeDistribution;
+    std::shared_ptr<Distribution> readDistribution;
+    std::shared_ptr<MutableDistribution> insertDistribution;
+    std::shared_ptr<Distribution> removeDistribution;
     Random64 &rng;
     PAD;
     std::atomic<size_t> *deletedValue;
     PAD;
 
-    DataMap<K> *readData;
-    DataMap<K> *removeData;
+    std::shared_ptr<DataMap<K>> readData;
+    std::shared_ptr<DataMap<K>> removeData;
 
 public:
     LeafsHandshakeArgsGenerator(Random64 &rng, size_t range, std::atomic<size_t> *deletedValue,
-                                Distribution *readDistribution, MutableDistribution *insertDistribution,
-                                Distribution *removeDistribution, DataMap<K> *readData, DataMap<K> *removeData) :
+                                std::shared_ptr<Distribution> readDistribution, std::shared_ptr<MutableDistribution> insertDistribution,
+                                std::shared_ptr<Distribution> removeDistribution, std::shared_ptr<DataMap<K>> readData, std::shared_ptr<DataMap<K>> removeData) :
             range(range),
             readDistribution(readDistribution),
             insertDistribution(insertDistribution),
@@ -70,13 +71,7 @@ public:
         setbench_error("Unsupported operation -- nextRange")
     }
 
-    ~LeafsHandshakeArgsGenerator() {
-        delete readData;
-        delete removeData;
-        delete readDistribution;
-        delete insertDistribution;
-        delete removeDistribution;
-    }
+    ~LeafsHandshakeArgsGenerator() = default;
 };
 
 
@@ -94,37 +89,37 @@ class LeafsHandshakeArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 private:
     size_t range;
 
-    DistributionBuilder *readDistBuilder = new UniformDistributionBuilder();
-    MutableDistributionBuilder *insertDistBuilder = new ZipfianDistributionBuilder();
-    DistributionBuilder *removeDistBuilder = new UniformDistributionBuilder();
+    std::shared_ptr<DistributionBuilder> readDistBuilder = std::make_shared<UniformDistributionBuilder>();
+    std::shared_ptr<MutableDistributionBuilder> insertDistBuilder = std::make_shared<ZipfianDistributionBuilder>();
+    std::shared_ptr<DistributionBuilder> removeDistBuilder = std::make_shared<UniformDistributionBuilder>();
 
-    DataMapBuilder *readDataMapBuilder = new IdDataMapBuilder();
-    DataMapBuilder *removeDataMapBuilder = new IdDataMapBuilder();
+    std::shared_ptr<DataMapBuilder> readDataMapBuilder = std::make_shared<IdDataMapBuilder>();
+    std::shared_ptr<DataMapBuilder> removeDataMapBuilder = std::make_shared<IdDataMapBuilder>();
     std::atomic<size_t> *deletedValue;
 
 public:
 
-    LeafsHandshakeArgsGeneratorBuilder *setReadDistBuilder(DistributionBuilder *_readDistBuilder) {
+    LeafsHandshakeArgsGeneratorBuilder *setReadDistBuilder(std::shared_ptr<DistributionBuilder> _readDistBuilder) {
         readDistBuilder = _readDistBuilder;
         return this;
     }
 
-    LeafsHandshakeArgsGeneratorBuilder *setInsertDistBuilder(MutableDistributionBuilder *_insertDistBuilder) {
+    LeafsHandshakeArgsGeneratorBuilder *setInsertDistBuilder(std::shared_ptr<MutableDistributionBuilder> _insertDistBuilder) {
         insertDistBuilder = _insertDistBuilder;
         return this;
     }
 
-    LeafsHandshakeArgsGeneratorBuilder *setRemoveDistBuilder(DistributionBuilder *_removeDistBuilder) {
+    LeafsHandshakeArgsGeneratorBuilder *setRemoveDistBuilder(std::shared_ptr<DistributionBuilder> _removeDistBuilder) {
         removeDistBuilder = _removeDistBuilder;
         return this;
     }
 
-    LeafsHandshakeArgsGeneratorBuilder *setReadDataMapBuilder(DataMapBuilder *_readDataMapBuilder) {
+    LeafsHandshakeArgsGeneratorBuilder *setReadDataMapBuilder(std::shared_ptr<DataMapBuilder> _readDataMapBuilder) {
         readDataMapBuilder = _readDataMapBuilder;
         return this;
     }
 
-    LeafsHandshakeArgsGeneratorBuilder *setRemoveDataMapBuilder(DataMapBuilder *_removeDataMapBuilder) {
+    LeafsHandshakeArgsGeneratorBuilder *setRemoveDataMapBuilder(std::shared_ptr<DataMapBuilder> _removeDataMapBuilder) {
         removeDataMapBuilder = _removeDataMapBuilder;
         return this;
     }
@@ -139,13 +134,13 @@ public:
         return this;
     }
 
-    LeafsHandshakeArgsGenerator<K> *build(Random64 &_rng) override {
-        return new LeafsHandshakeArgsGenerator<K>(_rng, range, deletedValue,
+    std::shared_ptr<ArgsGenerator<K>> build(Random64 &_rng) override {
+        return std::shared_ptr<LeafsHandshakeArgsGenerator<K>>(new LeafsHandshakeArgsGenerator<K>(_rng, range, deletedValue,
                                                   readDistBuilder->build(_rng, range),
                                                   insertDistBuilder->build(_rng),
                                                   removeDistBuilder->build(_rng, range),
                                                   readDataMapBuilder->build(),
-                                                  removeDataMapBuilder->build());
+                                                  removeDataMapBuilder->build()));
     }
 
     void toJson(nlohmann::json &j) const override {
@@ -179,12 +174,7 @@ public:
                + removeDataMapBuilder->toString(indents + 1);
     }
 
-    ~LeafsHandshakeArgsGeneratorBuilder() override {
-        delete readDistBuilder;
-        delete insertDistBuilder;
-        delete removeDistBuilder;
-//        delete dataMapBuilder; //TODO may delete twice
-    };
+    ~LeafsHandshakeArgsGeneratorBuilder() override = default;
 
 };
 

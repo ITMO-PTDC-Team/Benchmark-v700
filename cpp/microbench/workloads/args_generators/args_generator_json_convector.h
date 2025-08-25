@@ -19,29 +19,29 @@
 #include "workloads/args_generators/impls/range_query_args_generator.h"
 #include "errors.h"
 
-ArgsGeneratorBuilder *getArgsGeneratorFromJson(const nlohmann::json &j) {
+std::shared_ptr<ArgsGeneratorBuilder> getArgsGeneratorFromJson(const nlohmann::json &j) {
     std::string className = j["ClassName"];
-    ArgsGeneratorBuilder *argsGeneratorBuilder;
+    std::shared_ptr<ArgsGeneratorBuilder> argsGeneratorBuilder;
     if (className == "DefaultArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new DefaultArgsGeneratorBuilder();
+        argsGeneratorBuilder = std::make_shared<DefaultArgsGeneratorBuilder>();
     } else if (className == "SkewedSetsArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new SkewedSetsArgsGeneratorBuilder();
+        argsGeneratorBuilder = std::make_shared<SkewedSetsArgsGeneratorBuilder>();
     } else if (className == "TemporarySkewedArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new TemporarySkewedArgsGeneratorBuilder();
+        argsGeneratorBuilder = std::make_shared<TemporarySkewedArgsGeneratorBuilder>();
     } else if (className == "CreakersAndWaveArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new CreakersAndWaveArgsGeneratorBuilder();
+        argsGeneratorBuilder = std::make_shared<CreakersAndWaveArgsGeneratorBuilder>();
     } else if (className == "CreakersAndWavePrefillArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new CreakersAndWavePrefillArgsGeneratorBuilder();
+        argsGeneratorBuilder = std::make_shared<CreakersAndWavePrefillArgsGeneratorBuilder>();
     } else if (className == "LeafsHandshakeArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new LeafsHandshakeArgsGeneratorBuilder();
+        argsGeneratorBuilder = std::make_shared<LeafsHandshakeArgsGeneratorBuilder>();
     } else if (className == "SkewedInsertArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new SkewedInsertArgsGeneratorBuilder();
+        argsGeneratorBuilder = std::make_shared<SkewedInsertArgsGeneratorBuilder>();
     } else if (className == "GeneralizedArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new GeneralizedArgsGeneratorBuilder();
+        argsGeneratorBuilder = std::make_shared<GeneralizedArgsGeneratorBuilder>();
     } else if (className == "NullArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new NullArgsGeneratorBuilder();
+        argsGeneratorBuilder = std::make_shared<NullArgsGeneratorBuilder>();
     } else if (className == "RangeQueryArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new RangeQueryArgsGeneratorBuilder();
+        argsGeneratorBuilder = std::make_shared<RangeQueryArgsGeneratorBuilder>();
     } else {
         setbench_error("JSON PARSER: Unknown class name ArgsGeneratorBuilder -- " + className)
     }

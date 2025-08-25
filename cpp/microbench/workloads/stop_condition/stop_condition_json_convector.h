@@ -11,13 +11,13 @@
 #include "workloads/stop_condition/impls/operation_counter.h"
 #include "errors.h"
 
-StopCondition *getStopConditionFromJson(const nlohmann::json &j) {
+std::shared_ptr<StopCondition> getStopConditionFromJson(const nlohmann::json &j) {
     std::string className = j["ClassName"];
-    StopCondition *stopCondition;
+    std::shared_ptr<StopCondition> stopCondition;
     if (className == "Timer") {
-        stopCondition = new Timer();
+        stopCondition = std::shared_ptr<Timer>(new Timer());
     } else if (className == "OperationCounter") {
-        stopCondition = new OperationCounter();
+        stopCondition = std::shared_ptr<OperationCounter>(new OperationCounter());
     } else {
         setbench_error("JSON PARSER: Unknown class name StopCondition -- " + className)
     }

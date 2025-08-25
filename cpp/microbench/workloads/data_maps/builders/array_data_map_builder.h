@@ -11,24 +11,22 @@
 #include "workloads/data_maps/impls/array_data_map.h"
 
 class ArrayDataMapBuilder : public DataMapBuilder {
-    long long* data = nullptr;
+    std::vector<long long> data = {};
 
 public:
     ArrayDataMapBuilder* init(size_t range) override {
-        delete[] data;
-
-        data = new long long[range];
+        data = std::vector<long long>();
         for (long long i = 0; i < range; i++) {
-            data[i] = i + 1;
+            data.push_back(i + 1);
         }
 
         //        std::random_shuffle(data, data + range - 1);
-        std::shuffle(data, data + range, std::mt19937(std::random_device()()));
+        std::shuffle(data.begin(), data.begin() + range, std::mt19937(std::random_device()()));
         return this;
     }
 
-    ArrayDataMap* build() override {
-        return new ArrayDataMap(data);
+    std::shared_ptr<DataMap<K>> build() override {
+        return std::shared_ptr<ArrayDataMap>(new ArrayDataMap(data));
     }
 
     void toJson(nlohmann::json& j) const override {

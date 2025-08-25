@@ -16,14 +16,14 @@ private:
     PAD;
     Random64 &rng;
     PAD;
-    ArgsGenerator<K> *argsGenerator;
+    std::shared_ptr<ArgsGenerator<K>> argsGenerator;
     PAD;
     size_t number_of_attempts;
 
 public:
-    PrefillInsertThreadLoop(globals_t *_g, Random64 &_rng, size_t _threadId,
-                            StopCondition *_stopCondition, size_t _RQ_RANGE,
-                            ArgsGenerator<K> *_argsGenerator, size_t _number_of_attempts)
+    PrefillInsertThreadLoop(std::shared_ptr<globals_t> _g, Random64 &_rng, size_t _threadId,
+                            std::shared_ptr<StopCondition> _stopCondition, size_t _RQ_RANGE,
+                            std::shared_ptr<ArgsGenerator<K>> _argsGenerator, size_t _number_of_attempts)
             : ThreadLoop(_g, _threadId, _stopCondition, _RQ_RANGE),
               rng(_rng), argsGenerator(_argsGenerator), number_of_attempts(_number_of_attempts) {
     }
@@ -53,7 +53,7 @@ public:
 
 //template<typename K>
 struct PrefillInsertThreadLoopBuilder : public ThreadLoopBuilder {
-    ArgsGeneratorBuilder *argsGeneratorBuilder = new DefaultArgsGeneratorBuilder();
+    std::shared_ptr<ArgsGeneratorBuilder> argsGeneratorBuilder = std::make_shared<DefaultArgsGeneratorBuilder>();
     size_t numberOfAttempts = 10e+6;
 
     PrefillInsertThreadLoopBuilder *setNumberOfAttempts(size_t _numberOfAttempts) {
@@ -61,7 +61,7 @@ struct PrefillInsertThreadLoopBuilder : public ThreadLoopBuilder {
         return this;
     }
 
-    PrefillInsertThreadLoopBuilder *setArgsGeneratorBuilder(ArgsGeneratorBuilder *_argsGeneratorBuilder) {
+    PrefillInsertThreadLoopBuilder *setArgsGeneratorBuilder(std::shared_ptr<ArgsGeneratorBuilder> _argsGeneratorBuilder) {
         argsGeneratorBuilder = _argsGeneratorBuilder;
         return this;
     }
@@ -73,9 +73,9 @@ struct PrefillInsertThreadLoopBuilder : public ThreadLoopBuilder {
     }
 
 //    template<typename K>
-    ThreadLoop *build(globals_t *_g, Random64 &_rng, size_t _threadId, StopCondition *_stopCondition) override {
-        return new PrefillInsertThreadLoop(_g, _rng, _threadId, _stopCondition, this->RQ_RANGE,
-                                           argsGeneratorBuilder->build(_rng), numberOfAttempts);
+    std::shared_ptr<ThreadLoop> build(std::shared_ptr<globals_t> _g, Random64 &_rng, size_t _threadId, std::shared_ptr<StopCondition> _stopCondition) override {
+        return std::shared_ptr<PrefillInsertThreadLoop>(new PrefillInsertThreadLoop(_g, _rng, _threadId, _stopCondition, this->RQ_RANGE,
+                                           argsGeneratorBuilder->build(_rng), numberOfAttempts));
     }
 
     void toJson(nlohmann::json &json) const override {
@@ -98,9 +98,7 @@ struct PrefillInsertThreadLoopBuilder : public ThreadLoopBuilder {
                + argsGeneratorBuilder->toString(indents + 1);
     }
 
-    ~PrefillInsertThreadLoopBuilder() override {
-        delete argsGeneratorBuilder;
-    };
+    ~PrefillInsertThreadLoopBuilder() override = default;
 };
 
 #endif //SETBENCH_PREFILL_INSERT_THREAD_LOOP_H

@@ -11,9 +11,9 @@
 #include "workloads/data_maps/builders/array_data_map_builder.h"
 #include "errors.h"
 
-std::map<size_t, DataMapBuilder *> dataMapBuilders;
+std::map<size_t, std::shared_ptr<DataMapBuilder>> dataMapBuilders;
 
-DataMapBuilder *getDataMapFromJson(const nlohmann::json &j) {
+std::shared_ptr<DataMapBuilder> getDataMapFromJson(const nlohmann::json &j) {
     size_t id = j["id"];
 
     auto dataMapsBuilderById = dataMapBuilders.find(id);
@@ -22,11 +22,11 @@ DataMapBuilder *getDataMapFromJson(const nlohmann::json &j) {
     }
 
     std::string className = j["ClassName"];
-    DataMapBuilder *dataMapBuilder;
+    std::shared_ptr<DataMapBuilder> dataMapBuilder;
     if (className == "IdDataMapBuilder") {
-        dataMapBuilder = new IdDataMapBuilder();
+        dataMapBuilder = std::make_shared<IdDataMapBuilder>();
     } else if (className == "ArrayDataMapBuilder") {
-            dataMapBuilder = new ArrayDataMapBuilder();
+            dataMapBuilder = std::make_shared<ArrayDataMapBuilder>();
     } else if (className == "HashDataMapBuilder") {
 
     } else {
@@ -40,9 +40,7 @@ DataMapBuilder *getDataMapFromJson(const nlohmann::json &j) {
 }
 
 void deleteDataMapBuilders() {
-    for (auto it: dataMapBuilders) {
-        delete it.second;
-    }
+    // noop since smart pointers used
 }
 
 void initDataMapBuilders(size_t range) {

@@ -11,16 +11,16 @@
 #include "workloads/thread_loops/impls/temporary_operations_thread_loop.h"
 #include "errors.h"
 
-ThreadLoopBuilder *getThreadLoopFromJson(const nlohmann::json &j) {
+std::shared_ptr<ThreadLoopBuilder> getThreadLoopFromJson(const nlohmann::json &j) {
     std::string className = j["ClassName"];
-    ThreadLoopBuilder *threadLoopBuilder;
+    std::shared_ptr<ThreadLoopBuilder> threadLoopBuilder;
 
     if (className == "DefaultThreadLoopBuilder") {
-        threadLoopBuilder = new DefaultThreadLoopBuilder();
+        threadLoopBuilder = std::shared_ptr<DefaultThreadLoopBuilder>(new DefaultThreadLoopBuilder());
     } else if (className == "TemporaryOperationsThreadLoopBuilder") {
-        threadLoopBuilder = new TemporaryOperationsThreadLoopBuilder();
+        threadLoopBuilder = std::shared_ptr<TemporaryOperationsThreadLoopBuilder>(new TemporaryOperationsThreadLoopBuilder());
     } else if (className == "PrefillInsertThreadLoopBuilder") {
-        threadLoopBuilder = new PrefillInsertThreadLoopBuilder();
+        threadLoopBuilder = std::shared_ptr<PrefillInsertThreadLoopBuilder>(new PrefillInsertThreadLoopBuilder());
     } else {
         setbench_error("JSON PARSER: Unknown class name ThreadLoopBuilder -- " + className)
     }

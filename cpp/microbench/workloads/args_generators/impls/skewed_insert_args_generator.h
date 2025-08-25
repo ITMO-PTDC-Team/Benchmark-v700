@@ -15,14 +15,14 @@ class SkewedInsertArgsGenerator : public ArgsGenerator<K> {
 //    PAD;
     size_t skewedLength;
     size_t insertedNumber;
-    Distribution *distribution;
+    std::shared_ptr<Distribution> distribution;
     PAD;
-    DataMap <K> *dataMap;
+    std::shared_ptr<DataMap <K>> dataMap;
     PAD;
 
 public:
 
-    SkewedInsertArgsGenerator(size_t skewedLength, Distribution *distribution, DataMap <K> *dataMap)
+    SkewedInsertArgsGenerator(size_t skewedLength, std::shared_ptr<Distribution> distribution, std::shared_ptr<DataMap <K>> dataMap)
             : insertedNumber(0), skewedLength(skewedLength),
               distribution(distribution), dataMap(dataMap) {}
 
@@ -48,10 +48,7 @@ public:
         setbench_error("Unsupported operation -- nextGet")
     }
 
-    ~SkewedInsertArgsGenerator() override {
-        delete distribution;
-        delete dataMap;
-    };
+    ~SkewedInsertArgsGenerator() override = default;
 
 
 };
@@ -65,9 +62,9 @@ public:
 class SkewedInsertArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     size_t range;
 
-    DistributionBuilder *distBuilder = new UniformDistributionBuilder();
+    std::shared_ptr<DistributionBuilder> distBuilder = std::make_shared<UniformDistributionBuilder>();
 
-    DataMapBuilder *dataMapBuilder = new ArrayDataMapBuilder();
+    std::shared_ptr<DataMapBuilder> dataMapBuilder = std::make_shared<ArrayDataMapBuilder>();
 
     double skewedSize = 0;
 
@@ -79,12 +76,12 @@ public:
         return this;
     }
 
-    SkewedInsertArgsGeneratorBuilder *setDistributionBuilder(DistributionBuilder *_distBuilder) {
+    SkewedInsertArgsGeneratorBuilder *setDistributionBuilder(std::shared_ptr<DistributionBuilder> _distBuilder) {
         distBuilder = _distBuilder;
         return this;
     }
 
-    SkewedInsertArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
+    SkewedInsertArgsGeneratorBuilder *setDataMapBuilder(std::shared_ptr<DataMapBuilder> _dataMapBuilder) {
         dataMapBuilder = _dataMapBuilder;
         return this;
     }
@@ -96,12 +93,12 @@ public:
         return this;
     }
 
-    SkewedInsertArgsGenerator<K> *build(Random64 &_rng) override {
-        return new SkewedInsertArgsGenerator<K>(
+    std::shared_ptr<ArgsGenerator<K>> build(Random64 &_rng) override {
+        return std::shared_ptr<SkewedInsertArgsGenerator<K>>(new SkewedInsertArgsGenerator<K>(
                 skewedLength,
                 distBuilder->build(_rng, range - skewedLength),
                 dataMapBuilder->build()
-        );
+        ));
     }
 
     void toJson(nlohmann::json &j) const override {
@@ -126,10 +123,7 @@ public:
                + dataMapBuilder->toString(indents + 1);
     }
 
-    ~SkewedInsertArgsGeneratorBuilder() override {
-        delete distBuilder;
-//        delete dataMapBuilder; //TODO may delete twice
-    };
+    ~SkewedInsertArgsGeneratorBuilder() override = default;
 
 };
 

@@ -5,6 +5,7 @@
 #ifndef SETBENCH_DEFAULT_THREAD_LOOP_H
 #define SETBENCH_DEFAULT_THREAD_LOOP_H
 
+#include <memory>
 #include "workloads/thread_loops/thread_loop.h"
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/thread_loops/ratio_thread_loop_parameters.h"
@@ -12,19 +13,19 @@
 //template<typename K>
 class DefaultThreadLoop : public ThreadLoop {
     PAD;
-    double *cdf;
+    std::vector<double> cdf;
     Random64 &rng;
     PAD;
-    ArgsGenerator<K> *argsGenerator;
+    std::shared_ptr<ArgsGenerator<K>> argsGenerator;
     PAD;
 
 public:
-    DefaultThreadLoop(globals_t *_g, Random64 &_rng, size_t _threadId, StopCondition *_stopCondition, size_t _RQ_RANGE,
-                      ArgsGenerator<K> *_argsGenerator,
+    DefaultThreadLoop(std::shared_ptr<globals_t> _g, Random64 &_rng, size_t _threadId, std::shared_ptr<StopCondition> _stopCondition, size_t _RQ_RANGE,
+                      std::shared_ptr<ArgsGenerator<K>> _argsGenerator,
                       RatioThreadLoopParameters &threadLoopParameters)
             : ThreadLoop(_g, _threadId, _stopCondition, _RQ_RANGE),
               rng(_rng), argsGenerator(_argsGenerator) {
-        cdf = new double[3];
+        cdf.resize(3);
         cdf[0] = threadLoopParameters.INS_RATIO;
         cdf[1] = cdf[0] + threadLoopParameters.REM_RATIO;
         cdf[2] = cdf[1] + threadLoopParameters.RQ_RATIO;
@@ -58,7 +59,7 @@ public:
 struct DefaultThreadLoopBuilder : public ThreadLoopBuilder {
     RatioThreadLoopParameters parameters;
 
-    ArgsGeneratorBuilder *argsGeneratorBuilder = new DefaultArgsGeneratorBuilder();
+    std::shared_ptr<ArgsGeneratorBuilder> argsGeneratorBuilder = std::shared_ptr<DefaultArgsGeneratorBuilder>(new DefaultArgsGeneratorBuilder());
 
     DefaultThreadLoopBuilder *setInsRatio(double insRatio) {
         parameters.INS_RATIO = insRatio;
@@ -75,7 +76,7 @@ struct DefaultThreadLoopBuilder : public ThreadLoopBuilder {
         return this;
     }
 
-    DefaultThreadLoopBuilder *setArgsGeneratorBuilder(ArgsGeneratorBuilder *_argsGeneratorBuilder) {
+    DefaultThreadLoopBuilder *setArgsGeneratorBuilder(std::shared_ptr<ArgsGeneratorBuilder> _argsGeneratorBuilder) {
         argsGeneratorBuilder = _argsGeneratorBuilder;
         return this;
     }
@@ -87,10 +88,10 @@ struct DefaultThreadLoopBuilder : public ThreadLoopBuilder {
     }
 
 //    template<typename K>
-    ThreadLoop *build(globals_t *_g, Random64 &_rng, size_t _threadId, StopCondition *_stopCondition) override {
-        return new DefaultThreadLoop(_g, _rng, _threadId, _stopCondition, this->RQ_RANGE,
+    std::shared_ptr<ThreadLoop> build(std::shared_ptr<globals_t> _g, Random64 &_rng, size_t _threadId, std::shared_ptr<StopCondition> _stopCondition) override {
+        return std::shared_ptr<ThreadLoop>(new DefaultThreadLoop(_g, _rng, _threadId, _stopCondition, this->RQ_RANGE,
                                      argsGeneratorBuilder->build(_rng),
-                                     parameters);
+                                     parameters));
     }
 
     void toJson(nlohmann::json &json) const override {
@@ -114,9 +115,7 @@ struct DefaultThreadLoopBuilder : public ThreadLoopBuilder {
                + argsGeneratorBuilder->toString(indents + 1);
     }
 
-    ~DefaultThreadLoopBuilder() override {
-        delete argsGeneratorBuilder;
-    };
+    ~DefaultThreadLoopBuilder() override = default;
 };
 
 

@@ -15,14 +15,14 @@ class SkewedUniformDistribution : public Distribution {
 private:
     PAD;
     Random64 &rng;
-    Distribution *hotDistribution;
-    Distribution *coldDistribution;
+    std::shared_ptr<Distribution> hotDistribution;
+    std::shared_ptr<Distribution> coldDistribution;
     double hotProb;
     size_t hotSetLength;
     PAD;
 public:
     SkewedUniformDistribution(Random64 &_rng,
-                              Distribution *_hotDistribution, Distribution *_coldDistribution,
+                              std::shared_ptr<Distribution> _hotDistribution, std::shared_ptr<Distribution> _coldDistribution,
                               const double _hotProb, const size_t _hotSetLength)
             : hotDistribution(_hotDistribution), coldDistribution(_coldDistribution),
               rng(_rng), hotProb(_hotProb), hotSetLength(_hotSetLength) {}
@@ -43,10 +43,7 @@ public:
         return value;
     }
 
-    ~SkewedUniformDistribution() override {
-        delete hotDistribution;
-        delete coldDistribution;
-    }
+    ~SkewedUniformDistribution() override = default;
 };
 
 

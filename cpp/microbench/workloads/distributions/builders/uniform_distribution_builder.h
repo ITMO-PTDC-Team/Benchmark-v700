@@ -13,12 +13,12 @@
 #include "globals_extern.h"
 
 struct UniformDistributionBuilder : public MutableDistributionBuilder {
-    UniformDistribution * build(Random64 &rng, size_t range) override {
-        return new UniformDistribution(rng, range);
+    std::shared_ptr<Distribution> build(Random64 &rng, size_t range) override {
+        return std::shared_ptr<UniformDistribution>(new UniformDistribution(rng, range));
     }
 
-    UniformDistribution * build(Random64 &rng) override {
-        return new UniformDistribution(rng);
+    std::shared_ptr<MutableDistribution> build(Random64 &rng) override {
+        return std::shared_ptr<UniformDistribution>(new UniformDistribution(rng));
     }
 
     void toJson(nlohmann::json &j) const override {

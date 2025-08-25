@@ -19,7 +19,7 @@ struct ThreadLoopBuilder {
         return this;
     };
 
-    virtual ThreadLoop *build(globals_t *_g, Random64 & _rng, size_t _tid, StopCondition *_stopCondition) = 0;
+    virtual std::shared_ptr<ThreadLoop> build(std::shared_ptr<globals_t> _g, Random64 & _rng, size_t _tid, std::shared_ptr<StopCondition> _stopCondition) = 0;
 
     virtual void toJson(nlohmann::json &j) const = 0;
 

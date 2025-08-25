@@ -6,21 +6,21 @@
 #define SETBENCH_ARRAY_DATA_MAP_H
 
 #include <algorithm>
+#include <vector>
 #include "workloads/data_maps/data_map.h"
 
 class ArrayDataMap : public DataMap<long long> {
 private:
-    long long *data;
+    std::vector<long long> data;
 public:
 
-    ArrayDataMap(long long int *data) : data(data) {}
+    ArrayDataMap(std::vector<long long> data) : data(data) {}
 
     long long get(size_t index) override {
         return data[index];
     }
 
     ~ArrayDataMap() {
-        delete[] data;
     }
 
 };

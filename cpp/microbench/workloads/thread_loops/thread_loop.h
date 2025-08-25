@@ -22,10 +22,10 @@ protected:
     size_t RQ_RANGE;
 public:
     size_t threadId;
-    globals_t *g;
-    StopCondition *stopCondition;
+    std::shared_ptr<globals_t> g;
+    std::shared_ptr<StopCondition> stopCondition;
 
-    ThreadLoop(globals_t *_g, size_t _threadId, StopCondition *_stopCondition, size_t _RQ_RANGE)
+    ThreadLoop(std::shared_ptr<globals_t> _g, size_t _threadId, std::shared_ptr<StopCondition> _stopCondition, size_t _RQ_RANGE)
             : g(_g), threadId(_threadId), stopCondition(_stopCondition), RQ_RANGE(_RQ_RANGE) {}
 
     template<typename K>

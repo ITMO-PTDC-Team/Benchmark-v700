@@ -9,37 +9,38 @@
 #include "parameters.h"
 #include "workloads/stop_condition/impls/operation_counter.h"
 #include "workloads/thread_loops/impls/default_thread_loop.h"
+#include "workloads/thread_loops/impls/prefill_insert_thread_loop.h"
 
 struct BenchParameters {
     size_t range;
 
-    Parameters* test;
-    Parameters* prefill;
-    Parameters* warmUp;
+    std::shared_ptr<Parameters> prefill;
+    std::shared_ptr<Parameters> warmUp;
+    std::shared_ptr<Parameters> test;
 
     BenchParameters() {
         range = 2048;
         //        test = nullptr;
         //        prefill = nullptr;
         //        warmUp = nullptr;
-        test = new Parameters();
-        prefill = new Parameters();
-        warmUp = new Parameters();
+        test = std::make_shared<Parameters>();
+        prefill = std::make_shared<Parameters>();
+        warmUp = std::make_shared<Parameters>();
     }
 
     BenchParameters(const BenchParameters& p) = default;
 
     BenchParameters& createDefaultPrefill(size_t threadNum) {
-        prefill = (new Parameters())
-                      ->setStopCondition(new OperationCounter(range / 2))
-                      ->addThreadLoopBuilder(new PrefillInsertThreadLoopBuilder(), threadNum);
+        prefill = std::shared_ptr<Parameters>((new Parameters())
+                      ->setStopCondition(std::shared_ptr<OperationCounter>(new OperationCounter(range / 2)))
+                      ->addThreadLoopBuilder(std::shared_ptr<PrefillInsertThreadLoopBuilder>(new PrefillInsertThreadLoopBuilder()), threadNum));
         return *this;
     }
 
     BenchParameters& createDefaultPrefill() {
-        prefill = new Parameters();
-        prefill->stopCondition = new OperationCounter(range / 2);
-        prefill->addThreadLoopBuilder(new PrefillInsertThreadLoopBuilder(), 1);
+        prefill = std::shared_ptr<Parameters>(new Parameters());
+        prefill->stopCondition = std::shared_ptr<OperationCounter>(new OperationCounter(range / 2));
+        prefill->addThreadLoopBuilder(std::shared_ptr<PrefillInsertThreadLoopBuilder>(new PrefillInsertThreadLoopBuilder()), 1);
         return createDefaultPrefill(1);
     }
 
@@ -48,17 +49,17 @@ struct BenchParameters {
         return *this;
     }
 
-    BenchParameters& setTest(Parameters* _test) {
+    BenchParameters& setTest(std::shared_ptr<Parameters> _test) {
         test = _test;
         return *this;
     }
 
-    BenchParameters& setPrefill(Parameters* _prefill) {
+    BenchParameters& setPrefill(std::shared_ptr<Parameters> _prefill) {
         prefill = _prefill;
         return *this;
     }
 
-    BenchParameters& setWarmUp(Parameters* _warmUp) {
+    BenchParameters& setWarmUp(std::shared_ptr<Parameters> _warmUp) {
         warmUp = _warmUp;
         return *this;
     }
@@ -100,9 +101,6 @@ struct BenchParameters {
     }
 
     ~BenchParameters() {
-        delete test;
-        delete prefill;
-        delete warmUp;
         deleteDataMapBuilders();
     }
 };
@@ -116,9 +114,9 @@ void to_json(nlohmann::json& json, const BenchParameters& s) {
 
 void from_json(const nlohmann::json& json, BenchParameters& s) {
     s.range = json["range"];
-    s.test = new Parameters(json["test"]);
-    s.prefill = new Parameters(json["prefill"]);
-    s.warmUp = new Parameters(json["warmUp"]);
+    s.test = std::make_shared<Parameters>(json["test"]);
+    s.prefill = std::make_shared<Parameters>(json["prefill"]);
+    s.warmUp = std::make_shared<Parameters>(json["warmUp"]);
 }
 
 #endif  // SETBENCH_BENCH_PARAMETERS_H

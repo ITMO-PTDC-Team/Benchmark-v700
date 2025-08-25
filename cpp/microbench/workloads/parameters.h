@@ -5,6 +5,8 @@
 #ifndef SETBENCH_PARAMETERS_H
 #define SETBENCH_PARAMETERS_H
 
+#include <iterator>
+#include <memory>
 #include <vector>
 #include <string>
 #include <iostream>
@@ -20,7 +22,7 @@
 #include "binding.h"
 
 struct ThreadLoopSettings {
-    ThreadLoopBuilder *threadLoopBuilder;
+    std::shared_ptr<ThreadLoopBuilder> threadLoopBuilder;
     size_t quantity;
     std::string pinPattern;
 
@@ -34,7 +36,7 @@ struct ThreadLoopSettings {
         threadLoopBuilder = getThreadLoopFromJson(j["threadLoopBuilder"]);
     }
 
-    ThreadLoopSettings *setThreadLoopBuilder(ThreadLoopBuilder *_threadLoopBuilder) {
+    ThreadLoopSettings *setThreadLoopBuilder(std::shared_ptr<ThreadLoopBuilder> _threadLoopBuilder) {
         threadLoopBuilder = _threadLoopBuilder;
         return this;
     }
@@ -51,12 +53,9 @@ struct ThreadLoopSettings {
 
     ThreadLoopSettings() {}
 
-    ThreadLoopSettings(ThreadLoopBuilder *threadLoopBuilder, size_t quantity = 1, const std::string& _pinPattern = "")
+    ThreadLoopSettings(std::shared_ptr<ThreadLoopBuilder> threadLoopBuilder, size_t quantity = 1, const std::string& _pinPattern = "")
             : threadLoopBuilder(threadLoopBuilder), quantity(quantity), pinPattern(_pinPattern) {}
 
-    ~ThreadLoopSettings() {
-        delete threadLoopBuilder;
-    }
 };
 
 
@@ -117,12 +116,12 @@ public:
         }
     }
 
-    StopCondition *stopCondition;
+    std::shared_ptr<StopCondition> stopCondition;
 
-    std::vector<ThreadLoopSettings *> threadLoopBuilders;
+    std::vector<std::shared_ptr<ThreadLoopSettings>> threadLoopBuilders;
 
 //    Parameters() : numThreads(0), stopCondition(nullptr) {}
-    Parameters() : numThreads(0), stopCondition(new Timer(5000)) {}
+    Parameters() : numThreads(0), stopCondition(std::shared_ptr<Timer>(new Timer(5000))) {}
 
     Parameters(const Parameters &p) = default;
 
@@ -134,17 +133,17 @@ public:
         return pin;
     }
 
-    Parameters *setStopCondition(StopCondition *_stopCondition) {
+    Parameters *setStopCondition(std::shared_ptr<StopCondition> _stopCondition) {
         stopCondition = _stopCondition;
         return this;
     }
 
-    Parameters *setThreadLoopBuilders(const std::vector<ThreadLoopSettings *> &_threadLoopBuilders) {
+    Parameters *setThreadLoopBuilders(const std::vector<std::shared_ptr<ThreadLoopSettings>> &_threadLoopBuilders) {
         Parameters::threadLoopBuilders = _threadLoopBuilders;
         return this;
     }
 
-    Parameters *addThreadLoopBuilder(ThreadLoopSettings *_threadLoopSettings) {
+    Parameters *addThreadLoopBuilder(std::shared_ptr<ThreadLoopSettings> _threadLoopSettings) {
         threadLoopBuilders.push_back(_threadLoopSettings);
         numThreads += _threadLoopSettings->quantity;
         if (_threadLoopSettings && !_threadLoopSettings->pinPattern.empty()) {
@@ -160,33 +159,34 @@ public:
         return this;
     }
 
-    Parameters *addThreadLoopBuilder(ThreadLoopBuilder *_threadLoopBuilder,
+    Parameters *addThreadLoopBuilder(std::shared_ptr<ThreadLoopBuilder> _threadLoopBuilder,
                                      size_t quantity = 1,
                                      const std::string& _pinPattern = "") {
-        return addThreadLoopBuilder(new ThreadLoopSettings(_threadLoopBuilder, quantity, _pinPattern));
+        return addThreadLoopBuilder(std::shared_ptr<ThreadLoopSettings>(new ThreadLoopSettings(_threadLoopBuilder, quantity, _pinPattern)));
     }
 
     Parameters *init(int range) {
         if (stopCondition == nullptr) {
-            stopCondition = new Timer(5000);
+            stopCondition = std::shared_ptr<Timer>(new Timer(5000));
         }
 
-        for (ThreadLoopSettings *threadLoopSettings: threadLoopBuilders) {
+        for (auto threadLoopSettings: threadLoopBuilders) {
             threadLoopSettings->threadLoopBuilder->init(range);
         }
         return this;
     }
 
-    ThreadLoop **getWorkload(globals_t *_g, Random64 *_rngs) const {
-        ThreadLoop **workload = new ThreadLoop *[this->numThreads];
+    std::vector<std::shared_ptr<ThreadLoop>> getWorkload(std::shared_ptr<globals_t> _g, Random64 *_rngs) const {
+        auto workload = std::vector<std::shared_ptr<ThreadLoop>>();
+        workload.reserve(this->numThreads);
         for (size_t threadId = 0, i = 0, curQuantity = 0; threadId < this->numThreads; ++threadId, ++curQuantity) {
             if (curQuantity >= threadLoopBuilders[i]->quantity) {
                 curQuantity = 0;
                 ++i;
             }
 
-            workload[threadId] = threadLoopBuilders[i]->threadLoopBuilder
-                    ->build(_g, _rngs[threadId], threadId, stopCondition);
+            workload.push_back(threadLoopBuilders[i]->threadLoopBuilder
+                    ->build(_g, _rngs[threadId], threadId, stopCondition));
         }
         return workload;
     }
@@ -194,7 +194,7 @@ public:
     void toJson(nlohmann::json &j) const {
         j["numThreads"] = numThreads;
         j["stopCondition"] = *stopCondition;
-        for (ThreadLoopSettings *tls: threadLoopBuilders) {
+        for (auto tls: threadLoopBuilders) {
             j["threadLoopBuilders"].push_back(*tls);
         }
     }
@@ -204,7 +204,7 @@ public:
 
         if (j.contains("threadLoopBuilders")) {
             for (const auto &i: j["threadLoopBuilders"]) {
-                addThreadLoopBuilder(new ThreadLoopSettings(i));
+                addThreadLoopBuilder(std::shared_ptr<ThreadLoopSettings>(new ThreadLoopSettings(i)));
             }
         }
     }
@@ -238,10 +238,6 @@ public:
     }
 
     ~Parameters() {
-        delete stopCondition;
-        for (ThreadLoopSettings *tls: threadLoopBuilders) {
-            delete tls;
-        }
     }
 
 };

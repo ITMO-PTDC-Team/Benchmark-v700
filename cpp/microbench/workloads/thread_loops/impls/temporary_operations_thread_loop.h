@@ -5,6 +5,7 @@
 #ifndef SETBENCH_TEMPORARY_OPERATIONS_THREAD_LOOP_H
 #define SETBENCH_TEMPORARY_OPERATIONS_THREAD_LOOP_H
 
+#include "workloads/args_generators/args_generator.h"
 #include "workloads/thread_loops/thread_loop.h"
 #include "workloads/thread_loops/ratio_thread_loop_parameters.h"
 
@@ -14,7 +15,7 @@ class TemporaryOperationThreadLoop : public ThreadLoop {
     double **cdf;
     Random64 &rng;
     PAD;
-    ArgsGenerator<K> *argsGenerator;
+    std::shared_ptr<ArgsGenerator<K>> argsGenerator;
     PAD;
     size_t time;
     size_t pointer;
@@ -34,12 +35,12 @@ class TemporaryOperationThreadLoop : public ThreadLoop {
     }
 
 public:
-    TemporaryOperationThreadLoop(globals_t *g, Random64 &_rng, size_t threadId, StopCondition *stopCondition,
+    TemporaryOperationThreadLoop(std::shared_ptr<globals_t> g, Random64 &_rng, size_t threadId, std::shared_ptr<StopCondition> stopCondition,
                                  size_t rqRange,
                                  size_t _stagesNumber,
                                  size_t *_stagesDurations,
                                  RatioThreadLoopParameters **ratios,
-                                 ArgsGenerator<K> *_argsGenerator)
+                                 std::shared_ptr<ArgsGenerator<K>> _argsGenerator)
             : ThreadLoop(g, threadId, stopCondition, rqRange),
               rng(_rng),
               argsGenerator(_argsGenerator),
@@ -87,7 +88,7 @@ struct TemporaryOperationsThreadLoopBuilder : public ThreadLoopBuilder {
     size_t *stagesDurations;
     RatioThreadLoopParameters **ratios;
 
-    ArgsGeneratorBuilder *argsGeneratorBuilder = new DefaultArgsGeneratorBuilder();
+    std::shared_ptr<ArgsGeneratorBuilder> argsGeneratorBuilder = std::make_shared<DefaultArgsGeneratorBuilder>();
 
     TemporaryOperationsThreadLoopBuilder *setStagesNumber(const size_t _stagesNumber) {
         stagesNumber = _stagesNumber;
@@ -141,7 +142,7 @@ struct TemporaryOperationsThreadLoopBuilder : public ThreadLoopBuilder {
         return this;
     }
 
-    TemporaryOperationsThreadLoopBuilder *setArgsGeneratorBuilder(ArgsGeneratorBuilder *_argsGeneratorBuilder) {
+    TemporaryOperationsThreadLoopBuilder *setArgsGeneratorBuilder(std::shared_ptr<ArgsGeneratorBuilder> _argsGeneratorBuilder) {
         argsGeneratorBuilder = _argsGeneratorBuilder;
         return this;
     }
@@ -152,11 +153,11 @@ struct TemporaryOperationsThreadLoopBuilder : public ThreadLoopBuilder {
         return this;
     }
 
-    TemporaryOperationThreadLoop *
-    build(globals_t *_g, Random64 &_rng, size_t _tid, StopCondition *_stopCondition) override {
-        return new TemporaryOperationThreadLoop(_g, _rng, _tid, _stopCondition, this->RQ_RANGE,
+    std::shared_ptr<ThreadLoop>
+    build(std::shared_ptr<globals_t> _g, Random64 &_rng, size_t _tid, std::shared_ptr<StopCondition> _stopCondition) override {
+        return std::shared_ptr<TemporaryOperationThreadLoop>(new TemporaryOperationThreadLoop(_g, _rng, _tid, _stopCondition, this->RQ_RANGE,
                                                 stagesNumber, stagesDurations, ratios,
-                                                argsGeneratorBuilder->build(_rng));
+                                                argsGeneratorBuilder->build(_rng)));
     }
 
     void toJson(nlohmann::json &j) const override {
@@ -211,7 +212,6 @@ struct TemporaryOperationsThreadLoopBuilder : public ThreadLoopBuilder {
     ~TemporaryOperationsThreadLoopBuilder() override {
         delete stagesDurations;
         delete[] ratios;
-        delete argsGeneratorBuilder;
     };
 };
 

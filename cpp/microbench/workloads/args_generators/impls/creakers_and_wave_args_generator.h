@@ -6,6 +6,7 @@
 #define SETBENCH_CREAKERS_AND_WAVE_ARGS_GENERATOR_H
 
 #include <atomic>
+#include <memory>
 
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/distributions/distribution.h"
@@ -38,9 +39,9 @@ class CreakersAndWaveArgsGenerator : public ArgsGenerator<K> {
     PAD;
     double creakersRatio;
     size_t creakersBegin;
-    Distribution *creakersDist;
-    MutableDistribution *waveDist;
-    DataMap<K> *dataMap;
+    std::shared_ptr<Distribution> creakersDist;
+    std::shared_ptr<MutableDistribution> waveDist;
+    std::shared_ptr<DataMap<K>> dataMap;
     PAD;
     std::atomic<size_t> *waveBegin;
     PAD;
@@ -121,9 +122,9 @@ public:
     CreakersAndWaveArgsGenerator(Random64 &rng, double creakersRatio, size_t creakersBegin,
                                  std::atomic<size_t> *waveBegin,
                                  std::atomic<size_t> *waveEnd,
-                                 Distribution *creakersDist,
-                                 MutableDistribution *waveDist,
-                                 DataMap<K> *dataMap) :
+                                 std::shared_ptr<Distribution> creakersDist,
+                                 std::shared_ptr<MutableDistribution> waveDist,
+                                 std::shared_ptr<DataMap<K>> dataMap) :
             rng(rng),
             creakersRatio(creakersRatio),
             creakersBegin(creakersBegin),
@@ -168,11 +169,7 @@ public:
         return {left, right};
     }
 
-    ~CreakersAndWaveArgsGenerator() override {
-        delete creakersDist;
-        delete waveDist;
-        delete dataMap;
-    };
+    ~CreakersAndWaveArgsGenerator() override = default;
 };
 
 #include "errors.h"
@@ -182,13 +179,13 @@ class CreakersAndWavePrefillArgsGenerator : public ArgsGenerator<K> {
     PAD;
     Random64 &rng;
     PAD;
-    DataMap<K> *dataMap;
+    std::shared_ptr<DataMap<K>> dataMap;
     size_t waveBegin;
     size_t prefillLength;
     PAD;
 
 public:
-    CreakersAndWavePrefillArgsGenerator(Random64 &rng, size_t waveBegin, size_t prefillLength, DataMap<K> *dataMap) :
+    CreakersAndWavePrefillArgsGenerator(Random64 &rng, size_t waveBegin, size_t prefillLength, std::shared_ptr<DataMap<K>> dataMap) :
             rng(rng), waveBegin(waveBegin), prefillLength(prefillLength), dataMap(dataMap) {}
 
     K nextGet() override {
@@ -215,9 +212,7 @@ public:
         setbench_error("Unsupported operation -- nextRange")
     }
 
-    ~CreakersAndWavePrefillArgsGenerator() override {
-        delete dataMap;
-    };
+    ~CreakersAndWavePrefillArgsGenerator() override = default;
 };
 
 #include "workloads/args_generators/args_generator_builder.h"
@@ -245,10 +240,10 @@ class CreakersAndWaveArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     double creakersRatio = 0;
     double waveSize = 0;
 
-    DistributionBuilder *creakersDistBuilder = new UniformDistributionBuilder();
-    MutableDistributionBuilder *waveDistBuilder = new ZipfianDistributionBuilder();
+    std::shared_ptr<DistributionBuilder> creakersDistBuilder = std::make_shared<UniformDistributionBuilder>();
+    std::shared_ptr<MutableDistributionBuilder> waveDistBuilder = std::make_shared<ZipfianDistributionBuilder>();
 
-    DataMapBuilder *dataMapBuilder = new ArrayDataMapBuilder();
+    std::shared_ptr<DataMapBuilder> dataMapBuilder = std::make_shared<ArrayDataMapBuilder>();
 
 public:
     double getCreakersSize() const {
@@ -259,7 +254,7 @@ public:
         return waveSize;
     }
 
-    DataMapBuilder *getDataMapBuilder() const {
+    std::shared_ptr<DataMapBuilder> getDataMapBuilder() const {
         return dataMapBuilder;
     }
 
@@ -279,17 +274,17 @@ public:
         return this;
     }
 
-    CreakersAndWaveArgsGeneratorBuilder *setCreakersDistBuilder(DistributionBuilder *_creakersDistBuilder) {
+    CreakersAndWaveArgsGeneratorBuilder *setCreakersDistBuilder(std::shared_ptr<DistributionBuilder> _creakersDistBuilder) {
         creakersDistBuilder = _creakersDistBuilder;
         return this;
     }
 
-    CreakersAndWaveArgsGeneratorBuilder *setWaveDistBuilder(MutableDistributionBuilder *_waveDistBuilder) {
+    CreakersAndWaveArgsGeneratorBuilder *setWaveDistBuilder(std::shared_ptr<MutableDistributionBuilder> _waveDistBuilder) {
         waveDistBuilder = _waveDistBuilder;
         return this;
     }
 
-    CreakersAndWaveArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
+    CreakersAndWaveArgsGeneratorBuilder *setDataMapBuilder(std::shared_ptr<DataMapBuilder> _dataMapBuilder) {
         dataMapBuilder = _dataMapBuilder;
         return this;
     }
@@ -304,13 +299,13 @@ public:
         return this;
     }
 
-    CreakersAndWaveArgsGenerator<K> *build(Random64 &_rng) override {
-        return new CreakersAndWaveArgsGenerator<K>(_rng, creakersRatio, creakersBegin,
+    std::shared_ptr<ArgsGenerator<K>> build(Random64 &_rng) override {
+        return std::shared_ptr<CreakersAndWaveArgsGenerator<K>>(new CreakersAndWaveArgsGenerator<K>(_rng, creakersRatio, creakersBegin,
                                                    waveBegin,
                                                    waveEnd,
                                                    creakersDistBuilder->build(_rng, creakersLength),
                                                    waveDistBuilder->build(_rng),
-                                                   dataMapBuilder->build());
+                                                   dataMapBuilder->build()));
     }
 
     void toJson(nlohmann::json &j) const override {
@@ -348,9 +343,6 @@ public:
     ~CreakersAndWaveArgsGeneratorBuilder() override {
         delete waveBegin;
         delete waveEnd;
-        delete creakersDistBuilder;
-        delete waveDistBuilder;
-//        delete dataMapBuilder;
     };
 };
 
@@ -362,7 +354,7 @@ class CreakersAndWavePrefillArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     double creakersSize = 0;
     double waveSize = 0;
 
-    DataMapBuilder *dataMapBuilder = new ArrayDataMapBuilder();
+    std::shared_ptr<DataMapBuilder> dataMapBuilder = std::make_shared<ArrayDataMapBuilder>();
 
 public:
     size_t getPrefillLength() const {
@@ -375,12 +367,12 @@ public:
 
     CreakersAndWavePrefillArgsGeneratorBuilder() {}
 
-    CreakersAndWavePrefillArgsGeneratorBuilder(CreakersAndWaveArgsGeneratorBuilder *builder) {
+    CreakersAndWavePrefillArgsGeneratorBuilder(std::shared_ptr<CreakersAndWaveArgsGeneratorBuilder> builder) {
         setParametersByBuilder(builder);
     }
 
     CreakersAndWavePrefillArgsGeneratorBuilder *setParametersByBuilder(
-                CreakersAndWaveArgsGeneratorBuilder *builder) {
+                std::shared_ptr<CreakersAndWaveArgsGeneratorBuilder> builder) {
         creakersSize = builder->getCreakersSize();
         waveSize = builder->getWaveSize();
         dataMapBuilder = builder->getDataMapBuilder();
@@ -397,7 +389,7 @@ public:
         return this;
     }
 
-    CreakersAndWavePrefillArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
+    CreakersAndWavePrefillArgsGeneratorBuilder *setDataMapBuilder(std::shared_ptr<DataMapBuilder> _dataMapBuilder) {
         dataMapBuilder = _dataMapBuilder;
         return this;
     }
@@ -409,9 +401,9 @@ public:
         return this;
     }
 
-    CreakersAndWavePrefillArgsGenerator<K> *build(Random64 &_rng) override {
-        return new CreakersAndWavePrefillArgsGenerator<K>(_rng, waveBegin, prefillLength,
-                                                          dataMapBuilder->build());
+    std::shared_ptr<ArgsGenerator<K>> build(Random64 &_rng) override {
+        return std::shared_ptr<CreakersAndWavePrefillArgsGenerator<K>>(new CreakersAndWavePrefillArgsGenerator<K>(_rng, waveBegin, prefillLength,
+                                                          dataMapBuilder->build()));
     }
 
     void toJson(nlohmann::json &j) const override {
@@ -435,9 +427,7 @@ public:
                + dataMapBuilder->toString(indents + 1);
     }
 
-    ~CreakersAndWavePrefillArgsGeneratorBuilder() override {
-//        delete dataMapBuilder;
-    };
+    ~CreakersAndWavePrefillArgsGeneratorBuilder() override = default;
 };
 
 

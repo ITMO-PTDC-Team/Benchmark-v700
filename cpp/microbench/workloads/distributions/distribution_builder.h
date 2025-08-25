@@ -11,7 +11,7 @@
 #include "json/single_include/nlohmann/json.hpp"
 
 struct DistributionBuilder {
-    virtual Distribution * build(Random64 &rng, size_t range) = 0;
+    virtual std::shared_ptr<Distribution> build(Random64 &rng, size_t range) = 0;
 
     virtual std::string toString(size_t indents) = 0;
 
@@ -23,7 +23,7 @@ struct DistributionBuilder {
 };
 
 struct MutableDistributionBuilder : public DistributionBuilder {
-    virtual MutableDistribution * build(Random64 &rng) = 0;
+    virtual std::shared_ptr<MutableDistribution> build(Random64 &rng) = 0;
 };
 
 void to_json(nlohmann::json &j, const DistributionBuilder &s) {

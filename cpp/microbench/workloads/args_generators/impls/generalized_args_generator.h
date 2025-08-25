@@ -51,7 +51,7 @@ public:
 
 static const std::set<std::string> oper_types{"get", "insert", "remove", "rangeQuery"};
 
-ArgsGeneratorBuilder *getArgsGeneratorFromJson(const nlohmann::json &j);
+std::shared_ptr<ArgsGeneratorBuilder> getArgsGeneratorFromJson(const nlohmann::json &j);
 
 //template<typename K>
 class GeneralizedArgsGeneratorBuilder : public ArgsGeneratorBuilder {
@@ -66,7 +66,7 @@ public:
     GeneralizedArgsGeneratorBuilder() = default;
 
     GeneralizedArgsGeneratorBuilder *addArgsGeneratorBuilder(const std::vector<std::string>& opers,
-                                                         ArgsGeneratorBuilder *_argsGenBuilder) {
+                                                         std::shared_ptr<ArgsGeneratorBuilder> _argsGenBuilder) {
         for (auto oper_type : opers) {
             if (oper_types.find(oper_type) == oper_types.end()) {
                 setbench_error("Unsupported operation type: " + oper_type);
@@ -78,7 +78,7 @@ public:
         }
 
         std::shared_ptr<ArgsGeneratorBuilder> new_builder;
-        new_builder.reset(_argsGenBuilder);
+        new_builder = _argsGenBuilder;
         args_generator_builders.push_back({opers, new_builder});
 
         return this;
@@ -88,7 +88,7 @@ public:
         if (!undec_oper_types.empty()) {
             addArgsGeneratorBuilder(
                 std::vector<std::string>(undec_oper_types.begin(), undec_oper_types.end()),
-                new NullArgsGeneratorBuilder());
+                std::shared_ptr<ArgsGeneratorBuilder>(new NullArgsGeneratorBuilder()));
         }
 
         for (auto& it : args_generator_builders) {
@@ -97,20 +97,20 @@ public:
         return this;
     }
 
-    GeneralizedArgsGenerator<K> *build(Random64 &_rng) override {
+    std::shared_ptr<ArgsGenerator<K>> build(Random64 &_rng) override {
         std::map<std::string, std::shared_ptr<ArgsGenerator<K>>> built;
         for (auto& it : args_generator_builders) {
             std::shared_ptr<ArgsGenerator<K>> u;
-            u.reset(it.second->build(_rng));
+            u = it.second->build(_rng);
             for (auto& oper_type : it.first) {
                 built.insert({oper_type, u});
             }
         }
 
-        return new GeneralizedArgsGenerator<K>(std::move(built["get"]),
+        return std::shared_ptr<GeneralizedArgsGenerator<K>>(new GeneralizedArgsGenerator<K>(std::move(built["get"]),
                                                std::move(built["insert"]),
                                                std::move(built["remove"]),
-                                               std::move(built["rangeQuery"]));
+                                               std::move(built["rangeQuery"])));
     }
 
     void toJson(nlohmann::json &j) const override {

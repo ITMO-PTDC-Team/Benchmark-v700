@@ -162,7 +162,7 @@ public:
             // we now have at least minNodes subtrees to process (in qn[ixStartOfDepth ... ix]),
             // so we can use openmp parallel for to construct TreeStats for these subtrees in parallel.
             std::cout<<"partitioned into "<<(ix-ixStartOfDepth)<<" subtrees; running parallel for..."<<std::endl;
-            #pragma omp parallel for schedule(dynamic, 1)
+            // #pragma omp parallel for schedule(dynamic, 1)
             for (size_t i=ixStartOfDepth;i<ix;++i) {
                 TreeStats<NodeHandlerT> * ts = new TreeStats(handler, qn[i], false, false);
                 TRACE COUTATOMIC("tree_stats: sequential compute at depth "<<currDepth<<std::endl);

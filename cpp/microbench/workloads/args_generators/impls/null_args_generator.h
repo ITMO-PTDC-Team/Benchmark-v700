@@ -38,8 +38,8 @@ public:
         return this;
     }
 
-    NullArgsGenerator<K> *build(Random64 &_rng) override {
-        return new NullArgsGenerator<K>();
+    std::shared_ptr<ArgsGenerator<K>> build(Random64 &_rng) override {
+        return std::shared_ptr<NullArgsGenerator<K>>(new NullArgsGenerator<K>());
     }
 
     void toJson(nlohmann::json &j) const override {

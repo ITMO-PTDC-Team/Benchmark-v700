@@ -16,7 +16,7 @@ typedef long long K;
 struct ArgsGeneratorBuilder {
     virtual ArgsGeneratorBuilder * init(size_t range) = 0;
 
-    virtual ArgsGenerator<K> * build(Random64 & _rng) = 0;
+    virtual std::shared_ptr<ArgsGenerator<K>> build(Random64 & _rng) = 0;
 
     virtual void toJson(nlohmann::json &j) const = 0;
 
