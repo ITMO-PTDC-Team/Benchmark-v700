@@ -155,7 +155,7 @@ add_compile_options(${compilerOptions})
 add_compile_definitions(${compilerDefinitions})
 add_link_options(${linkerOptions})
 
-##### configure data structures #####
+##### configure data structures & other targets #####
 
 set(DSDir "ds")
 
@@ -190,3 +190,10 @@ foreach(dataStructure ${dataStructures})
         endif()
     endforeach()
 endforeach()
+
+if(TESTING)
+    find_package(GTest REQUIRED)
+    file(GLOB testSources tests/*.cpp)
+    add_executable(tests ${testSources})
+    target_link_libraries(tests GTest::gtest GTest::gtest_main)
+endif()
