@@ -21,23 +21,23 @@ class LeafsHandshakeArgsGenerator : public ArgsGenerator {
     std::atomic<size_t> *deletedValue;
     PAD;
 
-    DataMap<long long> *readData;
-    DataMap<long long> *removeData;
+    DataMap<long long> *readDataMap;
+    DataMap<long long> *removeDataMap;
 
 public:
     LeafsHandshakeArgsGenerator(Random64 &rng, size_t range, std::atomic<size_t> *deletedValue,
                                 Distribution *readDistribution, MutableDistribution *insertDistribution,
-                                Distribution *removeDistribution, DataMap<long long> *readData, DataMap<long long> *removeData) :
+                                Distribution *removeDistribution, DataMap<long long> *readDataMap, DataMap<long long> *removeDataMap) :
             range(range),
             readDistribution(readDistribution),
             insertDistribution(insertDistribution),
             removeDistribution(removeDistribution),
             rng(rng), deletedValue(deletedValue),
-            readData(readData),
-            removeData(removeData) {}
+            readDataMap(readDataMap),
+            removeDataMap(removeDataMap) {}
 
     size_t nextGet() {
-        return readData->get(readDistribution->next());
+        return readDataMap->get(readDistribution->next());
     }
 
     size_t nextInsert() {
@@ -58,7 +58,7 @@ public:
 
     size_t nextRemove() {
         size_t localDeletedValue = *deletedValue;
-        size_t value = removeData->get(removeDistribution->next());
+        size_t value = removeDataMap->get(removeDistribution->next());
 
         //todo learn the difference between all kinds of weakCompareAndSet
         deletedValue->compare_exchange_weak(localDeletedValue, value);
@@ -70,9 +70,19 @@ public:
         setbench_error("Unsupported operation -- nextRange")
     }
 
+    std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() {
+        std::vector<std::shared_ptr<DataMap<long long>>> result;
+        result.reserve(4);
+        result.emplace_back(readDataMap);
+        result.emplace_back(readDataMap);
+        result.emplace_back(removeDataMap);
+        result.emplace_back(nullptr);
+        return result;
+    }
+
     ~LeafsHandshakeArgsGenerator() {
-        delete readData;
-        delete removeData;
+        delete readDataMap;
+        delete removeDataMap;
         delete readDistribution;
         delete insertDistribution;
         delete removeDistribution;

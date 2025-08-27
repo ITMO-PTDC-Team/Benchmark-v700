@@ -6,6 +6,7 @@
 #define SETBENCH_ARGS_GENERATOR_H
 
 #include <utility>
+#include <vector>
 
 struct ArgsGenerator {
     virtual size_t nextGet() = 0;
@@ -17,6 +18,16 @@ struct ArgsGenerator {
     virtual std::pair<size_t, size_t> nextRange() = 0;
 
     virtual ~ArgsGenerator() = default;
+
+    /*
+        Function, that returns a vector of DataMap ptr's, each corresponding to
+        function in a data structure
+        1. get
+        2. insert
+        3. remove
+        4. rangeQuery
+    */
+    virtual std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() = 0;
 };
 
 #endif //SETBENCH_ARGS_GENERATOR_H

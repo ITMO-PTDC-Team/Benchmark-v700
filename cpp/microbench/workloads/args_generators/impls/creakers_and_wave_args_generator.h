@@ -168,6 +168,15 @@ public:
         return {left, right};
     }
 
+    std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() {
+        std::vector<std::shared_ptr<DataMap<long long>>> result;
+        result.reserve(4);
+        for (int i = 0; i<4; ++i) {
+            result.emplace_back(dataMap);
+        }
+        return result;
+    }
+
     ~CreakersAndWaveArgsGenerator() override {
         delete creakersDist;
         delete waveDist;
@@ -212,6 +221,19 @@ public:
 
     std::pair<size_t, size_t> nextRange() override {
         setbench_error("Unsupported operation -- nextRange")
+    }
+
+    std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() {
+        std::vector<std::shared_ptr<DataMap<long long>>> result;
+        result.reserve(4);
+        for (int i = 0; i<4; ++i) {
+            if (i == 1) {
+                result.emplace_back(dataMap);
+                continue;
+            }
+            result.emplace_back(nullptr);
+        }
+        return result;
     }
 
     ~CreakersAndWavePrefillArgsGenerator() override {

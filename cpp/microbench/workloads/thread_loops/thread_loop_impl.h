@@ -9,6 +9,8 @@
 #include "globals_t_impl.h"
 #include "globals_extern.h"
 
+#include <iostream>
+
 #define THREAD_MEASURED_PRE \
     tid = this->threadId; \
     binding_bindThread(tid); \
@@ -47,7 +49,8 @@
 
 // template<typename KEY_TYPE>
 KEY_TYPE *ThreadLoop::executeInsert(size_t& key) {
-    KEY_TYPE* actualKey = convertKey(key);
+    KEY_TYPE* actualKey = converter.convert(key, "insert");
+    // std::cout << actualKey << std::endl;
     TRACE COUTATOMICTID("### calling INSERT " << key << std::endl);
 
 
@@ -71,10 +74,10 @@ KEY_TYPE *ThreadLoop::executeInsert(size_t& key) {
 
 // template<typename KEY_TYPE>
 KEY_TYPE *ThreadLoop::executeRemove(size_t& key) {
-    KEY_TYPE* actualKey = convertKey(key);
+    KEY_TYPE actualKey = *converter.convert(key, "remove");
     TRACE COUTATOMICTID("### calling ERASE " << key << std::endl);
 //    KEY_TYPE *value = (KEY_TYPE *) g->dsAdapter->erase(this->threadId, key);
-    VALUE_TYPE value = g->dsAdapter->erase(this->threadId, *actualKey);
+    VALUE_TYPE value = g->dsAdapter->erase(this->threadId, actualKey);
 
     if (value != this->g->dsAdapter->getNoValue()) {
         TRACE COUTATOMICTID("### completed ERASE modification for " << key << std::endl);
@@ -93,8 +96,8 @@ KEY_TYPE *ThreadLoop::executeRemove(size_t& key) {
 
 // template<typename KEY_TYPE>
 KEY_TYPE *ThreadLoop::executeGet(size_t& key) {
-    KEY_TYPE* actualKey = convertKey(key);
-    VALUE_TYPE value = this->g->dsAdapter->find(this->threadId, *actualKey);
+    KEY_TYPE actualKey = *converter.convert(key, "get");
+    VALUE_TYPE value = this->g->dsAdapter->find(this->threadId, actualKey);
 
     if (value != this->g->dsAdapter->getNoValue()) {
         garbage += key; // prevent optimizing out
@@ -110,8 +113,8 @@ KEY_TYPE *ThreadLoop::executeGet(size_t& key) {
 
 // template<typename KEY_TYPE>
 bool ThreadLoop::executeContains(size_t& key) {
-    KEY_TYPE* actualKey = convertKey(key);
-    bool value = this->g->dsAdapter->contains(this->threadId, *actualKey);
+    KEY_TYPE actualKey = *converter.convert(key, "get");
+    bool value = this->g->dsAdapter->contains(this->threadId, actualKey);
 
     if (value) {
         garbage += key; // prevent optimizing out
@@ -132,8 +135,8 @@ bool ThreadLoop::executeContains(size_t& key) {
 void ThreadLoop::executeRangeQuery(size_t& leftKey, size_t& rightKey) {
     ++rq_cnt;
     size_t rqcnt;
-    KEY_TYPE * actualLeftKey = convertKey(leftKey);
-    KEY_TYPE * actualRightKey = convertKey(rightKey);
+    KEY_TYPE * actualLeftKey = converter.convert(leftKey, "range");
+    KEY_TYPE * actualRightKey = converter.convert(rightKey, "range");
     if ((rqcnt = this->g->dsAdapter->rangeQuery(this->threadId, *actualLeftKey, *actualRightKey,
                                                 rqResultKeys, (VALUE_TYPE*) rqResultValues))) {
         garbage += rqResultKeys[0] +
@@ -151,11 +154,6 @@ void ThreadLoop::run() {
         step();
     }
     THREAD_MEASURED_POST
-}
-
-// template<typename KEY_TYPE>
-KEY_TYPE* ThreadLoop::convertKey(size_t& key) {
-    return new KEY_TYPE;
 }
 
 

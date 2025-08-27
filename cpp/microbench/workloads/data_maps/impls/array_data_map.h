@@ -10,13 +10,18 @@
 
 class ArrayDataMap : public DataMap<long long> {
 private:
+    KEY_TYPE *actualData;
     long long *data;
 public:
 
-    ArrayDataMap(long long int *data) : data(data) {}
+    ArrayDataMap(long long int *data, KEY_TYPE* actualData) : data(data), actualData(actualData) {}
 
     long long get(size_t index) override {
         return data[index];
+    }
+
+    long long* getActual(size_t index) override {
+        return &actualData[index];
     }
 
     ~ArrayDataMap() {

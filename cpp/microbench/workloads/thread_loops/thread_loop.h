@@ -21,6 +21,7 @@ protected:
     VALUE_TYPE NO_VALUE;
     int rq_cnt;
     size_t RQ_RANGE;
+    KeyConverter converter;
 
 public:
     size_t threadId;
@@ -51,9 +52,6 @@ public:
     virtual void run();
 
     virtual void step() = 0;
-
-    //template<typename K>
-    KEY_TYPE * convertKey(size_t& key);
 };
 
 #ifndef MAIN_BENCH

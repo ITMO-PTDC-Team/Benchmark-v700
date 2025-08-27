@@ -108,6 +108,15 @@ public:
         return {left, right};
     }
 
+    std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() {
+        std::vector<std::shared_ptr<DataMap<long long>>> result;
+        result.reserve(4);
+        for (int i = 0; i<4; ++i) {
+            result.emplace_back(dataMap);
+        }
+        return result;
+    }
+
     ~TemporarySkewedArgsGenerator() override {
         delete[] hotDists;
         delete relaxDist;

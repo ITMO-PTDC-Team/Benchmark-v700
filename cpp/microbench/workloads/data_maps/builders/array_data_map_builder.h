@@ -12,23 +12,29 @@
 
 class ArrayDataMapBuilder : public DataMapBuilder {
     long long* data = nullptr;
+    KEY_TYPE* actualData = nullptr;
 
 public:
     ArrayDataMapBuilder* init(size_t range) override {
         delete[] data;
+        delete[] actualData;
 
         data = new long long[range];
+        actualData = new KEY_TYPE[range];
         for (long long i = 0; i < range; i++) {
             data[i] = i + 1;
         }
 
         //        std::random_shuffle(data, data + range - 1);
         std::shuffle(data, data + range, std::mt19937(std::random_device()()));
+        for (long long i = 0; i < range; i++) {
+            actualData[i] = data[i];
+        }
         return this;
     }
 
     ArrayDataMap* build() override {
-        return new ArrayDataMap(data);
+        return new ArrayDataMap(data, actualData);
     }
 
     void toJson(nlohmann::json& j) const override {

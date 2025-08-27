@@ -11,6 +11,10 @@ struct IdDataMap : public DataMap<long long> {
     long long get(size_t index) override {
         return index + 1;
     }
+
+    long long* getActual(size_t index) override {
+        return new long long(index + 1);
+    }
 };
 
 #endif //SETBENCH_ID_DATA_MAP_H

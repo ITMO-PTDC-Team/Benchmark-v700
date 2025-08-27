@@ -48,6 +48,19 @@ public:
         setbench_error("Unsupported operation -- nextGet")
     }
 
+    std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() {
+        std::vector<std::shared_ptr<DataMap<long long>>> result;
+        result.reserve(4);
+        for (int i = 0; i<4; ++i) {
+            if (i == 1) {
+                result.emplace_back(dataMap);
+                continue;
+            }
+            result.emplace_back(nullptr);
+        }
+        return result;
+    }
+
     ~SkewedInsertArgsGenerator() override {
         delete distribution;
         delete dataMap;

@@ -39,6 +39,15 @@ public:
         return _range_generator->nextRange();
     }
 
+    std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() {
+        std::vector<std::shared_ptr<DataMap<long long>>> result;
+        result.push_back(_get_generator->getInternalDataMaps()[0]);
+        result.push_back(_insert_generator->getInternalDataMaps()[1]);
+        result.push_back(_remove_generator->getInternalDataMaps()[2]);
+        result.push_back(_range_generator->getInternalDataMaps()[3]);
+        return result;
+    }
+
     ~GeneralizedArgsGenerator() = default;
 };
 

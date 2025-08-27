@@ -28,6 +28,7 @@ public:
         cdf[0] = threadLoopParameters.INS_RATIO;
         cdf[1] = cdf[0] + threadLoopParameters.REM_RATIO;
         cdf[2] = cdf[1] + threadLoopParameters.RQ_RATIO;
+        converter = KeyConverter(std::move(_argsGenerator->getInternalDataMaps()));
     }
 
     void step() override {

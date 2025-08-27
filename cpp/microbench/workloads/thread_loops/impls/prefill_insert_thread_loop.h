@@ -26,6 +26,7 @@ public:
                             ArgsGenerator *_argsGenerator, size_t _number_of_attempts)
             : ThreadLoop(_g, _threadId, _stopCondition, _RQ_RANGE),
               rng(_rng), argsGenerator(_argsGenerator), number_of_attempts(_number_of_attempts) {
+        converter = KeyConverter(std::move(_argsGenerator->getInternalDataMaps()));
     }
 
     void step() override {

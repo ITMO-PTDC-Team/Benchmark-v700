@@ -10,13 +10,13 @@ class RangeQueryArgsGenerator : public ArgsGenerator {
 private:
 //    PAD;
     Distribution *distribution;
-    DataMap<long long> *data;
+    DataMap<long long> *dataMap;
     size_t interval;
 //    PAD;
 
 public:
-    RangeQueryArgsGenerator(DataMap<long long> *_data, Distribution *_distribution, size_t _interval)
-            : data(_data), distribution(_distribution), interval(_interval) {}
+    RangeQueryArgsGenerator(DataMap<long long> *_dataMap, Distribution *_distribution, size_t _interval)
+            : dataMap(_dataMap), distribution(_distribution), interval(_interval) {}
 
     size_t nextGet() {
         setbench_error("Operation not supported");
@@ -32,17 +32,27 @@ public:
 
     std::pair<size_t, size_t> nextRange() {
         size_t index = distribution->next();
-        size_t left = data->get(index);
-        size_t right = data->get(index + interval);
+        size_t left = dataMap->get(index);
+        size_t right = dataMap->get(index + interval);
         if (left > right) {
             std::swap(left, right);
         }
         return {left, right};
     }
 
+    std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() {
+        std::vector<std::shared_ptr<DataMap<long long>>> result;
+        result.reserve(4);
+        for (int i = 0; i<3; ++i) {
+            result.emplace_back(nullptr);
+        }
+        result.emplace_back(dataMap);
+        return result;
+    }
+
     ~RangeQueryArgsGenerator() {
         delete distribution;
-        delete data;
+        delete dataMap;
     }
 };
 
