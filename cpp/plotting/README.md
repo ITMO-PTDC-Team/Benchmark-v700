@@ -1,33 +1,38 @@
 # PLOTTING
 
-Use [argument_reader.py](plotting/argument_reader.py) to benchmark and then plot results.
+Use [plotter.py](plotting/plotter.py) to benchmark and then plot results.
 
-Before launching the scripts - install required dependecies via command:
+Before launching the scripts - install required dependencies via command:
 
 ```shell
 pip install --upgrade -r requirements.txt
+pip install --upgrade -r test_requirements.txt
 ```
-
-To get more info about laucnhing the scripts use `-h` option.
 
 ## Setting the JSON parameters
 
 Before launching the script, you should set up the parameters for it. 
 
-| Parameter            | Description                                  | Example Value                     |
-|----------------------|----------------------------------------------|-----------------------------------|
-| `folder`             | Output directory for plots and results       | `"tests-plots"`                   |
-| `json-file-input`    | Name of the input file for benchmark         | `"test.json"`                     |
-| `iterations`         | Number of test iterations to average between | `5`                               |
-| `competitors`        | Data structures to compare                   | `aksenov_splaylist_64`            |
-| `keys`               | Changeable input file parameters to          | See below                         |
-| `key_title`          | X-axis label                                 | `"NumberofThreads"`               |
-| `keys_title`         | X-axis tick labels                           | `["2", "4", "8", "16"]`           |
+| Parameter | Description | Example Value | Default Value | Required |
+|-----------|-------------|---------------|---------------|----------|
+| `folder` | Output directory for plots and results | `"tests-plots"` | - | **Yes** |
+| `json-file-input` | Name of the input file for benchmark | `"test.json"` | - | **Yes** |
+| `iterations` | Number of test iterations to average between | `5` | `1` | No |
+| `competitors` | Data structures to compare (array of strings) | `["aksenov_splaylist_64"]` | - | **Yes** |
+| `keys` | Changeable input file parameters to test (object with key-value pairs) | See below | - | **Yes** |
+| `key_title` | X-axis label | `"NumberOfThreads"` | - | **Yes** |
+| `keys_title` | X-axis tick labels (array of strings) | `["2", "4", "8", "16"]` | - | **Yes** |
+| `allocator` | Memory allocator to use | `"libc"` | `""` | No |
+| `compiled_path` | Path to compiled binaries | `"../build/"` | `"./bin/"` | No |
+| `agg_stat` | Aggregation statistic for results | `"average_num_operations_total"` | `"average_num_operations_total"` | No |
+| `ylabel` | Y-axis label for the plot | `"Avg operations"` | `"Average number of operations total"` | No |
+| `yscale` | Y-axis scale type | `"log"` | `"linear"` | No |
+
 
 
 ### Keys
 
-Each element in the list corresponding to a value, that would be substitued in the `input` JSON file by the `keys.name` path during the runs of a benchmark. The number of times benchmark would be launched equals to `len(keys_title) * len(competitor)`. 
+Each element in the list corresponding to a value, that would be substituted in the `input` JSON file by the `keys.name` path during the runs of a benchmark. The number of times benchmark would be launched equals to `len(keys_title) * len(competitor)`. 
 
 Please note, that `len(keys_title)` should be equal to the `len(keys.values)` for all values.
 
@@ -47,10 +52,12 @@ The script support following flags:
 | `-no-run`            | Store-only flag for benchmark running before plot. Use to omit run               | `-----`                           |
 
 ```shell
-python3 argument_reader.py -f plotter_example.json
+python3 plotter.py -f plotter_example.json
 ```
 
 NOTE: the process, that script will launch, will work from `cpp/microbench` directory. Set up your parameters in JSON file accordingly (only affects `compiled-path` currently) according to this.
+
+NOTE 2: The `logs` folder will be created under your plotting folder for potential error information during runs
 
 ## Troubleshooting
 
@@ -66,4 +73,6 @@ sudo sysctl kernel.perf_event_paranoid=1
 python3 -m pytest run_tests.py -v
 ```
 
-NOTE: For the final test, you must have `aksenov_splaylist_64.debra` built and located in `microbench/bin` directory
+NOTE: For the final test, you must have `aksenov_splaylist_64.debra` built and located in `microbench/bin` directory.
+
+By default, tests will clean their temporary output directories (with the exception of logs), but you can change that by setting `CLEAN_OUTPUT_DIRECTORY` environmental variable during launch to `False`.

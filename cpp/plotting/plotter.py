@@ -56,15 +56,14 @@ class PlotterJsonExtractor(JsonStatExtractor):
     def __init__(self, no_run, **kwargs):
         super().__init__(**kwargs)
         self.out_folder = "folder"
-        self.input_path = "test.json"
-        self.allocator = "libmimalloc"
+        self.allocator = ""
         self.compiled_path = "./bin/"
         self.iterations = 1
         self.agg_stat = "average_num_operations_total"
         self.ylabel = "Average number of operations total"
-        self.yscale = "log"
+        self.yscale = "linear"
 
-        self.xtitle = "NumberofThreads"
+        self.xtitle = "NumberOfThreads"
         self.xvalues = []
 
         self.ds = []
@@ -134,7 +133,7 @@ class PlotterJsonExtractor(JsonStatExtractor):
                         if os.path.isfile(f):
                             os.remove(f)  
                     except Exception as e:
-                        print(f"Ошибка при удалении файла {f}: {e}")
+                        print(f"Error during file deletion {f}: {e}")
 
         for ds_name in self.ds:
             for iter_num in range(len(self.xvalues)):
@@ -257,7 +256,7 @@ def modify_and_run_second_json(folder,
         with open(temp_file, 'w') as temp:
             json.dump(temp_data, temp, indent=4)
  
-        ld_preload = f"../lib/{allocator}.so"
+        ld_preload = f"../lib/{allocator}.so" if allocator != "" else ""
         inp = f"../plotting/{temp_file}"
         file_name = f"{ds}_{title}"
 
@@ -285,7 +284,7 @@ def modify_and_run_second_json(folder,
                         text=True
                     )
                     if cp.stderr:
-                        print(f"Error stream is not empty {cp.stderr}, check logs for info")
+                        print(f"Error stream is not empty {cp.stderr}")
                         task_logger.info(f"stderr: {cp.stderr}")
                 except subprocess.CalledProcessError as exc:
                     print(f"Error whilst launching subprocess {exc}")

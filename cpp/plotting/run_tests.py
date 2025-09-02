@@ -11,6 +11,13 @@ from plotter import run, PlotterJsonExtractor, ResultJsonExtractor, IterationsJs
 
 matplotlib.use('Agg')
 
+CLEAN_DIRECTORY_AFTER = os.getenv("CLEAN_DIRECTORY_AFTER", "True")
+
+def clean_directory(output_dir):
+    for filename in os.listdir(output_dir):
+        if not os.path.isdir(output_dir / filename):
+            os.remove(output_dir / filename)
+
 def check_error(args, capsys, error_string): 
     with pytest.raises(SystemExit) as excinfo:
         run(args)
@@ -67,9 +74,10 @@ def test_no_run_no_files(test_dirs, capsys):
     test_file = test_dirs["no_run"] / "plot_config.json"
     output_dir = test_dirs["no_run"] / "output"
 
-    for filename in os.listdir(output_dir):
-        if not os.path.isdir(output_dir / filename):
-            os.remove(output_dir / filename)
+    if (not os.path.exists(output_dir)):
+        os.makedirs(output_dir)
+
+    clean_directory(output_dir)
 
     args = argparse.Namespace(
         file=str(test_file),
@@ -80,11 +88,19 @@ def test_no_run_no_files(test_dirs, capsys):
 
     check_error(args, capsys, "File not found")
 
+    if (CLEAN_DIRECTORY_AFTER == "True"):
+        clean_directory(output_dir)   
+
 def test_no_run_delete_files(test_dirs, capsys):
     """Test plotting workflow with file deletion simulation"""
     test_file = test_dirs["no_run"] / "plot_config.json"
     output_dir = test_dirs["no_run"] / "output"
     
+    if (not os.path.exists(output_dir)):
+        os.makedirs(output_dir)
+
+    clean_directory(output_dir)
+            
     # mock functions
     def mock_run_extractor(self):
         for ds in ["ds1", "ds2"]:
@@ -134,15 +150,22 @@ def test_no_run_delete_files(test_dirs, capsys):
     run(args_after)
     assert (output_dir / "plot.png").exists()
 
+    if (CLEAN_DIRECTORY_AFTER == "True"):
+        clean_directory(output_dir)  
+
 # --------------------------
 # tests_complete - Full integration tests
 # --------------------------
 def test_full_workflow(test_dirs):
     """Test complete workflow from config to plot"""
     test_file = test_dirs["complete"] / "full_config.json"
-    output_dir = test_dirs["complete"] / "full_output"
-    output_dir.mkdir(exist_ok=True)
-    
+    output_dir = test_dirs["complete"] / "output"
+
+    if (not os.path.exists(output_dir)):
+        os.makedirs(output_dir)
+
+    clean_directory(output_dir)
+
     # Create args object
     args = argparse.Namespace(
         file=str(test_file),
@@ -158,3 +181,6 @@ def test_full_workflow(test_dirs):
     assert (output_dir / "full_plot.png").exists()
     assert (output_dir / "aksenov_splaylist_64_threads_1_aggregated.json").exists()
     assert (output_dir / "aksenov_splaylist_64_threads_2_aggregated.json").exists()
+
+    if (CLEAN_DIRECTORY_AFTER == "True"):
+        clean_directory(output_dir)  
