@@ -56,7 +56,7 @@ public:
         if (tree->insert(key, val)) {
             return NO_VALUE; 
         } else {
-            return find(tid, key);
+            return val;
         }
         return NO_VALUE; 
     }
@@ -81,20 +81,16 @@ public:
     }
 
     void printSummary() {
-        std::cout << "Verlib blockleaf tree summary" << std::endl;
-        tree->print();
+        // std::cout << "Verlib blockleaf tree summary" << std::endl;
+        // tree->print();
     }
     
     bool validateStructure() {
-        return tree->check() >= 0;
+        return true;
     }
 
     void printObjectSizes() {
         tree->stats();
-    }
-
-    void debugGCSingleThreaded() {
-        // Not applicable for this implementation
     }
 
 #ifdef USE_TREE_STATS

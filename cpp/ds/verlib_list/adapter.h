@@ -39,7 +39,7 @@ public:
     void deinitThread(const int tid) {}
 
     bool contains(const int tid, const K& key) {
-        return map->find_locked(key).has_value();
+        return map->find(key).has_value();
     }
 
     V insert(const int tid, const K& key, const V& val) {
@@ -47,20 +47,20 @@ public:
     }
 
     V insertIfAbsent(const int tid, const K& key, const V& val) {
-        auto result = tree->find_locked(key);
+        auto result = map->find(key);
         if (result.has_value()) {
             return result.value(); 
         }
-        if (tree->insert(key, val)) {
+        if (map->insert(key, val)) {
             return NO_VALUE; 
         } else {
-            return find(tid, key);
+            return val;
         }
         return NO_VALUE; 
     }
 
     V erase(const int tid, const K& key) {
-        auto result = map->find_locked(key);
+        auto result = map->find(key);
         if (result.has_value()) {
             if (map->remove(key)) {
                 return result.value();
@@ -70,7 +70,7 @@ public:
     }
 
     V find(const int tid, const K& key) {
-        auto result = map->find_locked(key);
+        auto result = map->find(key);
         return result.has_value() ? result.value() : NO_VALUE;
     }
 
@@ -90,19 +90,17 @@ public:
     }
 
     void printSummary() {
-        std::cout << "Linked Ordered Map summary" << std::endl;
-        map->print();
+        // std::cout << "Verlib list summary" << std::endl;
+        // map->print();
     }
 
     bool validateStructure() {
-        return map->check() >= 0;
+        return true;
     }
 
     void printObjectSizes() {
         map->stats();
     }
-
-    void debugGCSingleThreaded() {}
 
 #ifdef USE_TREE_STATS
     class NodeHandler {

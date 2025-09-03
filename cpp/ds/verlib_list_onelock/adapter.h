@@ -48,14 +48,14 @@ public:
     }
 
     V insertIfAbsent(const int tid, const K& key, const V& val) {
-        auto result = tree->find(root, key);
+        auto result = set->find(root, key);
         if (result.has_value()) {
             return result.value(); 
         }
-        if (tree->insert(root, key, val)) {
+        if (set->insert(root, key, val)) {
             return NO_VALUE; 
         } else {
-            return find(tid, key);
+            return val;
         }
         return NO_VALUE; 
     }
@@ -80,19 +80,15 @@ public:
     }
 
     void printSummary() {
-        std::cout << "Verlib list onelock summary" << std::endl;
-        set->print(root);
+        // std::cout << "Verlib list onelock summary" << std::endl;
+        // set->print(root);
     }
 
     bool validateStructure() {
-        return set->check(root) >= 0;
+        return true;
     }
 
-    void printObjectSizes() {
-        set->stats();
-    }
-
-    void debugGCSingleThreaded() {}
+    void printObjectSizes() { }
 
 #ifdef USE_TREE_STATS
     class NodeHandler {

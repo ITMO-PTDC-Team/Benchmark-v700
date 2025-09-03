@@ -46,7 +46,7 @@ public:
     }
 
     bool contains(const int tid, const K& key) {
-        return tree->find_locked(root, key).has_value();
+        return tree->find(root, key).has_value();
     }
 
     V insert(const int tid, const K& key, const V& val) {
@@ -54,20 +54,20 @@ public:
     }
 
     V insertIfAbsent(const int tid, const K& key, const V& val) {
-        auto result = tree->find_locked(root, key);
+        auto result = tree->find(root, key);
         if (result.has_value()) {
             return result.value(); 
         }
         if (tree->insert(root, key, val)) {
             return NO_VALUE; 
         } else {
-            return find(tid, key);
+            return val;
         }
         return NO_VALUE; 
     }
 
     V erase(const int tid, const K& key) {
-        auto result = tree->find_locked(root, key);
+        auto result = tree->find(root, key);
         if (result.has_value()) {
             if (tree->remove(root, key)) {
                 return result.value(); 
@@ -77,7 +77,7 @@ public:
     }
 
     V find(const int tid, const K& key) {
-        auto result = tree->find_locked(root, key);
+        auto result = tree->find(root, key);
         return result.has_value() ? result.value() : NO_VALUE;
     }
 
@@ -97,8 +97,8 @@ public:
     }
 
     void printSummary() {
-        std::cout << "Radix Tree summary" << std::endl;
-        tree->print(root);
+        // std::cout << "Verlib ART-Tree2 summary" << std::endl;
+        // tree->print(root);
     }
     
     bool validateStructure() {
@@ -107,10 +107,6 @@ public:
 
     void printObjectSizes() {
         // Could implement memory usage reporting
-    }
-
-    void debugGCSingleThreaded() {
-        // Not applicable for this implementation
     }
 
 #ifdef USE_TREE_STATS

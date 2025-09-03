@@ -39,28 +39,31 @@ public:
     }
 
     bool contains(const int tid, const K& key) {
-        return tree->find_locked(key).has_value();
+        return tree->find(key).has_value();
     }
 
     V insert(const int tid, const K& key, const V& val) {
         setbench_error("Plain insert functionality not implemented for this data structure");
     }
 
+    /*
+        Might want to use `find_locked` instead of `find` for better, but slower solution
+    */
     V insertIfAbsent(const int tid, const K& key, const V& val) {
-        auto result = tree->find_locked(key);
+        auto result = tree->find(key);
         if (result.has_value()) {
             return result.value(); 
         }
         if (tree->insert(key, val)) {
             return NO_VALUE; 
         } else {
-            return find(tid, key);
+            return val;
         }
         return NO_VALUE; 
     }
 
     V erase(const int tid, const K& key) {
-        auto result = tree->find_locked(key);
+        auto result = tree->find(key);
         if (result.has_value()) {
             if (tree->remove(key)) {
                 return result.value(); 
@@ -70,7 +73,7 @@ public:
     }
 
     V find(const int tid, const K& key) {
-        auto result = tree->find_locked(key);
+        auto result = tree->find(key);
         return result.has_value() ? result.value() : NO_VALUE;
     }
 
@@ -79,8 +82,8 @@ public:
     }
 
     void printSummary() {
-        std::cout << "ART-Tree summary" << std::endl;
-        tree->print();
+        // std::cout << "Verlib ART-Tree summary" << std::endl;
+        // tree->print();
     }
     
     bool validateStructure() {
@@ -88,8 +91,6 @@ public:
     }
 
     void printObjectSizes() {}
-
-    void debugGCSingleThreaded() {}
 
 #ifdef USE_TREE_STATS
     class NodeHandler {

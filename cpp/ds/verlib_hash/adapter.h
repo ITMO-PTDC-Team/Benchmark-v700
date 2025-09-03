@@ -49,14 +49,14 @@ public:
     }
 
     V insertIfAbsent(const int tid, const K& key, const V& val) {
-        auto result = tree->find(table, key);
+        auto result = set->find(table, key);
         if (result.has_value()) {
             return result.value(); 
         }
-        if (tree->insert(table, key, val)) {
+        if (set->insert(table, key, val)) {
             return NO_VALUE; 
         } else {
-            return find(tid, key);
+            return val;
         }
         return NO_VALUE; 
     }
@@ -81,8 +81,8 @@ public:
     }
 
     void printSummary() {
-        std::cout << "Verlib hash set summary" << std::endl;
-        set->print(table);
+        // std::cout << "Verlib hash set summary" << std::endl;
+        // set->print(table);
     }
 
     bool validateStructure() {
@@ -90,10 +90,8 @@ public:
     }
 
     void printObjectSizes() {
-        set->stats();
+        // set->stats();
     }
-
-    void debugGCSingleThreaded() {}
 
 #ifdef USE_TREE_STATS
     class NodeHandler {
