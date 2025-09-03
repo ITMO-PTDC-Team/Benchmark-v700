@@ -17,13 +17,13 @@ private:
 
 public:
     ds_adapter(const int NUM_THREADS,
-               const K& unused1,
-               const K& unused2,
-               const V& unused3,
-               Random64* const unused4)
+               const K& KEY_MIN,
+               const K& KEY_MAX,
+               const V& VALUE_RESERVED,
+               Random64* const unused1)
     : set(new Set<K, V>())
     , root(set->empty())
-    , NO_VALUE(unused3)
+    , NO_VALUE(VALUE_RESERVED)
     {}
 
     ~ds_adapter() {
@@ -44,21 +44,20 @@ public:
     }
 
     V insert(const int tid, const K& key, const V& val) {
-        if (set->insert(root, key, val)) {
-            return NO_VALUE;
-        }
-        return NO_VALUE;
+        setbench_error("Plain insert functionality not implemented for this data structure");
     }
 
     V insertIfAbsent(const int tid, const K& key, const V& val) {
-        auto result = set->find(root, key);
+        auto result = tree->find(root, key);
         if (result.has_value()) {
-            return result.value();
+            return result.value(); 
         }
-        if (set->insert(root, key, val)) {
-            return NO_VALUE;
+        if (tree->insert(root, key, val)) {
+            return NO_VALUE; 
+        } else {
+            return find(tid, key);
         }
-        return NO_VALUE;
+        return NO_VALUE; 
     }
 
     V erase(const int tid, const K& key) {
