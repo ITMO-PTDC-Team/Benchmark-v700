@@ -39,8 +39,8 @@ public:
         return _range_generator->nextRange();
     }
 
-    std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() {
-        std::vector<std::shared_ptr<DataMap<long long>>> result;
+    std::vector<shared_ptr<DataMap>> getInternalDataMaps() {
+        std::vector<std::shared_ptr<DataMap>> result;
         result.push_back(_get_generator->getInternalDataMaps()[0]);
         result.push_back(_insert_generator->getInternalDataMaps()[1]);
         result.push_back(_remove_generator->getInternalDataMaps()[2]);

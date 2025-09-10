@@ -21,13 +21,13 @@ class LeafsHandshakeArgsGenerator : public ArgsGenerator {
     std::atomic<size_t> *deletedValue;
     PAD;
 
-    DataMap<long long> *readDataMap;
-    DataMap<long long> *removeDataMap;
+    DataMap *readDataMap;
+    DataMap *removeDataMap;
 
 public:
     LeafsHandshakeArgsGenerator(Random64 &rng, size_t range, std::atomic<size_t> *deletedValue,
                                 Distribution *readDistribution, MutableDistribution *insertDistribution,
-                                Distribution *removeDistribution, DataMap<long long> *readDataMap, DataMap<long long> *removeDataMap) :
+                                Distribution *removeDistribution, DataMap *readDataMap, DataMap *removeDataMap) :
             range(range),
             readDistribution(readDistribution),
             insertDistribution(insertDistribution),
@@ -70,8 +70,8 @@ public:
         setbench_error("Unsupported operation -- nextRange")
     }
 
-    std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() {
-        std::vector<std::shared_ptr<DataMap<long long>>> result;
+    std::vector<shared_ptr<DataMap>> getInternalDataMaps() {
+        std::vector<std::shared_ptr<DataMap>> result;
         result.reserve(4);
         result.emplace_back(readDataMap);
         result.emplace_back(readDataMap);

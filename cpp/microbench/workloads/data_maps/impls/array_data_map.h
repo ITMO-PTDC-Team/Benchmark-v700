@@ -8,7 +8,7 @@
 #include <algorithm>
 #include "workloads/data_maps/data_map.h"
 
-class ArrayDataMap : public DataMap<long long> {
+class ArrayDataMap : public DataMap {
 private:
     long long *reverseData;
     long long *data;
@@ -22,7 +22,7 @@ public:
         return data[index];
     }
 
-    long long* getActual(size_t index) override {
+    KEY_TYPE* getActual(size_t index) override {
         auto& converter = DataMapConverter::getInstance();
         return converter.convert(mapId, reverseData[index - 1]);
     }

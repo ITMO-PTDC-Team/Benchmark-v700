@@ -30,7 +30,7 @@ class TemporarySkewedArgsGenerator : public ArgsGenerator {
 
     Distribution **hotDists;
     Distribution *relaxDist;
-    DataMap<long long> *dataMap;
+    DataMap *dataMap;
     PAD;
     long long *hotTimes;
     PAD;
@@ -81,7 +81,7 @@ class TemporarySkewedArgsGenerator : public ArgsGenerator {
 public:
     TemporarySkewedArgsGenerator(size_t setNumber, size_t range,
                                  long long *hotTimes, long long *relaxTimes, size_t *setBegins,
-                                 Distribution **hotDists, Distribution *relaxDist, DataMap<long long> *dataMap)
+                                 Distribution **hotDists, Distribution *relaxDist, DataMap *dataMap)
             : hotDists(hotDists), relaxDist(relaxDist), dataMap(dataMap), hotTimes(hotTimes), relaxTimes(relaxTimes),
               setBegins(setBegins), setNumber(setNumber), range(range), time(0), pointer(0), isRelaxTime(false) {}
 
@@ -108,8 +108,8 @@ public:
         return {left, right};
     }
 
-    std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() {
-        std::vector<std::shared_ptr<DataMap<long long>>> result;
+    std::vector<shared_ptr<DataMap>> getInternalDataMaps() {
+        std::vector<std::shared_ptr<DataMap>> result;
         result.reserve(4);
         for (int i = 0; i<4; ++i) {
             result.emplace_back(dataMap);

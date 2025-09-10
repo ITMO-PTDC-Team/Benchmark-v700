@@ -17,12 +17,12 @@ class SkewedInsertArgsGenerator : public ArgsGenerator {
     size_t insertedNumber;
     Distribution *distribution;
     PAD;
-    DataMap <long long> *dataMap;
+    DataMap *dataMap;
     PAD;
 
 public:
 
-    SkewedInsertArgsGenerator(size_t skewedLength, Distribution *distribution, DataMap <long long> *dataMap)
+    SkewedInsertArgsGenerator(size_t skewedLength, Distribution *distribution, DataMap *dataMap)
             : insertedNumber(0), skewedLength(skewedLength),
               distribution(distribution), dataMap(dataMap) {}
 
@@ -48,8 +48,8 @@ public:
         setbench_error("Unsupported operation -- nextGet")
     }
 
-    std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() {
-        std::vector<std::shared_ptr<DataMap<long long>>> result;
+    std::vector<shared_ptr<DataMap>> getInternalDataMaps() {
+        std::vector<std::shared_ptr<DataMap>> result;
         result.reserve(4);
         for (int i = 0; i<4; ++i) {
             if (i == 1) {

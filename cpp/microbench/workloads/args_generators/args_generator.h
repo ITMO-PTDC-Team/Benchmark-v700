@@ -27,7 +27,7 @@ struct ArgsGenerator {
         3. remove
         4. rangeQuery
     */
-    virtual std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() = 0;
+    virtual std::vector<shared_ptr<DataMap>> getInternalDataMaps() = 0;
 };
 
 #endif //SETBENCH_ARGS_GENERATOR_H

@@ -7,7 +7,7 @@
 
 #include "workloads/data_maps/data_map.h"
 
-class IdDataMap : public DataMap<long long> {
+class IdDataMap : public DataMap {
 // private:
 //     KEY_TYPE* actualData;
 
@@ -21,7 +21,7 @@ public:
         return index + 1;
     }
 
-    long long* getActual(size_t index) override {
+    KEY_TYPE* getActual(size_t index) override {
         auto& converter = DataMapConverter::getInstance();
         converter.set(mapId, 0, index);
         return converter.convert(mapId, 0);

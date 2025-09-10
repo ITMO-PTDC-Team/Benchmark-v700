@@ -24,8 +24,8 @@ public:
         setbench_error("Operation not supported");
     }
 
-    std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() {
-        std::vector<std::shared_ptr<DataMap<long long>>> result;
+    std::vector<shared_ptr<DataMap>> getInternalDataMaps() {
+        std::vector<std::shared_ptr<DataMap>> result;
         result.reserve(4);
         for (int i = 0; i<4; ++i) {
             result.emplace_back(nullptr);

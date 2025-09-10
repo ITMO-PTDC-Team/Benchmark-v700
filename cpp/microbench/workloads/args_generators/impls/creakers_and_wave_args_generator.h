@@ -40,7 +40,7 @@ class CreakersAndWaveArgsGenerator : public ArgsGenerator {
     size_t creakersBegin;
     Distribution *creakersDist;
     MutableDistribution *waveDist;
-    DataMap<long long> *dataMap;
+    DataMap *dataMap;
     PAD;
     std::atomic<size_t> *waveBegin;
     PAD;
@@ -123,7 +123,7 @@ public:
                                  std::atomic<size_t> *waveEnd,
                                  Distribution *creakersDist,
                                  MutableDistribution *waveDist,
-                                 DataMap<long long> *dataMap) :
+                                 DataMap *dataMap) :
             rng(rng),
             creakersRatio(creakersRatio),
             creakersBegin(creakersBegin),
@@ -168,8 +168,8 @@ public:
         return {left, right};
     }
 
-    std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() {
-        std::vector<std::shared_ptr<DataMap<long long>>> result;
+    std::vector<shared_ptr<DataMap>> getInternalDataMaps() {
+        std::vector<std::shared_ptr<DataMap>> result;
         result.reserve(4);
         for (int i = 0; i<4; ++i) {
             result.emplace_back(dataMap);
@@ -190,13 +190,13 @@ class CreakersAndWavePrefillArgsGenerator : public ArgsGenerator {
     PAD;
     Random64 &rng;
     PAD;
-    DataMap<long long> *dataMap;
+    DataMap *dataMap;
     size_t waveBegin;
     size_t prefillLength;
     PAD;
 
 public:
-    CreakersAndWavePrefillArgsGenerator(Random64 &rng, size_t waveBegin, size_t prefillLength, DataMap<long long> *dataMap) :
+    CreakersAndWavePrefillArgsGenerator(Random64 &rng, size_t waveBegin, size_t prefillLength, DataMap *dataMap) :
             rng(rng), waveBegin(waveBegin), prefillLength(prefillLength), dataMap(dataMap) {}
 
     size_t nextGet() override {
@@ -223,8 +223,8 @@ public:
         setbench_error("Unsupported operation -- nextRange")
     }
 
-    std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() {
-        std::vector<std::shared_ptr<DataMap<long long>>> result;
+    std::vector<shared_ptr<DataMap>> getInternalDataMaps() {
+        std::vector<std::shared_ptr<DataMap>> result;
         result.reserve(4);
         for (int i = 0; i<4; ++i) {
             if (i == 1) {

@@ -19,7 +19,7 @@ struct DataMapBuilder {
 
     virtual DataMapBuilder *init(size_t range) = 0;
 
-    virtual DataMap<K> *build() = 0;
+    virtual DataMap* build() = 0;
 
     virtual std::string toString(size_t indents = 1) = 0;
 

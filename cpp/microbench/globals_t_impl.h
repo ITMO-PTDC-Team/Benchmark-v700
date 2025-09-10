@@ -48,7 +48,7 @@ struct globals_t {
     PAD;
     long elapsedMillisNapping;
     PAD;
-    volatile KEY_TYPE garbage; // used to prevent optimizing out some code
+    volatile long long garbage; // used to prevent optimizing out some code
     PAD;
     DS_ADAPTER_T *dsAdapter; // the data structure
     PAD;

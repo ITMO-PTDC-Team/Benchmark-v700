@@ -7,15 +7,14 @@
 
 #include "data_map_converter.h"
 
-template<typename K>
 class DataMap {
 protected:
     size_t mapId;
 
 public:
-    virtual K get(size_t index) = 0;
+    virtual long long get(size_t index) = 0;
 
-    virtual K* getActual(size_t index) = 0;
+    virtual KEY_TYPE* getActual(size_t index) = 0;
 
     virtual ~DataMap() = default;
 

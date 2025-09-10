@@ -16,7 +16,7 @@ class SkewedSetsArgsGenerator : public ArgsGenerator {
     size_t writeSetBegins;
     Distribution *readDist;
     Distribution *writeDist;
-    DataMap<long long> *dataMap;
+    DataMap *dataMap;
 
     size_t nextWrite() {
         size_t index = writeSetBegins + writeDist->next();
@@ -30,7 +30,7 @@ public:
 
     SkewedSetsArgsGenerator(size_t range, size_t writeSetBegins,
                             Distribution *readDist, Distribution *writeDist,
-                            DataMap<long long> *dataMap)
+                            DataMap *dataMap)
             : range(range), writeSetBegins(writeSetBegins),
               readDist(readDist), writeDist(writeDist),
               dataMap(dataMap) {}
@@ -56,8 +56,8 @@ public:
         return {left, right};
     }
 
-    std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() {
-        std::vector<std::shared_ptr<DataMap<long long>>> result;
+    std::vector<shared_ptr<DataMap>> getInternalDataMaps() {
+        std::vector<std::shared_ptr<DataMap>> result;
         result.reserve(4);
         for (int i = 0; i<4; ++i) {
             result.emplace_back(dataMap);

@@ -10,12 +10,12 @@ class RangeQueryArgsGenerator : public ArgsGenerator {
 private:
 //    PAD;
     Distribution *distribution;
-    DataMap<long long> *dataMap;
+    DataMap *dataMap;
     size_t interval;
 //    PAD;
 
 public:
-    RangeQueryArgsGenerator(DataMap<long long> *_dataMap, Distribution *_distribution, size_t _interval)
+    RangeQueryArgsGenerator(DataMap *_dataMap, Distribution *_distribution, size_t _interval)
             : dataMap(_dataMap), distribution(_distribution), interval(_interval) {}
 
     size_t nextGet() {
@@ -40,8 +40,8 @@ public:
         return {left, right};
     }
 
-    std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() {
-        std::vector<std::shared_ptr<DataMap<long long>>> result;
+    std::vector<shared_ptr<DataMap>> getInternalDataMaps() {
+        std::vector<std::shared_ptr<DataMap>> result;
         result.reserve(4);
         for (int i = 0; i<3; ++i) {
             result.emplace_back(nullptr);

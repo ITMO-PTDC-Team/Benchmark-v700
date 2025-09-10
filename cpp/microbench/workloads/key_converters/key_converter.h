@@ -9,15 +9,15 @@
 
 struct KeyConverter {
 
-    std::shared_ptr<DataMap<long long>> getDataMap;
-    std::shared_ptr<DataMap<long long>> insertDataMap;
-    std::shared_ptr<DataMap<long long>> removeDataMap;
-    std::shared_ptr<DataMap<long long>> rangeDataMap;
+    std::shared_ptr<DataMap> getDataMap;
+    std::shared_ptr<DataMap> insertDataMap;
+    std::shared_ptr<DataMap> removeDataMap;
+    std::shared_ptr<DataMap> rangeDataMap;
 
     KeyConverter() : getDataMap(nullptr), insertDataMap(nullptr), 
                     removeDataMap(nullptr), rangeDataMap(nullptr) {}
 
-    KeyConverter(std::vector<std::shared_ptr<DataMap<long long>>>&& vec) {
+    KeyConverter(std::vector<std::shared_ptr<DataMap>>&& vec) {
         if (vec.size() >= 4) {
             getDataMap = vec[0];
             insertDataMap = vec[1];

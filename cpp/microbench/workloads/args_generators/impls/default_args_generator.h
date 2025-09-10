@@ -14,7 +14,7 @@ class DefaultArgsGenerator : public ArgsGenerator {
 private:
 //    PAD;
     Distribution *distribution;
-    DataMap<long long> *dataMap;
+    DataMap *dataMap;
 //    PAD;
 
     size_t next() {
@@ -23,7 +23,7 @@ private:
     }
 
 public:
-    DefaultArgsGenerator(DataMap<long long> *_dataMap, Distribution *_distribution)
+    DefaultArgsGenerator(DataMap *_dataMap, Distribution *_distribution)
             : dataMap(_dataMap), distribution(_distribution) {}
 
 
@@ -48,8 +48,8 @@ public:
         return {left, right};
     }
 
-    std::vector<shared_ptr<DataMap<long long>>> getInternalDataMaps() {
-        std::vector<std::shared_ptr<DataMap<long long>>> result;
+    std::vector<shared_ptr<DataMap>> getInternalDataMaps() {
+        std::vector<std::shared_ptr<DataMap>> result;
         result.reserve(4);
         for (int i = 0; i<4; ++i) {
             result.emplace_back(dataMap);

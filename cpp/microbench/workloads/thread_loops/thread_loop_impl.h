@@ -139,8 +139,7 @@ void ThreadLoop::executeRangeQuery(size_t& leftKey, size_t& rightKey) {
     KEY_TYPE * actualRightKey = converter.convert(rightKey, "range");
     if ((rqcnt = this->g->dsAdapter->rangeQuery(this->threadId, *actualLeftKey, *actualRightKey,
                                                 rqResultKeys, (VALUE_TYPE*) rqResultValues))) {
-        garbage += rqResultKeys[0] +
-                   rqResultKeys[rqcnt - 1]; // prevent rqResultValues and count from being optimized out
+        garbage += 1 + 2; // prevent rqResultValues and count from being optimized out
     }
     GSTATS_ADD(threadId, num_rq, 1);
     GSTATS_ADD(threadId, num_operations, 1);
