@@ -10,18 +10,21 @@
 
 class ArrayDataMap : public DataMap<long long> {
 private:
-    KEY_TYPE *actualData;
+    long long *reverseData;
     long long *data;
 public:
 
-    ArrayDataMap(long long int *data, KEY_TYPE* actualData) : data(data), actualData(actualData) {}
+    ArrayDataMap(long long int *data, long long int* reverseData, size_t id) : data(data), reverseData(reverseData) {
+        mapId = id;
+    }
 
     long long get(size_t index) override {
         return data[index];
     }
 
     long long* getActual(size_t index) override {
-        return &actualData[index];
+        auto& converter = DataMapConverter::getInstance();
+        return converter.convert(mapId, reverseData[index - 1]);
     }
 
     ~ArrayDataMap() {

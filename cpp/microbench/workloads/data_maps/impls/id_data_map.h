@@ -7,13 +7,24 @@
 
 #include "workloads/data_maps/data_map.h"
 
-struct IdDataMap : public DataMap<long long> {
+class IdDataMap : public DataMap<long long> {
+// private:
+//     KEY_TYPE* actualData;
+
+public:
+    IdDataMap(size_t id) {
+        // assert(sizeof(actualData) == sizeof(KEY_TYPE));
+        mapId = id;
+    }
+
     long long get(size_t index) override {
         return index + 1;
     }
 
     long long* getActual(size_t index) override {
-        return new long long(index + 1);
+        auto& converter = DataMapConverter::getInstance();
+        converter.set(mapId, 0, index);
+        return converter.convert(mapId, 0);
     }
 };
 

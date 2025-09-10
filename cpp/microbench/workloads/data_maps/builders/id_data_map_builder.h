@@ -10,12 +10,17 @@
 #include "globals_extern.h"
 
 struct IdDataMapBuilder : public DataMapBuilder {
+    KEY_TYPE* actualData;
+
     IdDataMapBuilder* init(size_t range) override {
+        delete[] actualData;
+        actualData = new KEY_TYPE[1];
+
         return this;
     };
 
     IdDataMap* build() override {
-        return new IdDataMap();
+        return new IdDataMap(id);
     };
 
     void toJson(nlohmann::json& j) const override {
@@ -29,6 +34,10 @@ struct IdDataMapBuilder : public DataMapBuilder {
         return indented_title_with_str_data("Type", "IdDataMap", indents) +
                indented_title_with_data("ID", id, indents);
     }
+
+    KEY_TYPE* getUnderlyingData() override {
+        return actualData;
+    };
 
     ~IdDataMapBuilder() override = default;
 };

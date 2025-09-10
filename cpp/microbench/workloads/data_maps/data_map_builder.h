@@ -27,6 +27,9 @@ struct DataMapBuilder {
 
     virtual void fromJson(const nlohmann::json &j) = 0;
 
+    // function, used to retrieve the underlying key types for later transformation
+    virtual KEY_TYPE* getUnderlyingData() = 0;
+
     virtual ~DataMapBuilder() = default;
 };
 
