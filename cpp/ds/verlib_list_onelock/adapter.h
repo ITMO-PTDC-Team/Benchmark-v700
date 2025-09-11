@@ -48,10 +48,6 @@ public:
     }
 
     V insertIfAbsent(const int tid, const K& key, const V& val) {
-        auto result = set->find(root, key);
-        if (result.has_value()) {
-            return result.value(); 
-        }
         if (set->insert(root, key, val)) {
             return NO_VALUE; 
         } else {
@@ -61,11 +57,8 @@ public:
     }
 
     V erase(const int tid, const K& key) {
-        auto result = set->find(root, key);
-        if (result.has_value()) {
-            if (set->remove(root, key)) {
-                return result.value();
-            }
+        if (set->remove(root, key)) {
+            return reinterpret_cast<V>(const_cast<K*>(&key));
         }
         return NO_VALUE;
     }

@@ -50,10 +50,6 @@ public:
         Might want to use `find_locked` instead of `find` for better, but slower solution
     */
     V insertIfAbsent(const int tid, const K& key, const V& val) {
-        auto result = tree->find(key);
-        if (result.has_value()) {
-            return result.value(); 
-        }
         if (tree->insert(key, val)) {
             return NO_VALUE; 
         } else {
@@ -63,11 +59,8 @@ public:
     }
 
     V erase(const int tid, const K& key) {
-        auto result = tree->find(key);
-        if (result.has_value()) {
-            if (tree->remove(key)) {
-                return result.value(); 
-            }
+        if (tree->remove(key)) {
+            return reinterpret_cast<V>(const_cast<K*>(&key));
         }
         return NO_VALUE; 
     }
