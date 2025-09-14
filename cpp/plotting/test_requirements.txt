@@ -1,2 +1,5 @@
 # pytest
 pytest==8.4.1
+
+# visualisation
+matplotlib==3.8.0
