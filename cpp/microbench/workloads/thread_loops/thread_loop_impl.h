@@ -49,7 +49,7 @@
 
 // template<typename KEY_TYPE>
 KEY_TYPE *ThreadLoop::executeInsert(size_t& key) {
-    KEY_TYPE* actualKey = converter.convert(key, "insert");
+    KEY_TYPE* actualKey = g->benchParameters->dataMap->convert(key);
     // std::cout << actualKey << std::endl;
     TRACE COUTATOMICTID("### calling INSERT " << key << std::endl);
 
@@ -74,7 +74,7 @@ KEY_TYPE *ThreadLoop::executeInsert(size_t& key) {
 
 // template<typename KEY_TYPE>
 KEY_TYPE *ThreadLoop::executeRemove(size_t& key) {
-    KEY_TYPE actualKey = *converter.convert(key, "remove");
+    KEY_TYPE actualKey = *g->benchParameters->dataMap->convert(key);
     TRACE COUTATOMICTID("### calling ERASE " << key << std::endl);
 //    KEY_TYPE *value = (KEY_TYPE *) g->dsAdapter->erase(this->threadId, key);
     VALUE_TYPE value = g->dsAdapter->erase(this->threadId, actualKey);
@@ -96,7 +96,7 @@ KEY_TYPE *ThreadLoop::executeRemove(size_t& key) {
 
 // template<typename KEY_TYPE>
 KEY_TYPE *ThreadLoop::executeGet(size_t& key) {
-    KEY_TYPE actualKey = *converter.convert(key, "get");
+    KEY_TYPE actualKey = *g->benchParameters->dataMap->convert(key);
     VALUE_TYPE value = this->g->dsAdapter->find(this->threadId, actualKey);
 
     if (value != this->g->dsAdapter->getNoValue()) {
@@ -113,7 +113,7 @@ KEY_TYPE *ThreadLoop::executeGet(size_t& key) {
 
 // template<typename KEY_TYPE>
 bool ThreadLoop::executeContains(size_t& key) {
-    KEY_TYPE actualKey = *converter.convert(key, "get");
+    KEY_TYPE actualKey = *g->benchParameters->dataMap->convert(key);
     bool value = this->g->dsAdapter->contains(this->threadId, actualKey);
 
     if (value) {
@@ -135,8 +135,8 @@ bool ThreadLoop::executeContains(size_t& key) {
 void ThreadLoop::executeRangeQuery(size_t& leftKey, size_t& rightKey) {
     ++rq_cnt;
     size_t rqcnt;
-    KEY_TYPE * actualLeftKey = converter.convert(leftKey, "range");
-    KEY_TYPE * actualRightKey = converter.convert(rightKey, "range");
+    KEY_TYPE * actualLeftKey = g->benchParameters->dataMap->convert(leftKey);
+    KEY_TYPE * actualRightKey = g->benchParameters->dataMap->convert(rightKey);
     if ((rqcnt = this->g->dsAdapter->rangeQuery(this->threadId, *actualLeftKey, *actualRightKey,
                                                 rqResultKeys, (VALUE_TYPE*) rqResultValues))) {
         garbage += 1 + 2; // prevent rqResultValues and count from being optimized out

@@ -12,8 +12,8 @@
                     "ClassName": "PrefillInsertThreadLoopBuilder",
                     "argsGeneratorBuilder": {
                         "ClassName": "DefaultArgsGeneratorBuilder",
-                        "dataMapBuilder": {
-                            "ClassName": "IdDataMapBuilder",
+                        "indexMapBuilder": {
+                            "ClassName": "IdIndexMapBuilder",
                             "id": 3
                         },
                         "distributionBuilder": {
@@ -49,8 +49,8 @@
                     "ClassName": "DefaultThreadLoopBuilder",
                     "argsGeneratorBuilder": {
                         "ClassName": "TemporarySkewedArgsGeneratorBuilder",
-                        "dataMapBuilder": {
-                            "ClassName": "ArrayDataMapBuilder",
+                        "indexMapBuilder": {
+                            "ClassName": "ArrayIndexMapBuilder",
                             "id": 0
                         },
                         "defaultHotTime": -1,

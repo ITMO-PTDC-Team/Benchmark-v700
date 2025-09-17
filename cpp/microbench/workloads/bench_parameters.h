@@ -9,9 +9,11 @@
 #include "parameters.h"
 #include "workloads/stop_condition/impls/operation_counter.h"
 #include "workloads/thread_loops/impls/default_thread_loop.h"
+#include "workloads/data_maps/data_map_json_converter.h"
 
 struct BenchParameters {
     size_t range;
+    std::shared_ptr<DataMap> dataMap;
 
     Parameters* test;
     Parameters* prefill;
@@ -45,6 +47,11 @@ struct BenchParameters {
 
     BenchParameters& setRange(size_t _range) {
         range = _range;
+        return *this;
+    }
+
+    BenchParameters& setDataMap(DataMap* _dataMap) {
+        dataMap.reset(_dataMap);
         return *this;
     }
 
@@ -82,7 +89,9 @@ struct BenchParameters {
         //        if (warmUp == nullptr) {
         //            warmUp = new Parameters();
         //        }
-        initDataMapBuilders(range);
+        dataMap->init(range);
+        initIndexMapBuilders(range);
+
         prefill->init(range);
         warmUp->init(range);
         test->init(range);
@@ -103,7 +112,7 @@ struct BenchParameters {
         delete test;
         delete prefill;
         delete warmUp;
-        deleteDataMapBuilders();
+        deleteIndexMapBuilders();
     }
 };
 
@@ -116,6 +125,8 @@ void to_json(nlohmann::json& json, const BenchParameters& s) {
 
 void from_json(const nlohmann::json& json, BenchParameters& s) {
     s.range = json["range"];
+    s.dataMap.reset(getDataMapFromJson(json));
+
     s.test = new Parameters(json["test"]);
     s.prefill = new Parameters(json["prefill"]);
     s.warmUp = new Parameters(json["warmUp"]);

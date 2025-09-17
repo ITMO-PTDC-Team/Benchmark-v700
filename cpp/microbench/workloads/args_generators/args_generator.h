@@ -20,14 +20,14 @@ struct ArgsGenerator {
     virtual ~ArgsGenerator() = default;
 
     /*
-        Function, that returns a vector of DataMap ptr's, each corresponding to
+        Function, that returns a vector of IndexMap ptr's, each corresponding to
         function in a data structure
         1. get
         2. insert
         3. remove
         4. rangeQuery
     */
-    virtual std::vector<shared_ptr<DataMap>> getInternalDataMaps() = 0;
+    virtual std::vector<shared_ptr<IndexMap>> getInternalIndexMaps() = 0;
 };
 
 #endif //SETBENCH_ARGS_GENERATOR_H

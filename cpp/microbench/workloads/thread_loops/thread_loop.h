@@ -21,7 +21,6 @@ protected:
     VALUE_TYPE NO_VALUE;
     int rq_cnt;
     size_t RQ_RANGE;
-    KeyConverter converter;
 
 public:
     size_t threadId;

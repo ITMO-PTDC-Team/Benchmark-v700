@@ -39,12 +39,12 @@ public:
         return _range_generator->nextRange();
     }
 
-    std::vector<shared_ptr<DataMap>> getInternalDataMaps() {
-        std::vector<std::shared_ptr<DataMap>> result;
-        result.push_back(_get_generator->getInternalDataMaps()[0]);
-        result.push_back(_insert_generator->getInternalDataMaps()[1]);
-        result.push_back(_remove_generator->getInternalDataMaps()[2]);
-        result.push_back(_range_generator->getInternalDataMaps()[3]);
+    std::vector<shared_ptr<IndexMap>> getInternalIndexMaps() {
+        std::vector<std::shared_ptr<IndexMap>> result;
+        result.push_back(_get_generator->getInternalIndexMaps()[0]);
+        result.push_back(_insert_generator->getInternalIndexMaps()[1]);
+        result.push_back(_remove_generator->getInternalIndexMaps()[2]);
+        result.push_back(_range_generator->getInternalIndexMaps()[3]);
         return result;
     }
 

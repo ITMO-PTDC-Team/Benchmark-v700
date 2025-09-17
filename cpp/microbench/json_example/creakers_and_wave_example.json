@@ -13,8 +13,8 @@
                     "argsGeneratorBuilder": {
                         "ClassName": "CreakersAndWavePrefillArgsGeneratorBuilder",
                         "creakersSize": 0.1,
-                        "dataMapBuilder": {
-                            "ClassName": "IdDataMapBuilder",
+                        "indexMapBuilder": {
+                            "ClassName": "IdIndexMapBuilder",
                             "id": 1
                         },
                         "waveSize": 0.2
@@ -53,8 +53,8 @@
                         },
                         "creakersRatio": 0.2,
                         "creakersSize": 0.1,
-                        "dataMapBuilder": {
-                            "ClassName": "IdDataMapBuilder",
+                        "indexMapBuilder": {
+                            "ClassName": "IdIndexMapBuilder",
                             "id": 1
                         },
                         "waveDistBuilder": {

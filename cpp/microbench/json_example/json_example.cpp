@@ -21,7 +21,7 @@ typedef long long ll;
 ArgsGeneratorBuilder* getDefaultArgsGeneratorBuilder() {
     return (new DefaultArgsGeneratorBuilder())
         ->setDistributionBuilder((new ZipfianDistributionBuilder())->setAlpha(1.0))
-        ->setDataMapBuilder(new ArrayDataMapBuilder());
+        ->setIndexMapBuilder(new ArrayIndexMapBuilder());
 }
 
 ArgsGeneratorBuilder* getTemporarySkewedArgsGeneratorBuilder() {
@@ -43,7 +43,7 @@ ArgsGeneratorBuilder* getCreakersAndWaveArgsGeneratorBuilder() {
         ->setCreakersRatio(0.2)
         ->setWaveSize(0.2)
         ->setCreakersSize(0.1)
-        ->setDataMapBuilder(new IdDataMapBuilder());
+        ->setIndexMapBuilder(new IdIndexMapBuilder());
 }
 
 ArgsGeneratorBuilder* getNullArgsGeneratorBuilder() {
@@ -53,7 +53,7 @@ ArgsGeneratorBuilder* getNullArgsGeneratorBuilder() {
 ArgsGeneratorBuilder* getRangeQueryArgsGeneratorBuilder() {
     return (new RangeQueryArgsGeneratorBuilder())
     ->setDistributionBuilder((new ZipfianDistributionBuilder())->setAlpha(1.0))
-    ->setDataMapBuilder(new ArrayDataMapBuilder())
+    ->setIndexMapBuilder(new ArrayIndexMapBuilder())
     ->setInterval(100);
 }
 
@@ -65,7 +65,7 @@ ArgsGeneratorBuilder* getGeneralizedArgsGeneratorBuilder(ArgsGeneratorBuilder* i
         ->addArgsGeneratorBuilder({"remove"}, getDefaultArgsGeneratorBuilder())
         ->addArgsGeneratorBuilder({"rangeQuery"}, getRangeQueryArgsGeneratorBuilder());
         // ->setDistributionBuilder((new ZipfianDistributionBuilder())->setAlpha(1.0))
-        // ->setDataMapBuilder(new ArrayDataMapBuilder()));
+        // ->setIndexMapBuilder(new ArrayIndexMapBuilder()));
 }
 
 ThreadLoopBuilder* getDefaultThreadLoopBuilder(ArgsGeneratorBuilder* argsGeneratorBuilder) {

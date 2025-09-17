@@ -7,7 +7,7 @@
 
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/distributions/distribution.h"
-#include "workloads/data_maps/data_map.h"
+#include "workloads/index_maps/index_map.h"
 
 // template<typename size_t>
 class LeafsHandshakeArgsGenerator : public ArgsGenerator {
@@ -21,23 +21,23 @@ class LeafsHandshakeArgsGenerator : public ArgsGenerator {
     std::atomic<size_t> *deletedValue;
     PAD;
 
-    DataMap *readDataMap;
-    DataMap *removeDataMap;
+    IndexMap *readIndexMap;
+    IndexMap *removeIndexMap;
 
 public:
     LeafsHandshakeArgsGenerator(Random64 &rng, size_t range, std::atomic<size_t> *deletedValue,
                                 Distribution *readDistribution, MutableDistribution *insertDistribution,
-                                Distribution *removeDistribution, DataMap *readDataMap, DataMap *removeDataMap) :
+                                Distribution *removeDistribution, IndexMap *readIndexMap, IndexMap *removeIndexMap) :
             range(range),
             readDistribution(readDistribution),
             insertDistribution(insertDistribution),
             removeDistribution(removeDistribution),
             rng(rng), deletedValue(deletedValue),
-            readDataMap(readDataMap),
-            removeDataMap(removeDataMap) {}
+            readIndexMap(readIndexMap),
+            removeIndexMap(removeIndexMap) {}
 
     size_t nextGet() {
-        return readDataMap->get(readDistribution->next());
+        return readIndexMap->get(readDistribution->next());
     }
 
     size_t nextInsert() {
@@ -58,7 +58,7 @@ public:
 
     size_t nextRemove() {
         size_t localDeletedValue = *deletedValue;
-        size_t value = removeDataMap->get(removeDistribution->next());
+        size_t value = removeIndexMap->get(removeDistribution->next());
 
         //todo learn the difference between all kinds of weakCompareAndSet
         deletedValue->compare_exchange_weak(localDeletedValue, value);
@@ -70,19 +70,19 @@ public:
         setbench_error("Unsupported operation -- nextRange")
     }
 
-    std::vector<shared_ptr<DataMap>> getInternalDataMaps() {
-        std::vector<std::shared_ptr<DataMap>> result;
+    std::vector<shared_ptr<IndexMap>> getInternalIndexMaps() {
+        std::vector<std::shared_ptr<IndexMap>> result;
         result.reserve(4);
-        result.emplace_back(readDataMap);
-        result.emplace_back(readDataMap);
-        result.emplace_back(removeDataMap);
+        result.emplace_back(readIndexMap);
+        result.emplace_back(readIndexMap);
+        result.emplace_back(removeIndexMap);
         result.emplace_back(nullptr);
         return result;
     }
 
     ~LeafsHandshakeArgsGenerator() {
-        delete readDataMap;
-        delete removeDataMap;
+        delete readIndexMap;
+        delete removeIndexMap;
         delete readDistribution;
         delete insertDistribution;
         delete removeDistribution;
@@ -91,12 +91,12 @@ public:
 
 
 #include "workloads/distributions/distribution_builder.h"
-#include "workloads/data_maps/data_map_builder.h"
+#include "workloads/index_maps/index_map_builder.h"
 #include "workloads/distributions/builders/uniform_distribution_builder.h"
-#include "workloads/data_maps/builders/id_data_map_builder.h"
+#include "workloads/index_maps/builders/id_index_map_builder.h"
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/distributions/distribution_json_convector.h"
-#include "workloads/data_maps/data_map_json_convector.h"
+#include "workloads/index_maps/index_map_json_convector.h"
 #include "globals_extern.h"
 
 //template<typename size_t>
@@ -108,8 +108,8 @@ private:
     MutableDistributionBuilder *insertDistBuilder = new ZipfianDistributionBuilder();
     DistributionBuilder *removeDistBuilder = new UniformDistributionBuilder();
 
-    DataMapBuilder *readDataMapBuilder = new IdDataMapBuilder();
-    DataMapBuilder *removeDataMapBuilder = new IdDataMapBuilder();
+    IndexMapBuilder *readIndexMapBuilder = new IdIndexMapBuilder();
+    IndexMapBuilder *removeIndexMapBuilder = new IdIndexMapBuilder();
     std::atomic<size_t> *deletedValue;
 
 public:
@@ -129,21 +129,21 @@ public:
         return this;
     }
 
-    LeafsHandshakeArgsGeneratorBuilder *setReadDataMapBuilder(DataMapBuilder *_readDataMapBuilder) {
-        readDataMapBuilder = _readDataMapBuilder;
+    LeafsHandshakeArgsGeneratorBuilder *setReadIndexMapBuilder(IndexMapBuilder *_readIndexMapBuilder) {
+        readIndexMapBuilder = _readIndexMapBuilder;
         return this;
     }
 
-    LeafsHandshakeArgsGeneratorBuilder *setRemoveDataMapBuilder(DataMapBuilder *_removeDataMapBuilder) {
-        removeDataMapBuilder = _removeDataMapBuilder;
+    LeafsHandshakeArgsGeneratorBuilder *setRemoveIndexMapBuilder(IndexMapBuilder *_removeIndexMapBuilder) {
+        removeIndexMapBuilder = _removeIndexMapBuilder;
         return this;
     }
 
 
     LeafsHandshakeArgsGeneratorBuilder *init(size_t _range) override {
         range = _range;
-//        readDataMapBuilder->init(_range);
-//        removeDataMapBuilder->init(_range);
+//        readIndexMapBuilder->init(_range);
+//        removeIndexMapBuilder->init(_range);
         deletedValue = new std::atomic<size_t>(range / 2);
 
         return this;
@@ -154,8 +154,8 @@ public:
                                                   readDistBuilder->build(_rng, range),
                                                   insertDistBuilder->build(_rng),
                                                   removeDistBuilder->build(_rng, range),
-                                                  readDataMapBuilder->build(),
-                                                  removeDataMapBuilder->build());
+                                                  readIndexMapBuilder->build(),
+                                                  removeIndexMapBuilder->build());
     }
 
     void toJson(nlohmann::json &j) const override {
@@ -163,16 +163,16 @@ public:
         j["readDistBuilder"] = *readDistBuilder;
         j["insertDistBuilder"] = *insertDistBuilder;
         j["removeDistBuilder"] = *removeDistBuilder;
-        j["readDataMapBuilder"] = *readDataMapBuilder;
-        j["removeDataMapBuilder"] = *removeDataMapBuilder;
+        j["readIndexMapBuilder"] = *readIndexMapBuilder;
+        j["removeIndexMapBuilder"] = *removeIndexMapBuilder;
     }
 
     void fromJson(const nlohmann::json &j) override {
         readDistBuilder = getDistributionFromJson(j["readDistBuilder"]);
         insertDistBuilder = getMutableDistributionFromJson(j["insertDistBuilder"]);
         removeDistBuilder = getDistributionFromJson(j["removeDistBuilder"]);
-        readDataMapBuilder = getDataMapFromJson(j["readDataMapBuilder"]);
-        removeDataMapBuilder = getDataMapFromJson(j["removeDataMapBuilder"]);
+        readIndexMapBuilder = getIndexMapFromJson(j["readIndexMapBuilder"]);
+        removeIndexMapBuilder = getIndexMapFromJson(j["removeIndexMapBuilder"]);
     }
 
     std::string toString(size_t indents = 1) override {
@@ -183,17 +183,17 @@ public:
                + insertDistBuilder->toString(indents + 1)
                + indented_title("Remove Distribution", indents)
                + removeDistBuilder->toString(indents + 1)
-               + indented_title("Read Data Map", indents)
-               + readDataMapBuilder->toString(indents + 1)
-               + indented_title("Remove Data Map", indents)
-               + removeDataMapBuilder->toString(indents + 1);
+               + indented_title("Read Index Map", indents)
+               + readIndexMapBuilder->toString(indents + 1)
+               + indented_title("Remove Index Map", indents)
+               + removeIndexMapBuilder->toString(indents + 1);
     }
 
     ~LeafsHandshakeArgsGeneratorBuilder() override {
         delete readDistBuilder;
         delete insertDistBuilder;
         delete removeDistBuilder;
-//        delete dataMapBuilder; //TODO may delete twice
+//        delete indexMapBuilder; //TODO may delete twice
     };
 
 };

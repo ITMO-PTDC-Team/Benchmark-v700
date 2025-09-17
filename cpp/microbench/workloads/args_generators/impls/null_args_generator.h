@@ -24,8 +24,8 @@ public:
         setbench_error("Operation not supported");
     }
 
-    std::vector<shared_ptr<DataMap>> getInternalDataMaps() {
-        std::vector<std::shared_ptr<DataMap>> result;
+    std::vector<shared_ptr<IndexMap>> getInternalIndexMaps() {
+        std::vector<std::shared_ptr<IndexMap>> result;
         result.reserve(4);
         for (int i = 0; i<4; ++i) {
             result.emplace_back(nullptr);
@@ -43,7 +43,7 @@ public:
 class NullArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 public:
     NullArgsGeneratorBuilder *init(size_t _range) override {
-//        dataMapBuilder->init(_range);
+//        indexMapBuilder->init(_range);
         return this;
     }
 

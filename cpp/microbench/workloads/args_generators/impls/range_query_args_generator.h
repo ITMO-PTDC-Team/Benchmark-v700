@@ -3,20 +3,20 @@
 
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/distributions/distribution.h"
-#include "workloads/data_maps/data_map.h"
+#include "workloads/index_maps/index_map.h"
 
 // template<typename size_t>
 class RangeQueryArgsGenerator : public ArgsGenerator {
 private:
 //    PAD;
     Distribution *distribution;
-    DataMap *dataMap;
+    IndexMap *indexMap;
     size_t interval;
 //    PAD;
 
 public:
-    RangeQueryArgsGenerator(DataMap *_dataMap, Distribution *_distribution, size_t _interval)
-            : dataMap(_dataMap), distribution(_distribution), interval(_interval) {}
+    RangeQueryArgsGenerator(IndexMap *_indexMap, Distribution *_distribution, size_t _interval)
+            : indexMap(_indexMap), distribution(_distribution), interval(_interval) {}
 
     size_t nextGet() {
         setbench_error("Operation not supported");
@@ -32,38 +32,38 @@ public:
 
     std::pair<size_t, size_t> nextRange() {
         size_t index = distribution->next();
-        size_t left = dataMap->get(index);
-        size_t right = dataMap->get(index + interval);
+        size_t left = indexMap->get(index);
+        size_t right = indexMap->get(index + interval);
         if (left > right) {
             std::swap(left, right);
         }
         return {left, right};
     }
 
-    std::vector<shared_ptr<DataMap>> getInternalDataMaps() {
-        std::vector<std::shared_ptr<DataMap>> result;
+    std::vector<shared_ptr<IndexMap>> getInternalIndexMaps() {
+        std::vector<std::shared_ptr<IndexMap>> result;
         result.reserve(4);
         for (int i = 0; i<3; ++i) {
             result.emplace_back(nullptr);
         }
-        result.emplace_back(dataMap);
+        result.emplace_back(indexMap);
         return result;
     }
 
     ~RangeQueryArgsGenerator() {
         delete distribution;
-        delete dataMap;
+        delete indexMap;
     }
 };
 
 
 #include "workloads/distributions/distribution_builder.h"
-#include "workloads/data_maps/data_map_builder.h"
+#include "workloads/index_maps/index_map_builder.h"
 #include "workloads/distributions/builders/uniform_distribution_builder.h"
-#include "workloads/data_maps/builders/id_data_map_builder.h"
+#include "workloads/index_maps/builders/id_index_map_builder.h"
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/distributions/distribution_json_convector.h"
-#include "workloads/data_maps/data_map_json_convector.h"
+#include "workloads/index_maps/index_map_json_convector.h"
 #include "globals_extern.h"
 
 //template<typename size_t>
@@ -73,15 +73,15 @@ private:
     size_t interval;
 public:
     DistributionBuilder *distributionBuilder = new UniformDistributionBuilder();
-    DataMapBuilder *dataMapBuilder = new IdDataMapBuilder();
+    IndexMapBuilder *indexMapBuilder = new IdIndexMapBuilder();
 
     RangeQueryArgsGeneratorBuilder *setDistributionBuilder(DistributionBuilder *_distributionBuilder) {
         distributionBuilder = _distributionBuilder;
         return this;
     }
 
-    RangeQueryArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
-        dataMapBuilder = _dataMapBuilder;
+    RangeQueryArgsGeneratorBuilder *setIndexMapBuilder(IndexMapBuilder *_indexMapBuilder) {
+        indexMapBuilder = _indexMapBuilder;
         return this;
     }
     
@@ -96,7 +96,7 @@ public:
     }
 
     RangeQueryArgsGenerator *build(Random64 &_rng) override {
-        return new RangeQueryArgsGenerator(dataMapBuilder->build(),
+        return new RangeQueryArgsGenerator(indexMapBuilder->build(),
                                            distributionBuilder->build(_rng, range), interval);
     }   
 
@@ -104,13 +104,13 @@ public:
         j["ClassName"] = "RangeQueryArgsGeneratorBuilder";
         j["interval"] = interval;
         j["distributionBuilder"] = *distributionBuilder;
-        j["dataMapBuilder"] = *dataMapBuilder;
+        j["indexMapBuilder"] = *indexMapBuilder;
     }
 
     void fromJson(const nlohmann::json &j) override {
         interval = j["interval"];
         distributionBuilder = getDistributionFromJson(j["distributionBuilder"]);
-        dataMapBuilder = getDataMapFromJson(j["dataMapBuilder"]);
+        indexMapBuilder = getIndexMapFromJson(j["indexMapBuilder"]);
     }
 
     std::string toString(size_t indents = 1) override {
@@ -119,14 +119,14 @@ public:
         res += indented_title_with_str_data("Interval", std::to_string(interval), indents);
         res += indented_title("Distribution", indents);
         res += distributionBuilder->toString(indents + 1);
-        res += indented_title("Data Map", indents);
-        res += dataMapBuilder->toString(indents + 1);
+        res += indented_title("Index Map", indents);
+        res += indexMapBuilder->toString(indents + 1);
         return res;
     }
 
     ~RangeQueryArgsGeneratorBuilder() override {
         delete distributionBuilder;
-//        delete dataMapBuilder; //TODO may delete twice
+//        delete indexMapBuilder; //TODO may delete twice
     };
 
 };
