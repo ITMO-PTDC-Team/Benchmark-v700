@@ -66,8 +66,8 @@ struct globals_t {
     PAD;
 
     globals_t(BenchParameters * _benchParameters)
-            : NO_VALUE(NULL), KEY_MIN(0) /*std::numeric_limits<test_type>::min()+1)*/
-            , KEY_MAX(_benchParameters->range + 1), PREFILL_INTERVAL_MILLIS(200),
+            : NO_VALUE(NULL), KEY_MIN(get_min()) /*std::numeric_limits<test_type>::min()+1)*/
+            , KEY_MAX(get_max(_benchParameters->range + 1)), PREFILL_INTERVAL_MILLIS(200),
               benchParameters(_benchParameters) {
         debug_print = 0;
         srand(time(0));
