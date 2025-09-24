@@ -33,7 +33,7 @@ public:
         }
 
         //        std::random_shuffle(data, data + range - 1);
-        std::shuffle(actualData, actualData + range, std::mt19937(std::random_device()()));
+        // std::shuffle(actualData, actualData + range, std::mt19937(std::random_device()()));
     }
 
     KEY_TYPE* convert(size_t index) override {

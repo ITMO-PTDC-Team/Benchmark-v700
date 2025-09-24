@@ -10,17 +10,12 @@
 #include "globals_extern.h"
 
 struct IdIndexMapBuilder : public IndexMapBuilder {
-    KEY_TYPE* actualData;
-
     IdIndexMapBuilder* init(size_t range) override {
-        delete[] actualData;
-        actualData = new KEY_TYPE[1];
-
         return this;
     };
 
     IdIndexMap* build() override {
-        return new IdIndexMap(id);
+        return new IdIndexMap();
     };
 
     void toJson(nlohmann::json& j) const override {

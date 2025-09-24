@@ -10,12 +10,9 @@
 class IdIndexMap : public IndexMap {
 
 public:
-    IdIndexMap(size_t id) {
-        // assert(sizeof(actualData) == sizeof(KEY_TYPE));
-        mapId = id;
-    }
+    IdIndexMap() { }
 
-    long long get(size_t index) override {
+    size_t get(size_t index) override {
         return index + 1;
     }
 };

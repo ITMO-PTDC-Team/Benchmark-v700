@@ -11,13 +11,13 @@
 #include "workloads/index_maps/impls/array_index_map.h"
 
 class ArrayIndexMapBuilder : public IndexMapBuilder {
-    long long* data = nullptr;
+    size_t* data = nullptr;
 
 public:
     ArrayIndexMapBuilder* init(size_t range) override {
         delete[] data;
-        data = new long long[range];
-        for (long long i = 0; i < range; i++) {
+        data = new size_t[range];
+        for (size_t i = 0; i < range; i++) {
             data[i] = i + 1;
         }
 
@@ -27,7 +27,7 @@ public:
     }
 
     ArrayIndexMap* build() override {
-        return new ArrayIndexMap(data, id);
+        return new ArrayIndexMap(data);
     }
 
     void toJson(nlohmann::json& j) const override {

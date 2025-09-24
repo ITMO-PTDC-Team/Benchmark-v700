@@ -8,6 +8,8 @@
 #include <utility>
 #include <vector>
 
+#include "workloads/index_maps/index_map.h"
+
 struct ArgsGenerator {
     virtual size_t nextGet() = 0;
 

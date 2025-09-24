@@ -9,8 +9,6 @@
 #include "index_map.h"
 #include "json/single_include/nlohmann/json.hpp"
 
-typedef long long K;
-
 //template<typename K>
 struct IndexMapBuilder {
     static size_t id_counter;

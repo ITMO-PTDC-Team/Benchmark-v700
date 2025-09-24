@@ -6,7 +6,6 @@
 #define SETBENCH_THREAD_LOOP_H
 
 #include "workloads/stop_condition/stop_condition.h"
-#include "workloads/key_converters/key_converter.h"
 #include "globals_t.h"
 
 //#define VALUE_TYPE void *

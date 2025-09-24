@@ -36,7 +36,6 @@ IndexMapBuilder *getIndexMapFromJson(const nlohmann::json &j) {
 
     indexMapBuilder->fromJson(j);
     indexMapBuilders.insert({id, indexMapBuilder});
-    std::cout << indexMapBuilder->id << " " << id << '\n';
     assert(id + 1 >= IndexMapBuilder::id_counter);
     IndexMapBuilder::id_counter = std::max(IndexMapBuilder::id_counter, id + 1);
     return indexMapBuilder;

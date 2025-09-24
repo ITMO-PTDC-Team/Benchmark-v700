@@ -10,14 +10,13 @@
 
 class ArrayIndexMap : public IndexMap {
 private:
-    long long *data;
+    size_t *data;
 public:
 
-    ArrayIndexMap(long long int *data, size_t id) : data(data) {
-        mapId = id;
+    ArrayIndexMap(size_t *data) : data(data) {
     }
 
-    long long get(size_t index) override {
+    size_t get(size_t index) override {
         return data[index];
     }
 
