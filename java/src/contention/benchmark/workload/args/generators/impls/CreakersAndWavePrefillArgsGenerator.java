@@ -1,7 +1,7 @@
 package contention.benchmark.workload.args.generators.impls;
 
-import contention.benchmark.workload.data.map.abstractions.DataMap;
 import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
+import contention.benchmark.workload.data.map.abstractions.DataMap;
 
 import java.util.Random;
 
@@ -20,7 +20,7 @@ public class CreakersAndWavePrefillArgsGenerator implements ArgsGenerator {
 
     @Override
     public int nextGet() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Get not supported");
     }
 
     @Override
@@ -30,7 +30,12 @@ public class CreakersAndWavePrefillArgsGenerator implements ArgsGenerator {
 
     @Override
     public int nextRemove() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Remove not supported");
+    }
+
+    @Override
+    public int[] nextRange() {
+        throw new UnsupportedOperationException("Range Query not supported");
     }
 
 }

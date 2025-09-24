@@ -1,10 +1,10 @@
 package contention.benchmark.workload.args.generators.builders;
 
+import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
 import contention.benchmark.workload.args.generators.abstractions.ArgsGeneratorBuilder;
 import contention.benchmark.workload.args.generators.impls.CreakersAndWavePrefillArgsGenerator;
 import contention.benchmark.workload.data.map.abstractions.DataMapBuilder;
 import contention.benchmark.workload.data.map.builders.ArrayDataMapBuilder;
-import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
 
 import static contention.benchmark.tools.StringFormat.indentedTitle;
 import static contention.benchmark.tools.StringFormat.indentedTitleWithData;

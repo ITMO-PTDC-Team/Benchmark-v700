@@ -72,4 +72,8 @@ public class LeafsHandshakeArgsGenerator implements ArgsGenerator {
         return value;
     }
 
+    @Override
+    public int[] nextRange() {
+        throw new UnsupportedOperationException("Range Query not supported");
+    }
 }

@@ -1,8 +1,8 @@
 package contention.benchmark.workload.args.generators.impls;
 
+import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
 import contention.benchmark.workload.data.map.abstractions.DataMap;
 import contention.benchmark.workload.distributions.abstractions.Distribution;
-import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
 
 public class TemporarySkewedArgsGenerator implements ArgsGenerator {
     private final DataMap data;
@@ -84,4 +84,8 @@ public class TemporarySkewedArgsGenerator implements ArgsGenerator {
         return next();
     }
 
+    @Override
+    public int[] nextRange() {
+        throw new UnsupportedOperationException("Range Query not supported");
+    }
 }

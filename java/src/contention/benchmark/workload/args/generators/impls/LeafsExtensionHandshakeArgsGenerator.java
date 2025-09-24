@@ -90,4 +90,9 @@ public class LeafsExtensionHandshakeArgsGenerator implements ArgsGenerator {
         return nextGet();
     }
 
+    @Override
+    public int[] nextRange() {
+        throw new UnsupportedOperationException("Range Query not supported");
+    }
+
 }

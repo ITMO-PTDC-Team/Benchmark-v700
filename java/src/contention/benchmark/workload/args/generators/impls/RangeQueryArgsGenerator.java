@@ -4,17 +4,15 @@ import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
 import contention.benchmark.workload.data.map.abstractions.DataMap;
 import contention.benchmark.workload.distributions.abstractions.Distribution;
 
-public class SkewedInsertArgsGenerator implements ArgsGenerator {
-    private final int skewedLength;
-    private int insertedNumber;
+public class RangeQueryArgsGenerator implements ArgsGenerator {
     private final DataMap data;
     private final Distribution distribution;
+    private final int interval;
 
-    public SkewedInsertArgsGenerator(int skewedLength, Distribution distribution, DataMap data) {
+    public RangeQueryArgsGenerator(DataMap data, Distribution distribution, int interval) {
         this.data = data;
-        this.skewedLength = skewedLength;
-        this.insertedNumber = 0;
         this.distribution = distribution;
+        this.interval = interval;
     }
 
     @Override
@@ -24,13 +22,7 @@ public class SkewedInsertArgsGenerator implements ArgsGenerator {
 
     @Override
     public int nextInsert() {
-        int key;
-        if (insertedNumber < skewedLength) {
-            key = data.get(insertedNumber++);
-        } else {
-            key = data.get(skewedLength + distribution.next());
-        }
-        return key;
+        throw new UnsupportedOperationException("Insert not supported");
     }
 
     @Override
@@ -40,6 +32,14 @@ public class SkewedInsertArgsGenerator implements ArgsGenerator {
 
     @Override
     public int[] nextRange() {
-        throw new UnsupportedOperationException("Range Query not supported");
+        int index = distribution.next();
+        int left = data.get(index);
+        int right = data.get(index + interval);
+
+        if (left > right) {
+            return new int[]{right, left};
+        }
+
+        return new int[]{left, right};
     }
 }

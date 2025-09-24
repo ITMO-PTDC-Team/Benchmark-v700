@@ -27,6 +27,6 @@ public class LeafInsertArgsGeneratorBuilder implements ArgsGeneratorBuilder {
     @Override
     public StringBuilder toStringBuilder(int indents) {
         return new StringBuilder()
-                .append(indentedTitleWithData("Type", "LeafInsert", indents));
+                .append(indentedTitleWithData("Type", "LEAF_INSERT", indents));
     }
 }

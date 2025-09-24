@@ -1,13 +1,13 @@
 package contention.benchmark.workload.args.generators.impls;
 
+import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
+import contention.benchmark.workload.args.generators.abstractions.ArgsGeneratorBuilder;
 import contention.benchmark.workload.data.map.abstractions.DataMap;
 import contention.benchmark.workload.data.map.abstractions.DataMapBuilder;
 import contention.benchmark.workload.data.map.builders.IdDataMapBuilder;
 import contention.benchmark.workload.distributions.abstractions.Distribution;
 import contention.benchmark.workload.distributions.abstractions.DistributionBuilder;
 import contention.benchmark.workload.distributions.builders.UniformDistributionBuilder;
-import contention.benchmark.workload.args.generators.abstractions.ArgsGeneratorBuilder;
-import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
 
 public class DefaultArgsGenerator implements ArgsGenerator {
     private final DataMap data;
@@ -36,6 +36,16 @@ public class DefaultArgsGenerator implements ArgsGenerator {
     @Override
     public int nextRemove() {
         return next();
+    }
+
+    @Override
+    public int[] nextRange() {
+        int left = nextGet();
+        int right = nextGet();
+        if (left > right) {
+            return new int[]{right, left};
+        }
+        return new int[]{left, right};
     }
 
 

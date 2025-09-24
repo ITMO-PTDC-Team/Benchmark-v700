@@ -6,4 +6,6 @@ public interface ArgsGenerator {
     int nextInsert();
 
     int nextRemove();
+
+    int[] nextRange();
 }
