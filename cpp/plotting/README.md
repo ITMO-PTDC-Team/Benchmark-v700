@@ -22,7 +22,7 @@ Before launching the script, you should set up the parameters for it.
 | `keys` | Changeable input file parameters to test (object with key-value pairs) | See below | - | **Yes** |
 | `key_title` | X-axis label | `"NumberOfThreads"` | - | **Yes** |
 | `keys_title` | X-axis tick labels (array of strings) | `["2", "4", "8", "16"]` | - | **Yes** |
-| `allocator` | Memory allocator to use | `"libc"` | `""` | No |
+| `allocator` | Memory allocator to use | `"libmimalloc"` | `""` | No |
 | `compiled_path` | Path to compiled binaries | `"../build/"` | `"./bin/"` | No |
 | `agg_stat` | Aggregation statistic for results | `"average_num_operations_total"` | `"average_num_operations_total"` | No |
 | `ylabel` | Y-axis label for the plot | `"Avg operations"` | `"Average number of operations total"` | No |

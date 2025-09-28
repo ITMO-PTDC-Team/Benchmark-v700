@@ -20,6 +20,7 @@ The project has the following structure:
 ├── lib
 ├── microbench
 ├── microbench_experiments
+├── plotting
 └── tools
 ```
 
@@ -90,6 +91,11 @@ or additionally
 + `-create-default-prefill` — create a default prefill: fill the data structure in half 
 (ignored if `-prefill` argument was already specified).
 
+
+## Plotter
+
+To run large tests with multiple parameters and plot the results, you can use a plotter.
+You can find the details in the folder [plotting](./plotting)
 
 # Configuring Launch Parameters
 
