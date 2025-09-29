@@ -85,7 +85,7 @@
 #include "errors.h"
 #include "locks_impl.h"
 #include "plaf.h"
-#include "json/single_include/nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 
 #ifndef VERBOSE
 #define VERBOSE if(0)
@@ -1362,4 +1362,3 @@ public:
 };
 
 #endif /* GSTATS_H */
-

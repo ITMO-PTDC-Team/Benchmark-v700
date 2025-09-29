@@ -7,7 +7,7 @@
 
 #include <string>
 #include "data_map.h"
-#include "json/single_include/nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 
 typedef long long K;
 

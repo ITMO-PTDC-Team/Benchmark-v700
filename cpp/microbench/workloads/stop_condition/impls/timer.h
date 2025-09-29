@@ -9,7 +9,7 @@
 #include <string>
 #include "plaf.h"
 #include "workloads/stop_condition/stop_condition.h"
-#include "json/single_include/nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 
 class Timer : public StopCondition {
     PAD;

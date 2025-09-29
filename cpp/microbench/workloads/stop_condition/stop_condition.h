@@ -5,7 +5,7 @@
 #ifndef SETBENCH_STOP_CONDITION_H
 #define SETBENCH_STOP_CONDITION_H
 
-#include "json/single_include/nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 
 struct StopCondition {
     virtual void start(size_t numThreads) = 0;

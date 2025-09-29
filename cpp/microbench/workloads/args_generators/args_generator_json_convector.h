@@ -6,7 +6,7 @@
 #define SETBENCH_ARGS_GENERATOR_JSON_CONVECTOR_H
 
 
-#include "json/single_include/nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 #include "args_generator_builder.h"
 #include "workloads/args_generators/impls/default_args_generator.h"
 #include "workloads/args_generators/impls/skewed_sets_args_generator.h"

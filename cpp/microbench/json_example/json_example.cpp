@@ -7,7 +7,7 @@
 
 #include <fstream>
 #include <iostream>
-#include "json/single_include/nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 
 #include "workloads/args_generators/impls/default_args_generator.h"
 #include "workloads/args_generators/impls/generalized_args_generator.h"
@@ -138,7 +138,7 @@ int main() {
 //               = getCreakersAndWaveArgsGeneratorBuilder();
 //                = getTemporarySkewedArgsGeneratorBuilder();
     /*
-     * Use this argsGeneratorBuilder for Generalized Testing 
+     * Use this argsGeneratorBuilder for Generalized Testing
      */
 //    ArgsGeneratorBuilder*  actualArgsGeneratorBuilde = getGeneralizedArgsGeneratorBuilder(argsGeneratorBuilder);
             /**

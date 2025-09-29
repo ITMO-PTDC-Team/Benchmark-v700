@@ -6,7 +6,7 @@
 #define SETBENCH_RATIO_THREAD_LOOP_PARAMETERS_H
 
 #include "globals_extern.h"
-#include "json/single_include/nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 
 struct RatioThreadLoopParameters {
     double INS_RATIO;

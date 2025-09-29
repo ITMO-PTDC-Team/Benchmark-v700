@@ -18,8 +18,8 @@ option(SKIP_VALIDATION "enable validation skipping
 option(TESTING         "enable utility code testing
     (compile target for testing workloads code)"            OFF)
 option(MAX_THREADS     "declare max threads
-    (should be power of 2)"                               "512")
-option(CPU_FREQ        "declare freq for server clock"    "2.1")
+    (should be power of 2)"                                 512)
+option(CPU_FREQ        "declare freq for server clock"      2.1)
 option(KEY_TOTAL_STAT  "trace depth & search total stats"    ON)
 
 
@@ -84,6 +84,10 @@ if(HARDENING)
     list(APPEND compilerDefinitions _GLIBCXX_DEBUG)
 endif()
 
+##### Dependencies #####
+
+include(cmake/Dependencies.cmake)
+
 include_directories(.)
 include_directories(microbench)
 include_directories(common)
@@ -101,6 +105,9 @@ include_directories(common/urcu)
 include_directories(ds/verlib_structs/include)
 
 set(libs "")
+
+find_package(nlohmann_json CONFIG REQUIRED)
+list(APPEND libs nlohmann_json::nlohmann_json)
 
 if(OPTIMIZE)
     add_compile_definitions(DCMAKE_BUILD_TYPE=Release)
@@ -192,7 +199,7 @@ foreach(dataStructure ${dataStructures})
 endforeach()
 
 if(TESTING)
-    find_package(GTest REQUIRED)
+    find_package(GTest CONFIG REQUIRED)
     file(GLOB testSources tests/*.cpp)
     add_executable(tests ${testSources})
     target_link_libraries(tests GTest::gtest GTest::gtest_main)

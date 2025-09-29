@@ -7,7 +7,7 @@
 
 #include <string>
 #include "thread_loop.h"
-#include "json/single_include/nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 #include "globals_t.h"
 
 //template<typename K>

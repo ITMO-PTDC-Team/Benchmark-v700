@@ -5,7 +5,7 @@
 #ifndef SETBENCH_STOP_CONDITION_JSON_CONVECTOR_H
 #define SETBENCH_STOP_CONDITION_JSON_CONVECTOR_H
 
-#include "json/single_include/nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 #include "stop_condition.h"
 #include "workloads/stop_condition/impls/timer.h"
 #include "workloads/stop_condition/impls/operation_counter.h"

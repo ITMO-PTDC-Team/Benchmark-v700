@@ -8,7 +8,7 @@
 #include <string>
 #include "distribution.h"
 #include "random_xoshiro256p.h"
-#include "json/single_include/nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 
 struct DistributionBuilder {
     virtual std::shared_ptr<Distribution> build(Random64 &rng, size_t range) = 0;

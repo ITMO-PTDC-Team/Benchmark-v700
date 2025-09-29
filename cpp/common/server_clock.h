@@ -8,6 +8,7 @@
 #ifndef SERVER_CLOCK_H
 #define SERVER_CLOCK_H
 
+#include <cstdint>
 #if defined __x86_64__ && !defined CPU_FREQ_GHZ
 #error "Must define CPU_FREQ_GHZ for server_clock.h on __x86_64__"
 #endif
