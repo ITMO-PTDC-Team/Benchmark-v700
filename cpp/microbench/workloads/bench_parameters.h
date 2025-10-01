@@ -99,6 +99,7 @@ struct BenchParameters {
 
     std::string toString(size_t indents = 1) {
         return indented_title_with_data("Range", range, indents) +
+               dataMap->toString(indents + 1) + 
                (prefill->getNumThreads() == 0
                     ? toStringStage("without prefill")
                     : toStringStage("prefill parameters") + prefill->toString(indents + 1)) +
@@ -118,6 +119,8 @@ struct BenchParameters {
 
 void to_json(nlohmann::json& json, const BenchParameters& s) {
     json["range"] = s.range;
+    s.dataMap->toJson(json["dataMap"]);
+
     json["test"] = *s.test;
     json["prefill"] = *s.prefill;
     json["warmUp"] = *s.warmUp;
@@ -125,7 +128,7 @@ void to_json(nlohmann::json& json, const BenchParameters& s) {
 
 void from_json(const nlohmann::json& json, BenchParameters& s) {
     s.range = json["range"];
-    s.dataMap.reset(getDataMapFromJson(json));
+    s.dataMap.reset(getDataMapFromJson(json["dataMap"]));
 
     s.test = new Parameters(json["test"]);
     s.prefill = new Parameters(json["prefill"]);

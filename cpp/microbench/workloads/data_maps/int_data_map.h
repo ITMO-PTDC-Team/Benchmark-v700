@@ -1,5 +1,5 @@
-#ifndef SETBENCH_FILE_DATA_MAP_H
-#define SETBENCH_FILE_DATA_MAP_H
+#ifndef SETBENCH_INT_DATA_MAP_H
+#define SETBENCH_INT_DATA_MAP_H
 
 #include "workloads/data_maps/data_map.h"
 #include <random>
@@ -10,7 +10,7 @@ class IntDataMap : public DataMap {
 
 public:
     IntDataMap(size_t id) {
-        mapId = id;
+        mapId = id; // may be used later
     }
 
     void init(size_t range) override {
@@ -18,16 +18,28 @@ public:
         for (long long i = 0; i < range; i++) {
             actualData[i] = i + 1;
         }
-
-        //        std::random_shuffle(data, data + range - 1);
-        // invariant for keys being in an ascending order
-        // std::shuffle(actualData, actualData + range, std::mt19937(std::random_device()()));
     }
 
     KEY_TYPE* convert(size_t index) override {
         return &actualData[index];
     }
+
+    KEY_TYPE get_min() const override {
+        return 0;
+    }
+
+    KEY_TYPE get_max(size_t range) const override {
+        return range + 1;
+    }
+
+    virtual std::string toString(size_t indents = 1) {
+        return indented_title_with_str_data("Type", "IntDataMap", indents);
+    }
+
+    virtual void toJson(nlohmann::json &j) const {
+        j["dataMap"] = "IntDataMap";
+    }
 };
 #endif
 
-#endif //SETBENCH_FILE_DATA_MAP_H
+#endif //SETBENCH_INT_DATA_MAP_H

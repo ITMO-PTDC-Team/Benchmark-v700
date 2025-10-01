@@ -18,9 +18,8 @@ public:
         std::string result;
         while (index > 0) {
             index--;
-            char c = 'a' + (index % 26);
+            char c = 'a';
             result = c + result;
-            index /= 26;
         }
         return result;
     }
@@ -31,14 +30,32 @@ public:
         for (long long i = 0; i < range; i++) {
             actualData[i] = generate_string_key(i + 1);
         }
-
-        //        std::random_shuffle(data, data + range - 1);
-        // std::shuffle(actualData, actualData + range, std::mt19937(std::random_device()()));
     }
 
     KEY_TYPE* convert(size_t index) override {
-        return nullptr;
+        return &actualData[index];
     }
+
+    KEY_TYPE get_min() {
+        return "";
+    }
+
+    KEY_TYPE get_max(size_t range) {
+        std::string mx_val;
+        for (int i = 0; i<range; ++i) {
+            mx_val += "a";
+        }
+        return mx_val;
+    }
+
+    virtual std::string toString(size_t indents = 1) {
+        return indented_title_with_str_data("Type", "StringDataMap", indents);
+    }
+
+    virtual void toJson(nlohmann::json &j) const {
+        j["dataMap"] = "StringDataMap";
+    }
+    
 #endif
 };
 

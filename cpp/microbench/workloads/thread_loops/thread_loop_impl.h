@@ -49,11 +49,10 @@
 
 // template<typename KEY_TYPE>
 KEY_TYPE *ThreadLoop::executeInsert(size_t& key) {
-    KEY_TYPE* actualKey = g->benchParameters->dataMap->convert(key);
-    // std::cout << actualKey << std::endl;
+    KEY_TYPE * actualKey = g->benchParameters->dataMap->convert(key);
     TRACE COUTATOMICTID("### calling INSERT " << key << std::endl);
 
-
+    // std::cout << *actualKey << std::endl;
     VALUE_TYPE value = g->dsAdapter->insertIfAbsent(threadId, *actualKey, actualKey);
 //    KEY_TYPE *value = (KEY_TYPE *) g->dsAdapter->insertIfAbsent(threadId, key, KEY_TO_VALUE(key));
 
@@ -74,10 +73,10 @@ KEY_TYPE *ThreadLoop::executeInsert(size_t& key) {
 
 // template<typename KEY_TYPE>
 KEY_TYPE *ThreadLoop::executeRemove(size_t& key) {
-    KEY_TYPE actualKey = *g->benchParameters->dataMap->convert(key);
+    KEY_TYPE * actualKey = g->benchParameters->dataMap->convert(key);
     TRACE COUTATOMICTID("### calling ERASE " << key << std::endl);
 //    KEY_TYPE *value = (KEY_TYPE *) g->dsAdapter->erase(this->threadId, key);
-    VALUE_TYPE value = g->dsAdapter->erase(this->threadId, actualKey);
+    VALUE_TYPE value = g->dsAdapter->erase(this->threadId, *actualKey);
 
     if (value != this->g->dsAdapter->getNoValue()) {
         TRACE COUTATOMICTID("### completed ERASE modification for " << key << std::endl);
@@ -96,8 +95,8 @@ KEY_TYPE *ThreadLoop::executeRemove(size_t& key) {
 
 // template<typename KEY_TYPE>
 KEY_TYPE *ThreadLoop::executeGet(size_t& key) {
-    KEY_TYPE actualKey = *g->benchParameters->dataMap->convert(key);
-    VALUE_TYPE value = this->g->dsAdapter->find(this->threadId, actualKey);
+    KEY_TYPE * actualKey = g->benchParameters->dataMap->convert(key);
+    VALUE_TYPE value = this->g->dsAdapter->find(this->threadId, *actualKey);
 
     if (value != this->g->dsAdapter->getNoValue()) {
         garbage += key; // prevent optimizing out
@@ -139,7 +138,7 @@ void ThreadLoop::executeRangeQuery(size_t& leftKey, size_t& rightKey) {
     KEY_TYPE * actualRightKey = g->benchParameters->dataMap->convert(rightKey);
     if ((rqcnt = this->g->dsAdapter->rangeQuery(this->threadId, *actualLeftKey, *actualRightKey,
                                                 rqResultKeys, (VALUE_TYPE*) rqResultValues))) {
-        garbage += 1 + 2; // prevent rqResultValues and count from being optimized out
+        garbage += leftKey + rightKey; // prevent rqResultValues and count from being optimized out
     }
     GSTATS_ADD(threadId, num_rq, 1);
     GSTATS_ADD(threadId, num_operations, 1);

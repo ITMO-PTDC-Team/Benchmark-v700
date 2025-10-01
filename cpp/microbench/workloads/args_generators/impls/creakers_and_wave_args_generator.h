@@ -249,8 +249,6 @@ public:
 #include "workloads/distributions/distribution_json_convector.h"
 #include "workloads/index_maps/index_map_json_convector.h"
 
-//typedef long long size_t;
-
 class CreakersAndWaveArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     size_t creakersLength;
     size_t creakersBegin;

@@ -20,7 +20,7 @@ DataMap* getDataMapFromJson(const nlohmann::json &j) {
     //     return indexMapsBuilderById->second;
     // }
 
-    std::string className = j["dataMap"];
+    // std::string className = j["dataMap"];
     if constexpr (std::is_same_v<KEY_TYPE, std::string>) {
         #ifdef USE_STRING
         #include "string_data_map.h"
@@ -33,7 +33,7 @@ DataMap* getDataMapFromJson(const nlohmann::json &j) {
         #endif
     }
 
-    setbench_error("JSON PARSER: Unknown class name DataMap -- " + className)
+    // setbench_error("JSON PARSER: Unknown class name DataMap -- " + className)
 
     // TODO: In case we want additional functionality for DataMaps
     // indexMapBuilder->fromJson(j);

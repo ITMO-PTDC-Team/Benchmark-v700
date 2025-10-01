@@ -1,11 +1,7 @@
 #ifndef GLOBAL_TYPES_H
 #define GLOBAL_TYPES_H
 
-#ifndef KEY_TYPE
-    #define KEY_TYPE long long
-    #define USE_LONG_LONG
-    // #define USE_STRING
-#endif
+#define USE_LONG_LONG
 
 #ifdef REDIS
     typedef KEY_TYPE VALUE_TYPE;
@@ -14,27 +10,15 @@
 #endif
 
 #ifdef USE_STRING
-    KEY_TYPE get_min() {
-        return "a";
-    }
-
-    KEY_TYPE get_max(size_t range) {
-        std::string mx_val;
-        for (int i = 0; i<range; ++i) {
-            mx_val += "a";
-        }
-        return mx_val;
-    }
+    #define KEY_TYPE std::string
 #endif
 
 #ifdef USE_LONG_LONG
-    KEY_TYPE get_min() {
-        return 0;
-    }
+    #define KEY_TYPE long long
+#endif
 
-    KEY_TYPE get_max(size_t range) {
-        return range + 1;
-    }
+#ifndef KEY_TYPE
+    #define KEY_TYPE long long
 #endif
 
 #endif //SETBENCH_GLOBALS_T_H

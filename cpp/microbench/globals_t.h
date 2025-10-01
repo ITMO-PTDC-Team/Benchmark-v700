@@ -1,10 +1,10 @@
 //
 // Created by Ravil Galiev on 26.07.2023.
 //
-#include "global_types.h"
-
 #ifndef SETBENCH_GLOBALS_T_H
 #define SETBENCH_GLOBALS_T_H
+
+#include "global_types.h"
 
 #ifdef REDIS
     #define VALUE_TYPE test_type
