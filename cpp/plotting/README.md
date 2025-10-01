@@ -18,6 +18,7 @@ Before launching the script, you should set up the parameters for it.
 | `folder` | Output directory for plots and results | `"tests-plots"` | - | **Yes** |
 | `json-file-input` | Name of the input file for benchmark | `"test.json"` | - | **Yes** |
 | `iterations` | Number of test iterations to average between | `5` | `1` | No |
+| `timeout` | Time (in seconds) after which benchmark will shutdown forcibly. Defaulted to 10000 for testing purposes | `5` | `10000` | No |
 | `competitors` | Data structures to compare (array of strings) | `["aksenov_splaylist_64"]` | - | **Yes** |
 | `keys` | Changeable input file parameters to test (object with key-value pairs) | See below | - | **Yes** |
 | `key_title` | X-axis label | `"NumberOfThreads"` | - | **Yes** |
@@ -29,6 +30,23 @@ Before launching the script, you should set up the parameters for it.
 | `yscale` | Y-axis scale type | `"log"` | `"linear"` | No |
 
 
+### Competitors Configuration
+
+The `competitors` parameter should be an array of objects, each containing:
+
+```json
+"competitors": [
+    {
+        "name": "aksenov_splaylist_64",
+        "display-name": "Aksenov Splaylist",
+        "data-structure-arguments": {
+            // Optional: specific arguments for this data structure
+            "id": "custom_id",
+            "other_param": "value"
+        }
+    }
+]
+```
 
 ### Keys
 

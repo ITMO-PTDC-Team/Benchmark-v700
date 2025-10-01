@@ -62,11 +62,13 @@ class PlotterJsonExtractor(JsonStatExtractor):
         self.agg_stat = "average_num_operations_total"
         self.ylabel = "Average number of operations total"
         self.yscale = "linear"
+        self.timeout = 100000
 
         self.xtitle = "NumberOfThreads"
         self.xvalues = []
 
         self.ds = []
+        self.ds_args = []
         self.display_ds = []
         self.settings = defaultdict(dict)
         self.no_run = no_run
@@ -97,6 +99,9 @@ class PlotterJsonExtractor(JsonStatExtractor):
             if "iterations" in data:
                 self.iterations = data['iterations']
 
+            if "timeout" in data:
+                self.timeout = data['timeout']
+
             if "allocator" in data:
                 self.allocator = data['allocator']
 
@@ -115,6 +120,7 @@ class PlotterJsonExtractor(JsonStatExtractor):
             for structs in data['competitors']:
                 ds_name = structs['name']
                 self.ds.append(ds_name)
+                self.ds_args.append(structs['data-structure-arguments'] if 'data-structure-arguments' in structs else {})
                 self.display_ds.append(structs['display-name'] if 'display-name' in structs else ds_name)
                     
                 for cur_keys in data['keys']:
@@ -135,24 +141,28 @@ class PlotterJsonExtractor(JsonStatExtractor):
                     except Exception as e:
                         print(f"Error during file deletion {f}: {e}")
 
-        for ds_name in self.ds:
+        for ds_name, ds_args in zip(self.ds, self.ds_args):
             for iter_num in range(len(self.xvalues)):
                 keys = []
                 for key, values in self.settings.items():
                     keys.append(values[iter_num])
                 paths = list(self.settings.keys())
+                suffix = str(self.xtitle) + '_' + self.xvalues[iter_num]
+                suffix += "_" + ds_args["id"] if "id" in ds_args else ""
                 modify_and_run_second_json(
-                                        self.out_folder, 
-                                        self.input_path, 
-                                        self.allocator,
-                                        self.compiled_path, 
-                                        self.iterations,
-                                        self.agg_stat,
-                                        self.no_run,
-                                        ds_name, 
-                                        keys, 
-                                        paths, 
-                                        str(self.xtitle) + '_' + self.xvalues[iter_num])
+                    self.out_folder, 
+                    self.input_path, 
+                    self.allocator,
+                    self.compiled_path, 
+                    self.iterations,
+                    self.timeout,
+                    self.agg_stat,
+                    self.no_run,
+                    ds_name, 
+                    keys, 
+                    paths,
+                    suffix
+                )
 
 class ResultJsonExtractor(JsonStatExtractor):
     def __init__(self, agg_label, **kwargs):
@@ -224,6 +234,7 @@ def modify_and_run_second_json(folder,
                                allocator,
                                compiled_path,
                                iters,
+                               timeout,
                                agg_stat,
                                no_run,
                                ds,
@@ -261,12 +272,11 @@ def modify_and_run_second_json(folder,
         file_name = f"{ds}_{title}"
 
         if not (no_run):
-            print("Running for " + ds)
+            print("Running for " + ds + " with title " + title)
 
             for iter_num in range(1, iters + 1):
                 out = f"../plotting/{folder}/{file_name}_{iter_num}.json"
                 run_command = f"{compiled_path}{ds}.debra -json-file {inp} -result-file {out}"
-
                 # TODO:
                 # for argument, value in additional: 
                 #    run_command += f"-{argument} {value}"
@@ -278,7 +288,7 @@ def modify_and_run_second_json(folder,
                         run_command.split(),
                         cwd=str(bench_path / "microbench"),
                         env=env,
-                        timeout=100000,
+                        timeout=timeout,
                         check=True,
                         capture_output=True,
                         text=True
@@ -315,10 +325,11 @@ def run(args):
     ax.set_yscale(plotter_initial.yscale)
     ax.set_ylabel(plotter_initial.ylabel)
 
-    for ds, name in zip(plotter_initial.ds, plotter_initial.display_ds):
+    for ds, ds_args, name in zip(plotter_initial.ds, plotter_initial.ds_args, plotter_initial.display_ds):
         yvalues = []
         for val in plotter_initial.xvalues:
-            path_to_result = f"{plotter_initial.out_folder}/{ds}_{plotter_initial.xtitle}_{val}_aggregated.json"
+            suffix = '_' + ds_args["id"] if "id" in ds_args else ""
+            path_to_result = f"{plotter_initial.out_folder}/{ds}_{plotter_initial.xtitle}_{val}{suffix}_aggregated.json"
             plotter_final = ResultJsonExtractor(agg_label=plotter_initial.agg_stat, path=path_to_result)
             plotter_final.extract()
             yvalues.append(plotter_final.agg_stat)
