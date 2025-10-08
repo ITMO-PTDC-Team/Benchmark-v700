@@ -11,7 +11,9 @@ import copy
 import logging
 import glob
 
+
 DEFAULT_OUTPUT_DIR_NAME = "plotter-output"
+
 
 def create_logger(name, log_file):
     logger = logging.getLogger(name)
@@ -27,6 +29,7 @@ def create_logger(name, log_file):
     logger.addHandler(handler)
     return logger
 
+
 def handle_file_error(exc: Exception, filepath: str = ""):
     if isinstance(exc, json.JSONDecodeError):
         print(f"Error: Invalid JSON or file read failed - '{filepath}'")
@@ -38,6 +41,7 @@ def handle_file_error(exc: Exception, filepath: str = ""):
         print(f"Unexpected error: {exc}")
     
     sys.exit(1)
+
 
 class JsonStatExtractor(abc.ABC):
     def __init__(self, **kwargs):
@@ -51,6 +55,7 @@ class JsonStatExtractor(abc.ABC):
     @abc.abstractmethod
     def run_extractor(self):
         """Run the custom extractor."""
+
 
 class PlotterJsonExtractor(JsonStatExtractor):
     def __init__(self, no_run, **kwargs):
@@ -140,15 +145,27 @@ class PlotterJsonExtractor(JsonStatExtractor):
                             os.remove(f)  
                     except Exception as e:
                         print(f"Error during file deletion {f}: {e}")
-
+            # create folder
+            if not os.path.exists(self.out_folder):
+                os.makedirs(self.out_folder)
+            log_folder = f"{self.out_folder}/logs/"
+            if not os.path.exists(log_folder):
+                os.makedirs(log_folder)
+            # populate folder with temporary configs
+            with open(self.input_path, 'r') as file:
+                original_data = json.load(file)     
+            for iter_num in range(len(self.xvalues)):
+                temp_data = copy.copy(original_data)
+                for key_path, values in self.settings.items():
+                    set_value(temp_data, key_path, values[iter_num])
+                title = str(self.xtitle) + '_' + self.xvalues[iter_num]
+                temp_file = os.path.join(self.out_folder, f"temp_config_{title}.json")
+                with open(temp_file, 'w') as temp:
+                    json.dump(temp_data, temp, indent=4)
         for ds_name, ds_args in zip(self.ds, self.ds_args):
             for iter_num in range(len(self.xvalues)):
-                keys = []
-                for key, values in self.settings.items():
-                    keys.append(values[iter_num])
-                paths = list(self.settings.keys())
-                suffix = str(self.xtitle) + '_' + self.xvalues[iter_num]
-                suffix += "_" + ds_args["id"] if "id" in ds_args else ""
+                title = str(self.xtitle) + '_' + self.xvalues[iter_num]
+                suffix = "_" + ds_args["id"] if "id" in ds_args else ""
                 modify_and_run_second_json(
                     self.out_folder, 
                     self.input_path, 
@@ -158,11 +175,11 @@ class PlotterJsonExtractor(JsonStatExtractor):
                     self.timeout,
                     self.agg_stat,
                     self.no_run,
-                    ds_name, 
-                    keys, 
-                    paths,
+                    ds_name,
+                    title,
                     suffix
                 )
+
 
 class ResultJsonExtractor(JsonStatExtractor):
     def __init__(self, agg_label, **kwargs):
@@ -184,6 +201,7 @@ class ResultJsonExtractor(JsonStatExtractor):
     
     def run_extractor(self):
         return
+
 
 class IterationsJsonAggregator(JsonStatExtractor):
     def __init__(self, file_name, iters, stats, **kwargs):
@@ -218,6 +236,7 @@ class IterationsJsonAggregator(JsonStatExtractor):
             print(f"Error: {e}")
         return
 
+
 def set_value(data, path, new_value):
     keys = path.split('.')
     current = data
@@ -238,41 +257,16 @@ def modify_and_run_second_json(folder,
                                agg_stat,
                                no_run,
                                ds,
-                               keys,
-                               path_to_keys,
-                               title):
+                               title,
+                               suffix):
     try:
-        bench_path = Path.cwd().parent
-
-        with open(params, 'r') as file:
-            data = json.load(file)
-
-        temp_data = copy.copy(data)
-
-        for key, key_path in zip(keys, path_to_keys):
-            set_value(temp_data, key_path, key)
-
-        temp_file = os.path.join(folder, f"temp_config_{ds}_{title}.json")
-
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-
-        log_folder = f"{folder}/logs/"
-        if not os.path.exists(log_folder):
-            os.makedirs(log_folder)
-
-        log_file = bench_path / "plotting" / folder / "logs" / f"log_{ds}_{title}.txt"
+        log_file = Path.cwd().parent / "plotting" / folder / "logs" / f"log_{ds}_{title}{suffix}.txt"
         task_logger = create_logger("logger_prefix", log_file)
-
-        with open(temp_file, 'w') as temp:
-            json.dump(temp_data, temp, indent=4)
- 
         ld_preload = f"../lib/{allocator}.so" if allocator != "" else ""
-        inp = f"../plotting/{temp_file}"
-        file_name = f"{ds}_{title}"
-
+        inp = f"../plotting/{folder}/temp_config_{title}.json"
+        file_name = f"{ds}_{title}{suffix}"
         if not (no_run):
-            print("Running for " + ds + " with title " + title)
+            print("Running for " + ds + " with suffix " + title + suffix)
 
             for iter_num in range(1, iters + 1):
                 out = f"../plotting/{folder}/{file_name}_{iter_num}.json"
@@ -286,7 +280,7 @@ def modify_and_run_second_json(folder,
                     env["LD_PRELOAD"] = ld_preload
                     cp = subprocess.run(
                         run_command.split(),
-                        cwd=str(bench_path / "microbench"),
+                        cwd=str(Path.cwd().parent / "microbench"),
                         env=env,
                         timeout=timeout,
                         check=True,
@@ -340,6 +334,7 @@ def run(args):
     fig.tight_layout()
     fig.savefig(args.pathg if args.pathg is not None else f"Result_graph.png")
     plt.close(fig)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="""
