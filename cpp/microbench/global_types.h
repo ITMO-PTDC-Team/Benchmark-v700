@@ -1,8 +1,6 @@
 #ifndef GLOBAL_TYPES_H
 #define GLOBAL_TYPES_H
 
-#define USE_LONG_LONG
-
 #ifdef REDIS
     typedef KEY_TYPE VALUE_TYPE;
 #else
