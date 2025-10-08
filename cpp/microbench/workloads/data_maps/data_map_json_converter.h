@@ -13,30 +13,25 @@
 #include <type_traits>
 
 DataMap* getDataMapFromJson(const nlohmann::json &j) {
-    // size_t id = j["id"];
-
-    // auto indexMapsBuilderById = indexMapBuilders.find(id);
-    // if (indexMapsBuilderById != indexMapBuilders.end()) {
-    //     return indexMapsBuilderById->second;
-    // }
-
-    // std::string className = j["dataMap"];
-    if constexpr (std::is_same_v<KEY_TYPE, std::string>) {
-        #ifdef USE_STRING
-        #include "string_data_map.h"
-        return new StringDataMap(1);
-        #endif
-    } else if constexpr (std::is_same_v<KEY_TYPE, long long>) {
-        #ifdef USE_LONG_LONG
+    std::string className = j["name"];
+    #ifdef USE_LONG_LONG
         #include "int_data_map.h"
-        return new IntDataMap(1);
-        #endif
-    }
+        if (className == "IntDataMap") {
+            return (new IntDataMap())->fromJson(j);
+        };
 
-    // setbench_error("JSON PARSER: Unknown class name DataMap -- " + className)
+        setbench_error("CMake and JSON data map name is not equal")
+    #endif
+        
+    #ifdef USE_STRING
+        #include "string_data_map.h"
+        if (className == "StringDataMap") {
+            return (new StringDataMap())->fromJson(j);
+        };
 
-    // TODO: In case we want additional functionality for DataMaps
-    // indexMapBuilder->fromJson(j);
+        setbench_error("CMake and JSON data map name is not equal")
+    #endif
+
     return nullptr;
 }
 

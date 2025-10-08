@@ -18,8 +18,11 @@ public:
     virtual size_t getId() const { return mapId; }
     
     virtual KEY_TYPE get_min() const = 0;
+
     virtual KEY_TYPE get_max(size_t range) const = 0;
 
+    virtual DataMap* fromJson(const nlohmann::json& j) {}
+    
     virtual std::string toString(size_t indents = 1) = 0;
 
     virtual void toJson(nlohmann::json &j) const = 0;

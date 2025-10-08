@@ -9,9 +9,7 @@
 class IntDataMap : public DataMap {
 
 public:
-    IntDataMap(size_t id) {
-        mapId = id; // may be used later
-    }
+    IntDataMap() {}
 
     void init(size_t range) override {
         actualData = new KEY_TYPE[range];
@@ -34,6 +32,10 @@ public:
 
     virtual std::string toString(size_t indents = 1) {
         return indented_title_with_str_data("Type", "IntDataMap", indents);
+    }
+
+    virtual DataMap* fromJson(const nlohmann::json& j) override {
+        return this;
     }
 
     virtual void toJson(nlohmann::json &j) const {
