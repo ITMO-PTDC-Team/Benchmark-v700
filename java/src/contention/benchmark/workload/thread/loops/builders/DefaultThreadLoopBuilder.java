@@ -29,6 +29,11 @@ public class DefaultThreadLoopBuilder extends ThreadLoopBuilder {
         return this;
     }
 
+    public DefaultThreadLoopBuilder setRangeQueryRatio(double rqRatio) {
+        parameters.rangeQueryRatio = rqRatio;
+        return this;
+    }
+
     public DefaultThreadLoopBuilder setRemoveRatio(double removeRatio) {
         parameters.removeRatio = removeRatio;
         return this;

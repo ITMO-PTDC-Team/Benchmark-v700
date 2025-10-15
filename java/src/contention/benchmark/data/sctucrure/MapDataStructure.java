@@ -4,6 +4,7 @@ import contention.abstractions.CompositionalMap;
 import contention.abstractions.DataStructure;
 
 import java.util.Collection;
+import java.util.NavigableMap;
 
 public class MapDataStructure<K> implements DataStructure<K> {
     private final CompositionalMap<K, K> dataStructure;
@@ -25,6 +26,11 @@ public class MapDataStructure<K> implements DataStructure<K> {
     @Override
     public K get(K key) {
         return dataStructure.get(key);
+    }
+
+    @Override
+    public int rangeQuery(K lo, K hi) {
+        return dataStructure.rangeQuery(lo, hi);
     }
 
     @Override

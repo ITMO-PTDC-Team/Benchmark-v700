@@ -3,6 +3,7 @@ package contention.benchmark.workload.thread.loops.abstractions;
 import contention.abstractions.CompositionalMap;
 import contention.abstractions.DataStructure;
 import contention.benchmark.statistic.ThreadStatistic;
+import contention.benchmark.tools.Pair;
 import contention.benchmark.workload.stop.condition.StopCondition;
 
 import java.lang.reflect.Method;
@@ -86,6 +87,16 @@ public abstract class ThreadLoop implements Runnable {
             stats.numContains++;
         } else {
             stats.failures++;
+        }
+        return result;
+    }
+
+    public Integer executeRangeQuery(Pair<Integer, Integer> keys) {
+        Integer result;
+        if ((result = dataStructure.rangeQuery(keys.first, keys.second)) != 0) {
+            stats.numRangeQuery++;
+        } else {
+            stats.numRangeQuery++;
         }
         return result;
     }

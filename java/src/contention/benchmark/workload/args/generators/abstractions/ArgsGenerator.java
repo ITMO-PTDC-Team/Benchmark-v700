@@ -1,4 +1,5 @@
 package contention.benchmark.workload.args.generators.abstractions;
+import contention.benchmark.tools.Pair;
 
 public interface ArgsGenerator {
     int nextGet();
@@ -6,4 +7,6 @@ public interface ArgsGenerator {
     int nextInsert();
 
     int nextRemove();
+
+    Pair<Integer, Integer> nextRange();
 }

@@ -6,6 +6,7 @@ public class RatioThreadLoopParameters {
     public double
             insertRatio = 0.2,
             removeRatio = 0.2,
+            rangeQueryRatio = 0,
             writeAllsRatio = 0,
             snapshotsRatio = 0;
 
@@ -24,6 +25,11 @@ public class RatioThreadLoopParameters {
 
     public RatioThreadLoopParameters setRemoveRatio(double removeRatio) {
         this.removeRatio = removeRatio;
+        return this;
+    }
+
+    public RatioThreadLoopParameters setRangeQueryRatio(double removeRatio) {
+        this.rangeQueryRatio = removeRatio;
         return this;
     }
 
@@ -51,6 +57,7 @@ public class RatioThreadLoopParameters {
         return new StringBuilder()
                 .append(indentedTitleWithData("Insert ratio", insertRatio, indents))
                 .append(indentedTitleWithData("Remove ratio", removeRatio, indents))
+                .append(indentedTitleWithData("Range query ratio", rangeQueryRatio, indents))
                 .append(indentedTitleWithData("WriteAll ratio", writeAllsRatio, indents))
                 .append(indentedTitleWithData("Snapshot ratio", snapshotsRatio, indents));
     }
