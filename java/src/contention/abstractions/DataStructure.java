@@ -9,6 +9,8 @@ public interface DataStructure<K> {
 
     K get(K key);
 
+    int rangeQuery(K lo, K hi);
+
     boolean removeAll(Collection<K> c);
 
     int size();

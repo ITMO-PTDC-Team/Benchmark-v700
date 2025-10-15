@@ -1,5 +1,6 @@
 package contention.benchmark.workload.args.generators.impls;
 
+import contention.benchmark.tools.Pair;
 import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
 
 public class GeneralizedArgsGenerator implements ArgsGenerator {
@@ -34,7 +35,7 @@ public class GeneralizedArgsGenerator implements ArgsGenerator {
     }
 
     @Override
-    public int[] nextRange() {
+    public Pair<Integer, Integer> nextRange() {
         return rangeGenerator.nextRange();
     }
 }

@@ -33,6 +33,12 @@ public class IntSetDataStructure implements DataStructure<Integer> {
     }
 
     @Override
+    public int rangeQuery(Integer lo, Integer hi) {
+        // TODO: Make a proper implementation
+        return 0;
+    }
+
+    @Override
     public int size() {
         return dataStructure.size();
     }

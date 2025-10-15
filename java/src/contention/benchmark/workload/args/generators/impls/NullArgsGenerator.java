@@ -1,5 +1,6 @@
 package contention.benchmark.workload.args.generators.impls;
 
+import contention.benchmark.tools.Pair;
 import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
 
 public class NullArgsGenerator implements ArgsGenerator {
@@ -23,7 +24,7 @@ public class NullArgsGenerator implements ArgsGenerator {
     }
 
     @Override
-    public int[] nextRange() {
+    public Pair<Integer, Integer> nextRange() {
         throw new UnsupportedOperationException("Range Query not supported");
     }
 }

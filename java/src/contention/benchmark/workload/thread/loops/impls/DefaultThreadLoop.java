@@ -1,6 +1,7 @@
 package contention.benchmark.workload.thread.loops.impls;
 
 import contention.abstractions.DataStructure;
+import contention.benchmark.tools.Pair;
 import contention.benchmark.workload.thread.loops.abstractions.ThreadLoop;
 import contention.benchmark.workload.thread.loops.parameters.RatioThreadLoopParameters;
 import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
@@ -21,7 +22,7 @@ public class DefaultThreadLoop extends ThreadLoop {
      * |--writeAll--|--writeSome--|--readAll--|--readSome--|
      * |-----------write----------|--readAll--|--readSome--| cdf[1]
      */
-    private final double[] cdf = new double[4];
+    private final double[] cdf = new double[5];
 
     public DefaultThreadLoop(int threadId, DataStructure<Integer> dataStructure,
                              Method[] methods, StopCondition stopCondition,
@@ -32,7 +33,8 @@ public class DefaultThreadLoop extends ThreadLoop {
         cdf[0] = parameters.writeAllsRatio;
         cdf[1] = cdf[0] + parameters.insertRatio;
         cdf[2] = cdf[1] + parameters.removeRatio;
-        cdf[3] = cdf[2] + parameters.snapshotsRatio;
+        cdf[3] = cdf[2] + parameters.removeRatio;
+        cdf[4] = cdf[3] + parameters.snapshotsRatio;
     }
 
     @Override
@@ -54,7 +56,10 @@ public class DefaultThreadLoop extends ThreadLoop {
         } else if (coin < cdf[2]) { // 3. should we run a remove
             int key = argsGenerator.nextRemove();
             executeRemove(key);
-        } else if (coin < cdf[3]) { // 4. should we run a readAll operation?
+        } else if (coin < cdf[3]) {  // 4. should we run a range query
+            Pair<Integer, Integer> keys = argsGenerator.nextRange();
+            executeRangeQuery(keys);
+        } else if (coin < cdf[4]) { // 5. should we run a readAll operation?
             executeSize();
         } else { //if (coin < cdf[3]) { // 5. then we should run a readSome operation
             int key = argsGenerator.nextGet();

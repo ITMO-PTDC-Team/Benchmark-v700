@@ -44,6 +44,10 @@ public class BenchStatistic {
                         commonStatistic.numRemove,
                         (double) commonStatistic.numRemove / (double) commonStatistic.total,
                         indents + 1))
+                .append(indentedTitleWithDataPercent("|--rangeQuery succ.",
+                        commonStatistic.numRangeQuery,
+                        (double) commonStatistic.numRangeQuery / (double) commonStatistic.total,
+                        indents + 1))
                 .append(indentedTitleWithDataPercent("|--addAll succ.",
                         commonStatistic.numAddAll,
                         (double) commonStatistic.numAddAll / (double) commonStatistic.total,

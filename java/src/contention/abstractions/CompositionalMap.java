@@ -26,6 +26,10 @@ public interface CompositionalMap<K, V> extends Map<K, V> {
             return new Vars();
         }
     };
+
+    default public int rangeQuery(K lo, K hi) {
+        return 0;
+    }
 	
 	public V putIfAbsent(K k, V v);
 

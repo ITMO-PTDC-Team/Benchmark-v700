@@ -1,5 +1,6 @@
 package contention.benchmark.workload.args.generators.impls;
 
+import contention.benchmark.tools.Pair;
 import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
 import contention.benchmark.workload.data.map.abstractions.DataMap;
 
@@ -34,7 +35,7 @@ public class CreakersAndWavePrefillArgsGenerator implements ArgsGenerator {
     }
 
     @Override
-    public int[] nextRange() {
+    public Pair<Integer, Integer> nextRange() {
         throw new UnsupportedOperationException("Range Query not supported");
     }
 

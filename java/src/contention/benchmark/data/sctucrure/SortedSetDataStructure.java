@@ -28,6 +28,12 @@ public class SortedSetDataStructure<K> implements DataStructure<K> {
     }
 
     @Override
+    public int rangeQuery(K lo, K hi) {
+        // TODO: Make a proper implementation
+        return 0;
+    }
+
+    @Override
     public boolean removeAll(Collection<K> c) {
         return dataStructure.removeAll(c);
     }

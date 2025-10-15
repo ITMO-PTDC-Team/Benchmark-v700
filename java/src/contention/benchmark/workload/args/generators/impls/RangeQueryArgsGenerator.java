@@ -1,5 +1,6 @@
 package contention.benchmark.workload.args.generators.impls;
 
+import contention.benchmark.tools.Pair;
 import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
 import contention.benchmark.workload.data.map.abstractions.DataMap;
 import contention.benchmark.workload.distributions.abstractions.Distribution;
@@ -31,15 +32,10 @@ public class RangeQueryArgsGenerator implements ArgsGenerator {
     }
 
     @Override
-    public int[] nextRange() {
+    public Pair<Integer, Integer> nextRange() {
         int index = distribution.next();
         int left = data.get(index);
-        int right = data.get(index + interval);
-
-        if (left > right) {
-            return new int[]{right, left};
-        }
-
-        return new int[]{left, right};
+        int right = left + interval;
+        return new Pair<>(left, right);
     }
 }
