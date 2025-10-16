@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 21.07.2023.
 //
-
-#ifndef SETBENCH_ARGS_GENERATOR_BUILDER_H
-#define SETBENCH_ARGS_GENERATOR_BUILDER_H
+#pragma once
 
 #include <string>
 #include "args_generator.h"
@@ -36,5 +34,3 @@ void to_json(nlohmann::json &j, const ArgsGeneratorBuilder &s) {
 void from_json(const nlohmann::json &j, ArgsGeneratorBuilder &s) {
     s.fromJson(j);
 }
-
-#endif //SETBENCH_ARGS_GENERATOR_BUILDER_H

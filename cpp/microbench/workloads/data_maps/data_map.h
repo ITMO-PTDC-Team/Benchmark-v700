@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 24.07.2023.
 //
-
-#ifndef SETBENCH_DATA_MAP_H
-#define SETBENCH_DATA_MAP_H
+#pragma once
 
 template<typename K>
 struct DataMap {
@@ -11,5 +9,3 @@ struct DataMap {
 
     virtual ~DataMap() = default;
 };
-
-#endif //SETBENCH_DATA_MAP_H

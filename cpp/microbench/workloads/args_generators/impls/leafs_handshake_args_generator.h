@@ -1,9 +1,8 @@
 //
 // Created by Ravil Galiev on 20.09.2023.
 //
+#pragma once
 
-#ifndef SETBENCH_LEAFS_HANDSHAKE_ARGS_GENERATOR_H
-#define SETBENCH_LEAFS_HANDSHAKE_ARGS_GENERATOR_H
 
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/distributions/distribution.h"
@@ -187,5 +186,3 @@ public:
     };
 
 };
-
-#endif //SETBENCH_LEAFS_HANDSHAKE_ARGS_GENERATOR_H

@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 30.08.2022.
 //
-
-#ifndef SETBENCH_UNIFORM_DISTRIBUTION_BUILDER_H
-#define SETBENCH_UNIFORM_DISTRIBUTION_BUILDER_H
+#pragma once
 
 #include <cassert>
 #include "random_xoshiro256p.h"
@@ -35,5 +33,3 @@ struct UniformDistributionBuilder : public MutableDistributionBuilder {
 
     ~UniformDistributionBuilder() override = default;
 };
-
-#endif //SETBENCH_UNIFORM_DISTRIBUTION_BUILDER_H

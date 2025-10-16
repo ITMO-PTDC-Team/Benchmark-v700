@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 21.07.2023.
 //
-
-#ifndef SETBENCH_PARAMETERS_H
-#define SETBENCH_PARAMETERS_H
+#pragma once
 
 #include <vector>
 #include <string>
@@ -88,28 +86,28 @@ public:
         std::istringstream iss(pinPattern);
         char c;
         int num;
-        
+
         while (iss >> c) {
-            if (c == '~') {  
+            if (c == '~') {
                 char next = iss.peek();
                 if (next == '.') {
                     resultPin.push_back(-1);
                 } else if (iss >> num) {
                     resultPin.insert(resultPin.end(), num, -1);
                 }
-            } else if (isdigit(c)) {  
+            } else if (isdigit(c)) {
                 iss.putback(c);
                 if (iss >> num) {
                     char next = iss.peek();
-                    if (next == '-') {  
-                        iss >> c;  
+                    if (next == '-') {
+                        iss >> c;
                         int end;
                         if (iss >> end) {
                             for (int i = num; i <= end; ++i) {
                                 resultPin.push_back(i);
                             }
                         }
-                    } else {  
+                    } else {
                         resultPin.push_back(num);
                     }
                 }
@@ -253,5 +251,3 @@ void to_json(nlohmann::json &json, const Parameters &s) {
 void from_json(const nlohmann::json &j, Parameters &s) {
     s.fromJson(j);
 }
-
-#endif //SETBENCH_PARAMETERS_H

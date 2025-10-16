@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 24.07.2023.
 //
-
-#ifndef SETBENCH_DATA_MAP_BUILDER_H
-#define SETBENCH_DATA_MAP_BUILDER_H
+#pragma once
 
 #include <string>
 #include "data_map.h"
@@ -41,5 +39,3 @@ void to_json(nlohmann::json &j, const DataMapBuilder &s) {
 void from_json(const nlohmann::json &j, DataMapBuilder &s) {
     s.fromJson(j);
 }
-
-#endif //SETBENCH_DATA_MAP_BUILDER_H

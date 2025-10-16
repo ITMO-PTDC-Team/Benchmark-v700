@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 30.08.2022.
 //
-
-#ifndef SETBENCH_ZIPF_DISTRIBUTION_H
-#define SETBENCH_ZIPF_DISTRIBUTION_H
+#pragma once
 
 #include <algorithm>
 #include <cassert>
@@ -57,6 +55,3 @@ public:
 
     ~ZipfDistribution() override = default;
 };
-
-
-#endif //SETBENCH_ZIPF_DISTRIBUTION_H

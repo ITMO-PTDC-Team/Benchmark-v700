@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 06.04.2023.
 //
-
-#ifndef SETBENCH_DEFAULT_THREAD_LOOP_H
-#define SETBENCH_DEFAULT_THREAD_LOOP_H
+#pragma once
 
 #include "workloads/thread_loops/thread_loop.h"
 #include "workloads/args_generators/args_generator.h"
@@ -118,6 +116,3 @@ struct DefaultThreadLoopBuilder : public ThreadLoopBuilder {
         delete argsGeneratorBuilder;
     };
 };
-
-
-#endif //SETBENCH_DEFAULT_THREAD_LOOP_H

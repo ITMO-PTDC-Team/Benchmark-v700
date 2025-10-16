@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 24.07.2023.
 //
-
-#ifndef SETBENCH_DISTRIBUTION_H
-#define SETBENCH_DISTRIBUTION_H
+#pragma once
 
 struct Distribution {
     virtual size_t next() = 0;
@@ -21,6 +19,3 @@ struct MutableDistribution : public Distribution {
         return this->next();
     }
 };
-
-
-#endif //SETBENCH_DISTRIBUTION_H

@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 03.08.2023.
 //
-
-#ifndef SETBENCH_STATISTICS_H
-#define SETBENCH_STATISTICS_H
+#pragma once
 
 #include "define_global_statistics.h"
 #include "gstats_global.h"
@@ -192,5 +190,3 @@ void from_json(const nlohmann::json &json, Statistic &s) {
 struct ThreadStatistic {
 
 };
-
-#endif //SETBENCH_STATISTICS_H

@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 27.07.2023.
 //
-
-#ifndef SETBENCH_GLOBALS_T_IMPL_H
-#define SETBENCH_GLOBALS_T_IMPL_H
+#pragma once
 
 typedef long long test_type;
 
@@ -96,5 +94,3 @@ struct globals_t {
         delete benchParameters;
     }
 };
-
-#endif //SETBENCH_GLOBALS_T_IMPL_H

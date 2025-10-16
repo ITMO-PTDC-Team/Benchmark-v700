@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 21.07.2023.
 //
-
-#ifndef SETBENCH_THREAD_LOOP_IMPL_H
-#define SETBENCH_THREAD_LOOP_IMPL_H
+#pragma once
 
 #include "adapter.h"
 #include "globals_t_impl.h"
@@ -147,6 +145,3 @@ void ThreadLoop::run() {
     }
     THREAD_MEASURED_POST
 }
-
-
-#endif //SETBENCH_THREAD_LOOP_IMPL_H

@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 31.07.2023.
 //
-
-#ifndef SETBENCH_STOP_CONDITION_JSON_CONVECTOR_H
-#define SETBENCH_STOP_CONDITION_JSON_CONVECTOR_H
+#pragma once
 
 #include "json/single_include/nlohmann/json.hpp"
 #include "stop_condition.h"
@@ -25,5 +23,3 @@ StopCondition *getStopConditionFromJson(const nlohmann::json &j) {
     stopCondition->fromJson(j);
     return stopCondition;
 }
-
-#endif //SETBENCH_STOP_CONDITION_JSON_CONVECTOR_H

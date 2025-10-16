@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 24.07.2023.
 //
-
-#ifndef SETBENCH_DISTRIBUTION_BUILDER_H
-#define SETBENCH_DISTRIBUTION_BUILDER_H
+#pragma once
 
 #include <string>
 #include "distribution.h"
@@ -34,5 +32,3 @@ void to_json(nlohmann::json &j, const DistributionBuilder &s) {
 void from_json(const nlohmann::json &j, DistributionBuilder &s) {
     s.fromJson(j);
 }
-
-#endif //SETBENCH_DISTRIBUTION_BUILDER_H

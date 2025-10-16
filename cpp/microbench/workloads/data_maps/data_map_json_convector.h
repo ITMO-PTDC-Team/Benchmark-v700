@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 27.07.2023.
 //
-
-#ifndef SETBENCH_DATA_MAP_JSON_CONVECTOR_H
-#define SETBENCH_DATA_MAP_JSON_CONVECTOR_H
+#pragma once
 
 #include "json/single_include/nlohmann/json.hpp"
 #include "data_map_builder.h"
@@ -50,5 +48,3 @@ void initDataMapBuilders(size_t range) {
         it.second->init(range);
     }
 }
-
-#endif  // SETBENCH_DATA_MAP_JSON_CONVECTOR_H

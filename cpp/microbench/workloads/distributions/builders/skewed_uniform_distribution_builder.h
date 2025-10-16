@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 30.08.2022.
 //
-
-#ifndef SETBENCH_SKEWED_UNIFORM_DISTRIBUTION_BUILDER_H
-#define SETBENCH_SKEWED_UNIFORM_DISTRIBUTION_BUILDER_H
+#pragma once
 
 #include <algorithm>
 #include <cassert>
@@ -89,6 +87,3 @@ struct SkewedUniformDistributionBuilder : public DistributionBuilder {
         delete coldDistBuilder;
     }
 };
-
-
-#endif //SETBENCH_SKEWED_UNIFORM_DISTRIBUTION_BUILDER_H

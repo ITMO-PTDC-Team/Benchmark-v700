@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 21.07.2023.
 //
-
-#ifndef SETBENCH_BENCH_PARAMETERS_H
-#define SETBENCH_BENCH_PARAMETERS_H
+#pragma once
 
 #include "globals_extern.h"
 #include "parameters.h"
@@ -120,5 +118,3 @@ void from_json(const nlohmann::json& json, BenchParameters& s) {
     s.prefill = new Parameters(json["prefill"]);
     s.warmUp = new Parameters(json["warmUp"]);
 }
-
-#endif  // SETBENCH_BENCH_PARAMETERS_H

@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 30.08.2022.
 //
-
-#ifndef SETBENCH_UNIFORM_DISTRIBUTION_H
-#define SETBENCH_UNIFORM_DISTRIBUTION_H
+#pragma once
 
 #include <cassert>
 #include "random_xoshiro256p.h"
@@ -30,5 +28,3 @@ public:
 
     ~UniformDistribution() override = default;
 };
-
-#endif //SETBENCH_UNIFORM_DISTRIBUTION_H

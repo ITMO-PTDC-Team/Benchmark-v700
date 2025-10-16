@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 08.08.2023.
 //
-
-#ifndef SETBENCH_TEMPORARY_SKEWED_ARGS_GENERATOR_H
-#define SETBENCH_TEMPORARY_SKEWED_ARGS_GENERATOR_H
+#pragma once
 
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/distributions/distribution.h"
@@ -425,5 +423,3 @@ public:
 
 
 };
-
-#endif //SETBENCH_TEMPORARY_SKEWED_ARGS_GENERATOR_H

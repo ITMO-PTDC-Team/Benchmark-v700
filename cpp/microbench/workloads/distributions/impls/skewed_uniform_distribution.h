@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 30.08.2022.
 //
-
-#ifndef SETBENCH_SKEWED_UNIFORM_DISTRIBUTION_H
-#define SETBENCH_SKEWED_UNIFORM_DISTRIBUTION_H
+#pragma once
 
 #include <algorithm>
 #include <cassert>
@@ -48,6 +46,3 @@ public:
         delete coldDistribution;
     }
 };
-
-
-#endif //SETBENCH_SKEWED_UNIFORM_DISTRIBUTION_H

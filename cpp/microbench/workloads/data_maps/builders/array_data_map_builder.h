@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 24.07.2023.
 //
-
-#ifndef SETBENCH_ARRAY_DATA_MAP_BUILDER_H
-#define SETBENCH_ARRAY_DATA_MAP_BUILDER_H
+#pragma once
 
 #include <random>
 #include "workloads/data_maps/data_map_builder.h"
@@ -45,5 +43,3 @@ public:
 
     ~ArrayDataMapBuilder() override = default;
 };
-
-#endif  // SETBENCH_ARRAY_DATA_MAP_BUILDER_H

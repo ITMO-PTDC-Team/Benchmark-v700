@@ -4,9 +4,7 @@
  *
  * Created on March 9, 2015, 1:32 PM
  */
-
-#ifndef GLOBALS_EXTERN_H
-#define    GLOBALS_EXTERN_H
+#pragma once
 
 // enable USE_TRACE if you want low level functionality tracing using std::cout
 //#define USE_TRACE
@@ -142,5 +140,3 @@ std::string toStringBigStage(const std::string& stageName) {
            + ' ' + stageName + ' ' + std::string(size, '#') + "\n"
            + std::string(80, '#') + "\n";
 }
-
-#endif /* GLOBALS_EXTERN_H */

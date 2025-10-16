@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 21.07.2023.
 //
-
-#ifndef SETBENCH_STOP_CONDITION_H
-#define SETBENCH_STOP_CONDITION_H
+#pragma once
 
 #include "json/single_include/nlohmann/json.hpp"
 
@@ -35,5 +33,3 @@ void to_json(nlohmann::json &j, const StopCondition &s) {
 void from_json(const nlohmann::json &j, StopCondition &s) {
     s.fromJson(j);
 }
-
-#endif //SETBENCH_STOP_CONDITION_H

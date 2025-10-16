@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 24.07.2023.
 //
-
-#ifndef SETBENCH_ID_DATA_MAP_BUILDER_H
-#define SETBENCH_ID_DATA_MAP_BUILDER_H
+#pragma once
 
 #include "workloads/data_maps/data_map_builder.h"
 #include "workloads/data_maps/impls/id_data_map.h"
@@ -32,5 +30,3 @@ struct IdDataMapBuilder : public DataMapBuilder {
 
     ~IdDataMapBuilder() override = default;
 };
-
-#endif  // SETBENCH_ID_DATA_MAP_BUILDER_H

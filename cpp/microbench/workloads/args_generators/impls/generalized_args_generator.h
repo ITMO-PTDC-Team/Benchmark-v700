@@ -1,5 +1,4 @@
-#ifndef SETBENCH_GENERALIZED_ARGS_GENERATOR_H
-#define SETBENCH_GENERALIZED_ARGS_GENERATOR_H
+#pragma once
 
 #include <vector>
 #include <utility>
@@ -163,5 +162,3 @@ public:
     ~GeneralizedArgsGeneratorBuilder() override = default;
 
 };
-
-#endif //SETBENCH_GENERALIZED_ARGS_GENERATOR_H

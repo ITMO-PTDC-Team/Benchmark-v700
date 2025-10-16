@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 31.07.2023.
 //
-
-#ifndef SETBENCH_DISTRIBUTION_JSON_CONVECTOR_H
-#define SETBENCH_DISTRIBUTION_JSON_CONVECTOR_H
+#pragma once
 
 #include "distribution_builder.h"
 #include "workloads/distributions/builders/uniform_distribution_builder.h"
@@ -31,5 +29,3 @@ DistributionBuilder *getDistributionFromJson(const nlohmann::json &j) {
 MutableDistributionBuilder *getMutableDistributionFromJson(const nlohmann::json &j) {
     return dynamic_cast<MutableDistributionBuilder *>(getDistributionFromJson(j));
 }
-
-#endif //SETBENCH_DISTRIBUTION_JSON_CONVECTOR_H

@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 25.07.2023.
 //
-
-#ifndef SETBENCH_OPERATION_COUNTER_H
-#define SETBENCH_OPERATION_COUNTER_H
+#pragma once
 
 #include "plaf.h"
 #include "workloads/stop_condition/stop_condition.h"
@@ -78,5 +76,3 @@ public:
     ~OperationCounter() = default;
 
 };
-
-#endif //SETBENCH_OPERATION_COUNTER_H

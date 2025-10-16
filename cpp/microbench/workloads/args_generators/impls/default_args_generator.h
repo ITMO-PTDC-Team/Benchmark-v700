@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 30.08.2022.
 //
-
-#ifndef SETBENCH_DEFAULT_ARGS_GENERATOR_H
-#define SETBENCH_DEFAULT_ARGS_GENERATOR_H
+#pragma once
 
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/distributions/distribution.h"
@@ -126,6 +124,3 @@ return res;
     };
 
 };
-
-
-#endif //SETBENCH_DEFAULT_ARGS_GENERATOR_H

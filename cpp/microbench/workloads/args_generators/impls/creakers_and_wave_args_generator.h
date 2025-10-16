@@ -1,9 +1,8 @@
 //
 // Created by Ravil Galiev on 08.08.2023.
 //
+#pragma once
 
-#ifndef SETBENCH_CREAKERS_AND_WAVE_ARGS_GENERATOR_H
-#define SETBENCH_CREAKERS_AND_WAVE_ARGS_GENERATOR_H
 
 #include <atomic>
 
@@ -439,6 +438,3 @@ public:
 //        delete dataMapBuilder;
     };
 };
-
-
-#endif //SETBENCH_CREAKERS_AND_WAVE_ARGS_GENERATOR_H

@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 21.07.2023.
 //
-
-#ifndef SETBENCH_THREAD_LOOP_BUILDER_H
-#define SETBENCH_THREAD_LOOP_BUILDER_H
+#pragma once
 
 #include <string>
 #include "thread_loop.h"
@@ -38,5 +36,3 @@ void to_json(nlohmann::json &j, const ThreadLoopBuilder &s) {
 void from_json(const nlohmann::json &j, ThreadLoopBuilder &s) {
     s.fromJson(j);
 }
-
-#endif //SETBENCH_THREAD_LOOP_BUILDER_H

@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 16.08.2023.
 //
-
-#ifndef SETBENCH_TEMPORARY_OPERATIONS_THREAD_LOOP_H
-#define SETBENCH_TEMPORARY_OPERATIONS_THREAD_LOOP_H
+#pragma once
 
 #include "workloads/thread_loops/thread_loop.h"
 #include "workloads/thread_loops/ratio_thread_loop_parameters.h"
@@ -214,6 +212,3 @@ struct TemporaryOperationsThreadLoopBuilder : public ThreadLoopBuilder {
         delete argsGeneratorBuilder;
     };
 };
-
-
-#endif //SETBENCH_TEMPORARY_OPERATIONS_THREAD_LOOP_H

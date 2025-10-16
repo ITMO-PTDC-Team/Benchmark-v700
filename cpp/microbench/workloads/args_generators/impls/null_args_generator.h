@@ -1,5 +1,4 @@
-#ifndef SETBENCH_NULL_ARGS_GENERATOR_H
-#define SETBENCH_NULL_ARGS_GENERATOR_H
+#pragma once
 
 #include "workloads/args_generators/args_generator.h"
 
@@ -56,6 +55,3 @@ public:
 
     ~NullArgsGeneratorBuilder() override = default;
 };
-
-
-#endif //SETBENCH_NULL_ARGS_GENERATOR_H

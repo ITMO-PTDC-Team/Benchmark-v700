@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 21.07.2023.
 //
-
-#ifndef SETBENCH_THREAD_LOOP_H
-#define SETBENCH_THREAD_LOOP_H
+#pragma once
 
 #include "workloads/stop_condition/stop_condition.h"
 #include "globals_t.h"
@@ -83,5 +81,3 @@ void ThreadLoop::run() {
 }
 
 #endif
-
-#endif //SETBENCH_THREAD_LOOP_H

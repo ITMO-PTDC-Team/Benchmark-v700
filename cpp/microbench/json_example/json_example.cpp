@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 25.07.2023.
 //
-
-#ifndef SETBENCH_JSON_EXAMPLE_CPP
-#define SETBENCH_JSON_EXAMPLE_CPP
+#pragma once
 
 #include <fstream>
 #include <iostream>
@@ -138,7 +136,7 @@ int main() {
 //               = getCreakersAndWaveArgsGeneratorBuilder();
 //                = getTemporarySkewedArgsGeneratorBuilder();
     /*
-     * Use this argsGeneratorBuilder for Generalized Testing 
+     * Use this argsGeneratorBuilder for Generalized Testing
      */
 //    ArgsGeneratorBuilder*  actualArgsGeneratorBuilde = getGeneralizedArgsGeneratorBuilder(argsGeneratorBuilder);
             /**
@@ -172,5 +170,3 @@ int main() {
 
     std::cout << "end\n";
 }
-
-#endif //SETBENCH_JSON_EXAMPLE_CPP

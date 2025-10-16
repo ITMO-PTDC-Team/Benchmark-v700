@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 27.07.2023.
 //
-
-#ifndef SETBENCH_THREAD_LOOP_JSON_CONVECTOR_H
-#define SETBENCH_THREAD_LOOP_JSON_CONVECTOR_H
+#pragma once
 
 #include "thread_loop_builder.h"
 #include "workloads/thread_loops/impls/default_thread_loop.h"
@@ -28,5 +26,3 @@ ThreadLoopBuilder *getThreadLoopFromJson(const nlohmann::json &j) {
     threadLoopBuilder->fromJson(j);
     return threadLoopBuilder;
 }
-
-#endif //SETBENCH_THREAD_LOOP_JSON_CONVECTOR_H

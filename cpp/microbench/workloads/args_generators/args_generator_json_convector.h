@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 27.07.2023.
 //
-
-#ifndef SETBENCH_ARGS_GENERATOR_JSON_CONVECTOR_H
-#define SETBENCH_ARGS_GENERATOR_JSON_CONVECTOR_H
+#pragma once
 
 
 #include "json/single_include/nlohmann/json.hpp"
@@ -49,6 +47,3 @@ ArgsGeneratorBuilder *getArgsGeneratorFromJson(const nlohmann::json &j) {
     argsGeneratorBuilder->fromJson(j);
     return argsGeneratorBuilder;
 }
-
-
-#endif //SETBENCH_ARGS_GENERATOR_JSON_CONVECTOR_H

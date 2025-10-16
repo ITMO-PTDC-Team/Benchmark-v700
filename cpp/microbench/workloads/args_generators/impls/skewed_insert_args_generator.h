@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 08.08.2023.
 //
-
-#ifndef SETBENCH_SKEWED_INSERT_ARGS_GENERATOR_H
-#define SETBENCH_SKEWED_INSERT_ARGS_GENERATOR_H
+#pragma once
 
 #include "workloads/args_generators/args_generator.h"
 
@@ -132,6 +130,3 @@ public:
     };
 
 };
-
-
-#endif //SETBENCH_SKEWED_INSERT_ARGS_GENERATOR_H

@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 25.07.2023.
 //
-
-#ifndef SETBENCH_TIMER_H
-#define SETBENCH_TIMER_H
+#pragma once
 
 #include <thread>
 #include <string>
@@ -69,5 +67,3 @@ public:
                + indented_title_with_data("work time", workTime, indents);
     }
 };
-
-#endif //SETBENCH_TIMER_H

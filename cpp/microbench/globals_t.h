@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 26.07.2023.
 //
-
-#ifndef SETBENCH_GLOBALS_T_H
-#define SETBENCH_GLOBALS_T_H
+#pragma once
 
 typedef long long test_type;
 
@@ -20,5 +18,3 @@ typedef long long test_type;
 #define DS_ADAPTER_T ds_adapter<test_type, VALUE_TYPE, RECLAIM<>, ALLOC<>, POOL<> >
 
 struct globals_t;
-
-#endif //SETBENCH_GLOBALS_T_H

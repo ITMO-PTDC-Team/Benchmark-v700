@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 07.08.2023.
 //
-
-#ifndef SETBENCH_PREFILL_INSERT_THREAD_LOOP_H
-#define SETBENCH_PREFILL_INSERT_THREAD_LOOP_H
+#pragma once
 
 #include <string>
 
@@ -102,5 +100,3 @@ struct PrefillInsertThreadLoopBuilder : public ThreadLoopBuilder {
         delete argsGeneratorBuilder;
     };
 };
-
-#endif //SETBENCH_PREFILL_INSERT_THREAD_LOOP_H

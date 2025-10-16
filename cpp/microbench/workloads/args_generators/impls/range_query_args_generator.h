@@ -1,5 +1,4 @@
-#ifndef SETBENCH_RANGE_QUERY_ARGS_GENERATOR_H
-#define SETBENCH_RANGE_QUERY_ARGS_GENERATOR_H
+#pragma once
 
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/distributions/distribution.h"
@@ -74,7 +73,7 @@ public:
         dataMapBuilder = _dataMapBuilder;
         return this;
     }
-    
+
     RangeQueryArgsGeneratorBuilder *setInterval(size_t _interval) {
         interval = _interval;
         return this;
@@ -120,6 +119,3 @@ public:
     };
 
 };
-
-
-#endif //SETBENCH_RANGE_QUERY_ARGS_GENERATOR_H

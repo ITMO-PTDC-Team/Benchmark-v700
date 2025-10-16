@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 06.04.2023.
 //
-
-#ifndef SETBENCH_PARSE_ARGUMENT_H
-#define SETBENCH_PARSE_ARGUMENT_H
+#pragma once
 
 struct ParseArgument {
     size_t pointer;
@@ -30,5 +28,3 @@ struct ParseArgument {
         return pointer < length;
     }
 };
-
-#endif //SETBENCH_PARSE_ARGUMENT_H

@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 16.08.2023.
 //
-
-#ifndef SETBENCH_RATIO_THREAD_LOOP_PARAMETERS_H
-#define SETBENCH_RATIO_THREAD_LOOP_PARAMETERS_H
+#pragma once
 
 #include "globals_extern.h"
 #include "json/single_include/nlohmann/json.hpp"
@@ -57,5 +55,3 @@ void from_json(const nlohmann::json &j, RatioThreadLoopParameters &s) {
         s.RQ_RATIO = j["rqRatio"];
     }
 }
-
-#endif //SETBENCH_RATIO_THREAD_LOOP_PARAMETERS_H

@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 30.08.2022.
 //
-
-#ifndef SETBENCH_ZIPFIAN_DISTRIBUTION_BUILDER_H
-#define SETBENCH_ZIPFIAN_DISTRIBUTION_BUILDER_H
+#pragma once
 
 #include <algorithm>
 #include <cassert>
@@ -47,6 +45,3 @@ struct ZipfianDistributionBuilder : public MutableDistributionBuilder {
 
     ~ZipfianDistributionBuilder() override = default;
 };
-
-
-#endif //SETBENCH_ZIPFIAN_DISTRIBUTION_BUILDER_H
