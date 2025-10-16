@@ -1,0 +1,146 @@
+#ifndef VERLIB_HASHBLOCK_ADAPTER_H
+#define VERLIB_HASHBLOCK_ADAPTER_H
+
+#include <iostream>
+#include "errors.h"
+#include "set.h"
+#ifdef USE_TREE_STATS
+include "tree_stats.h"
+
+#endif
+
+template <typename K, typename V, class Reclaim = reclaimer_debra<K>, class Alloc = allocator_new<K>, class Pool = pool_none<K>>
+class ds_adapter {
+private:
+    unordered_map<K, V>* map;
+    const V NO_VALUE;
+
+public:
+    ds_adapter(const int NUM_THREADS,
+    const K& KEY_MIN,
+    const K& KEY_MAX,
+    const V& VALUE_RESERVED,
+    Random64* const unused1)
+    : map(new unordered_map<K, V>(NUM_THREADS * 2))
+    , NO_VALUE(VALUE_RESERVED)
+    {}
+
+    ~ds_adapter() {
+        delete map;
+    }
+
+    V getNoValue() {
+        return NO_VALUE;
+    }
+
+    void initThread(const int tid) {}
+
+    void deinitThread(const int tid) {}
+
+    bool contains(const int tid, const K& key) {
+        return map->find(key).has_value();
+    }
+
+    V insert(const int tid, const K& key, const V& val) {
+        setbench_error("Plain insert functionality not implemented for this data structure");
+    }
+
+    V insertIfAbsent(const int tid, const K& key, const V& val) {
+        if (map->insert(key, val)) {
+            return NO_VALUE; 
+        } else {
+            return val;
+        }
+        return NO_VALUE; 
+    }
+
+    V erase(const int tid, const K& key) {
+        if (map->remove(key)) {
+            return reinterpret_cast<V>(const_cast<K*>(&key));
+        }
+        return NO_VALUE;
+    }
+
+    V find(const int tid, const K& key) {
+        auto result = map->find(key);
+        return result.has_value() ? result.value() : NO_VALUE;
+    }
+
+    int rangeQuery(const int tid, const K& lo, const K& hi, K* const resultKeys, V* const resultValues) {
+        setbench_error("RQ functionality not implemented for this data structure");
+    }
+
+    void printSummary() {
+        // std::cout << "Verlib hash block summary" << std::endl;
+        // map->print();
+    }
+
+    bool validateStructure() {
+        return true;
+    }
+
+    void printObjectSizes() {
+        map->stats();
+    }
+
+#ifdef USE_TREE_STATS
+    class NodeHandler {
+    public:
+    typedef typename unordered_map<K,V>::node* NodePtrType;
+    text
+
+        NodeHandler(const K& _minKey, const K& _maxKey) {}
+
+        class ChildIterator {
+        public:
+            ChildIterator(NodePtrType _node) {}
+            bool hasNext() {
+                return false;
+            }
+            NodePtrType next() {
+                return nullptr;
+            }
+        };
+
+        bool isLeaf(NodePtrType node) {
+            return true;
+        }
+        
+        size_t getNumChildren(NodePtrType node) {
+            return 0;
+        }
+        
+        size_t getNumKeys(NodePtrType node) {
+            return node ? node->cnt : 0;
+        }
+        
+        size_t getSumOfKeys(NodePtrType node) {
+            size_t sum = 0;
+            if (node) {
+                if (node->cnt <= 31) {
+                    for (int i = 0; i < node->cnt; i++) {
+                        sum += node->entries[i].key;
+                    }
+                } else {
+                    auto big_node = static_cast<typename unordered_map<K,V>::BigNode*>(node);
+                    for (int i = 0; i < node->cnt; i++) {
+                        sum += big_node->entries[i].key;
+                    }
+                }
+            }
+            return sum;
+        }
+        
+        ChildIterator getChildIterator(NodePtrType node) {
+            return ChildIterator(node);
+        }
+    };
+
+    TreeStats<NodeHandler>* createTreeStats(const K& _minKey, const K& _maxKey) {
+        return new TreeStats<NodeHandler>(new NodeHandler(_minKey, _maxKey), nullptr, true);
+}
+
+#endif
+};
+
+#endif // VERLIB_HASHBLOCK_ADAPTER_H

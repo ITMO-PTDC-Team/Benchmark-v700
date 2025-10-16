@@ -63,7 +63,7 @@ add_definitions("-DMAX_THREADS_POW2=512"
         "-DCPU_FREQ_GHZ=2.1"
         "-DMEMORY_STATS=if\(1\)"
         "-DMEMORY_STATS2=if\(0\)"
-        "-std=c++17 -mcx16 -gdwarf"
+        "-std=c++20 -mcx16 -gdwarf"
         "-fno-omit-frame-pointer"
         "-DDEBRA_ORIGINAL_FREE"
         "-DKEY_DEPTH_TOTAL_STAT"
@@ -89,7 +89,7 @@ include_directories(common/urcu)
 
 include_directories(${BENCH_DIR})
 
-
+find_package(Threads REQUIRED)
 
 set(SOURCE_EXE ${BENCH_DIR}/main.cpp)
 
@@ -106,7 +106,7 @@ foreach (DATA_STRUCTURE ${RAW_DATA_STRUCTURES})
     list(APPEND DATA_STRUCTURES ${DS})
 endforeach ()
 
-
+include_directories(ds/verlib_structs/include)
 
 foreach (DS ${DATA_STRUCTURES})
 
@@ -134,6 +134,13 @@ foreach (DS ${DATA_STRUCTURES})
 #        include_directories(dragonfly_table/src)
 
         target_link_libraries(${DS_RUN} PUBLIC dragonfly_static)
+    endif ()
+
+    if (${DS} MATCHES "verlib.*")
+
+        message(DS="${DS} || verlib type")
+
+        target_include_directories(${DS_RUN} PUBLIC parlay)
     endif ()
 endforeach ()
 
