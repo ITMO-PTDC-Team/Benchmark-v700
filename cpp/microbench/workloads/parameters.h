@@ -148,7 +148,7 @@ public:
         threadLoopBuilders.push_back(_threadLoopSettings);
         numThreads += _threadLoopSettings->quantity;
         if (_threadLoopSettings && !_threadLoopSettings->pinPattern.empty()) {
-            vector<int> curPin;
+            std::vector<int> curPin;
             parseBinding(_threadLoopSettings->pinPattern, curPin);
             for (size_t i = 0; i < _threadLoopSettings->quantity; ++i) {
                 pin.push_back(curPin[i % curPin.size()]);
