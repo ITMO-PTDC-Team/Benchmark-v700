@@ -6,18 +6,18 @@
 #include "workloads/thread_loops/thread_loop.h"
 #include "workloads/thread_loops/ratio_thread_loop_parameters.h"
 
-//template<typename K>
+// template<typename K>
 class TemporaryOperationThreadLoop : public ThreadLoop {
     PAD;
-    double **cdf;
-    Random64 &rng;
+    double** cdf;
+    Random64& rng;
     PAD;
-    ArgsGenerator<K> *argsGenerator;
+    ArgsGenerator<K>* argsGenerator;
     PAD;
     size_t time;
     size_t pointer;
     size_t stagesNumber;
-    size_t *stagesDurations;
+    size_t* stagesDurations;
     PAD;
 
     void update_pointer() {
@@ -32,19 +32,17 @@ class TemporaryOperationThreadLoop : public ThreadLoop {
     }
 
 public:
-    TemporaryOperationThreadLoop(globals_t *g, Random64 &_rng, size_t threadId, StopCondition *stopCondition,
-                                 size_t rqRange,
-                                 size_t _stagesNumber,
-                                 size_t *_stagesDurations,
-                                 RatioThreadLoopParameters **ratios,
-                                 ArgsGenerator<K> *_argsGenerator)
-            : ThreadLoop(g, threadId, stopCondition, rqRange),
-              rng(_rng),
-              argsGenerator(_argsGenerator),
-              stagesNumber(_stagesNumber),
-              time(0),
-              pointer(0) {
-        cdf = new double *[_stagesNumber];
+    TemporaryOperationThreadLoop(globals_t* g, Random64& _rng, size_t threadId,
+                                 StopCondition* stopCondition, size_t rqRange, size_t _stagesNumber,
+                                 size_t* _stagesDurations, RatioThreadLoopParameters** ratios,
+                                 ArgsGenerator<K>* _argsGenerator)
+        : ThreadLoop(g, threadId, stopCondition, rqRange),
+          rng(_rng),
+          argsGenerator(_argsGenerator),
+          stagesNumber(_stagesNumber),
+          time(0),
+          pointer(0) {
+        cdf = new double*[_stagesNumber];
         stagesDurations = new size_t[_stagesNumber];
         std::copy(_stagesDurations, _stagesDurations + _stagesNumber, stagesDurations);
 
@@ -59,17 +57,17 @@ public:
     void step() override {
         update_pointer();
 
-        double op = (double) rng.next() / (double) rng.max_value;
-        if (op < cdf[pointer][0]) { // insert
+        double op = (double)rng.next() / (double)rng.max_value;
+        if (op < cdf[pointer][0]) {  // insert
             K key = this->argsGenerator->nextInsert();
             this->executeInsert(key);
-        } else if (op < cdf[pointer][1]) { // remove
+        } else if (op < cdf[pointer][1]) {  // remove
             K key = this->argsGenerator->nextRemove();
             this->executeRemove(key);
-        } else if (op < cdf[pointer][2]) { // range query
+        } else if (op < cdf[pointer][2]) {  // range query
             std::pair<K, K> keys = this->argsGenerator->nextRange();
             this->executeRangeQuery(keys.first, keys.second);
-        } else { // read
+        } else {  // read
             K key = this->argsGenerator->nextGet();
             this->GET_FUNC(key);
         }
@@ -79,17 +77,16 @@ public:
 #include "workloads/thread_loops/thread_loop_builder.h"
 #include "default_thread_loop.h"
 
-
 struct TemporaryOperationsThreadLoopBuilder : public ThreadLoopBuilder {
     size_t stagesNumber = 0;
-    size_t *stagesDurations;
-    RatioThreadLoopParameters **ratios;
+    size_t* stagesDurations;
+    RatioThreadLoopParameters** ratios;
 
-    ArgsGeneratorBuilder *argsGeneratorBuilder = new DefaultArgsGeneratorBuilder();
+    ArgsGeneratorBuilder* argsGeneratorBuilder = new DefaultArgsGeneratorBuilder();
 
-    TemporaryOperationsThreadLoopBuilder *setStagesNumber(const size_t _stagesNumber) {
+    TemporaryOperationsThreadLoopBuilder* setStagesNumber(const size_t _stagesNumber) {
         stagesNumber = _stagesNumber;
-        ratios = new RatioThreadLoopParameters *[_stagesNumber];
+        ratios = new RatioThreadLoopParameters*[_stagesNumber];
         stagesDurations = new size_t[_stagesNumber];
 
         for (size_t i = 0; i < _stagesNumber; ++i) {
@@ -99,65 +96,68 @@ struct TemporaryOperationsThreadLoopBuilder : public ThreadLoopBuilder {
         return this;
     }
 
-    TemporaryOperationsThreadLoopBuilder *setStageDuration(const size_t index, size_t stageDuration) {
+    TemporaryOperationsThreadLoopBuilder* setStageDuration(const size_t index,
+                                                           size_t stageDuration) {
         assert(index < stagesNumber);
         stagesDurations[index] = stageDuration;
         return this;
     }
 
-    TemporaryOperationsThreadLoopBuilder *setStagesDurations(size_t *_stagesDurations) {
+    TemporaryOperationsThreadLoopBuilder* setStagesDurations(size_t* _stagesDurations) {
         stagesDurations = _stagesDurations;
         return this;
     }
 
-    TemporaryOperationsThreadLoopBuilder *setInsRatio(const size_t index, double insRatio) {
+    TemporaryOperationsThreadLoopBuilder* setInsRatio(const size_t index, double insRatio) {
         assert(index < stagesNumber);
         ratios[index]->INS_RATIO = insRatio;
         return this;
     }
 
-    TemporaryOperationsThreadLoopBuilder *setRemRatio(const size_t index, double remRatio) {
+    TemporaryOperationsThreadLoopBuilder* setRemRatio(const size_t index, double remRatio) {
         assert(index < stagesNumber);
         ratios[index]->REM_RATIO = remRatio;
         return this;
     }
 
-    TemporaryOperationsThreadLoopBuilder *setRqRatio(const size_t index, double rqRatio) {
+    TemporaryOperationsThreadLoopBuilder* setRqRatio(const size_t index, double rqRatio) {
         assert(index < stagesNumber);
         ratios[index]->RQ_RATIO = rqRatio;
         return this;
     }
 
-    TemporaryOperationsThreadLoopBuilder *setRatios(const size_t index, RatioThreadLoopParameters *ratio) {
+    TemporaryOperationsThreadLoopBuilder* setRatios(const size_t index,
+                                                    RatioThreadLoopParameters* ratio) {
         assert(index < stagesNumber);
         ratios[index] = ratio;
         return this;
     }
 
-    TemporaryOperationsThreadLoopBuilder *setRatios(RatioThreadLoopParameters **_ratios) {
+    TemporaryOperationsThreadLoopBuilder* setRatios(RatioThreadLoopParameters** _ratios) {
         ratios = _ratios;
         return this;
     }
 
-    TemporaryOperationsThreadLoopBuilder *setArgsGeneratorBuilder(ArgsGeneratorBuilder *_argsGeneratorBuilder) {
+    TemporaryOperationsThreadLoopBuilder* setArgsGeneratorBuilder(
+        ArgsGeneratorBuilder* _argsGeneratorBuilder) {
         argsGeneratorBuilder = _argsGeneratorBuilder;
         return this;
     }
 
-    TemporaryOperationsThreadLoopBuilder *init(int range) override {
+    TemporaryOperationsThreadLoopBuilder* init(int range) override {
         ThreadLoopBuilder::init(range);
         argsGeneratorBuilder->init(range);
         return this;
     }
 
-    TemporaryOperationThreadLoop *
-    build(globals_t *_g, Random64 &_rng, size_t _tid, StopCondition *_stopCondition) override {
+    TemporaryOperationThreadLoop* build(globals_t* _g, Random64& _rng, size_t _tid,
+                                        StopCondition* _stopCondition) override {
         return new TemporaryOperationThreadLoop(_g, _rng, _tid, _stopCondition, this->RQ_RANGE,
                                                 stagesNumber, stagesDurations, ratios,
                                                 argsGeneratorBuilder->build(_rng));
     }
 
-    void toJson(nlohmann::json &j) const override {
+    void toJson(nlohmann::json& j) const override {
         j["ClassName"] = "TemporaryOperationsThreadLoopBuilder";
         j["stagesNumber"] = stagesNumber;
         for (size_t i = 0; i < stagesNumber; ++i) {
@@ -167,13 +167,14 @@ struct TemporaryOperationsThreadLoopBuilder : public ThreadLoopBuilder {
         j["argsGeneratorBuilder"] = *argsGeneratorBuilder;
     }
 
-    void fromJson(const nlohmann::json &j) override {
+    void fromJson(const nlohmann::json& j) override {
         this->setStagesNumber(j["stagesNumber"]);
 
-        std::copy(std::begin(j["stagesDurations"]), std::end(j["stagesDurations"]), stagesDurations);
+        std::copy(std::begin(j["stagesDurations"]), std::end(j["stagesDurations"]),
+                  stagesDurations);
 
         size_t i = 0;
-        for (const auto &j_i: j["ratios"]) {
+        for (const auto& j_i : j["ratios"]) {
             ratios[i] = new RatioThreadLoopParameters(j_i);
             ++i;
         }
@@ -182,10 +183,9 @@ struct TemporaryOperationsThreadLoopBuilder : public ThreadLoopBuilder {
     }
 
     std::string toString(size_t indents) override {
-        std::string result =
-                indented_title_with_str_data("Type", "TEMPORARY_OPERATION", indents)
-                + indented_title_with_data("Stages number", stagesNumber, indents)
-                + indented_title("Stages Durations", indents);
+        std::string result = indented_title_with_str_data("Type", "TEMPORARY_OPERATION", indents) +
+                             indented_title_with_data("Stages number", stagesNumber, indents) +
+                             indented_title("Stages Durations", indents);
 
         for (size_t i = 0; i < stagesNumber; ++i) {
             result += indented_title_with_data("Stage Duration " + std::to_string(i),
@@ -195,13 +195,12 @@ struct TemporaryOperationsThreadLoopBuilder : public ThreadLoopBuilder {
         result += indented_title("Ratios", indents);
 
         for (size_t i = 0; i < stagesNumber; ++i) {
-            result += indented_title("Ratio " + std::to_string(i), indents + 1)
-                      + ratios[i]->toString(indents + 2);
+            result += indented_title("Ratio " + std::to_string(i), indents + 1) +
+                      ratios[i]->toString(indents + 2);
         }
 
         result +=
-                indented_title("Args generator", indents)
-                + argsGeneratorBuilder->toString(indents + 1);
+            indented_title("Args generator", indents) + argsGeneratorBuilder->toString(indents + 1);
 
         return result;
     }

@@ -9,9 +9,9 @@
 #include "workloads/data_maps/builders/array_data_map_builder.h"
 #include "errors.h"
 
-std::map<size_t, DataMapBuilder *> dataMapBuilders;
+std::map<size_t, DataMapBuilder*> dataMapBuilders;
 
-DataMapBuilder *getDataMapFromJson(const nlohmann::json &j) {
+DataMapBuilder* getDataMapFromJson(const nlohmann::json& j) {
     size_t id = j["id"];
 
     auto dataMapsBuilderById = dataMapBuilders.find(id);
@@ -20,13 +20,12 @@ DataMapBuilder *getDataMapFromJson(const nlohmann::json &j) {
     }
 
     std::string className = j["ClassName"];
-    DataMapBuilder *dataMapBuilder;
+    DataMapBuilder* dataMapBuilder;
     if (className == "IdDataMapBuilder") {
         dataMapBuilder = new IdDataMapBuilder();
     } else if (className == "ArrayDataMapBuilder") {
-            dataMapBuilder = new ArrayDataMapBuilder();
+        dataMapBuilder = new ArrayDataMapBuilder();
     } else if (className == "HashDataMapBuilder") {
-
     } else {
         setbench_error("JSON PARSER: Unknown class name DataMapBuilder -- " + className)
     }
@@ -38,13 +37,13 @@ DataMapBuilder *getDataMapFromJson(const nlohmann::json &j) {
 }
 
 void deleteDataMapBuilders() {
-    for (auto it: dataMapBuilders) {
+    for (auto it : dataMapBuilders) {
         delete it.second;
     }
 }
 
 void initDataMapBuilders(size_t range) {
-    for (auto it: dataMapBuilders) {
+    for (auto it : dataMapBuilders) {
         it.second->init(range);
     }
 }

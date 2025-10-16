@@ -2,7 +2,7 @@
 
 #include "workloads/args_generators/args_generator.h"
 
-template<typename K>
+template <typename K>
 class NullArgsGenerator : public ArgsGenerator<K> {
 public:
     NullArgsGenerator() = default;
@@ -29,23 +29,24 @@ public:
 #include "workloads/args_generators/args_generator_builder.h"
 #include "globals_extern.h"
 
-//template<typename K>
+// template<typename K>
 class NullArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 public:
-    NullArgsGeneratorBuilder *init(size_t _range) override {
-//        dataMapBuilder->init(_range);
+    NullArgsGeneratorBuilder* init(size_t _range) override {
+        //        dataMapBuilder->init(_range);
         return this;
     }
 
-    NullArgsGenerator<K> *build(Random64 &_rng) override {
+    NullArgsGenerator<K>* build(Random64& _rng) override {
         return new NullArgsGenerator<K>();
     }
 
-    void toJson(nlohmann::json &j) const override {
+    void toJson(nlohmann::json& j) const override {
         j["ClassName"] = "NullArgsGeneratorBuilder";
     }
 
-    void fromJson(const nlohmann::json &j) override { }
+    void fromJson(const nlohmann::json& j) override {
+    }
 
     std::string toString(size_t indents = 1) override {
         std::string res;

@@ -3,37 +3,40 @@
 //
 #pragma once
 
-
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/distributions/distribution.h"
 #include "workloads/data_maps/data_map.h"
 
-template<typename K>
+template <typename K>
 class LeafsHandshakeArgsGenerator : public ArgsGenerator<K> {
     size_t range;
 
-    Distribution *readDistribution;
-    MutableDistribution *insertDistribution;
-    Distribution *removeDistribution;
-    Random64 &rng;
+    Distribution* readDistribution;
+    MutableDistribution* insertDistribution;
+    Distribution* removeDistribution;
+    Random64& rng;
     PAD;
-    std::atomic<size_t> *deletedValue;
+    std::atomic<size_t>* deletedValue;
     PAD;
 
-    DataMap<K> *readData;
-    DataMap<K> *removeData;
+    DataMap<K>* readData;
+    DataMap<K>* removeData;
 
 public:
-    LeafsHandshakeArgsGenerator(Random64 &rng, size_t range, std::atomic<size_t> *deletedValue,
-                                Distribution *readDistribution, MutableDistribution *insertDistribution,
-                                Distribution *removeDistribution, DataMap<K> *readData, DataMap<K> *removeData) :
-            range(range),
-            readDistribution(readDistribution),
-            insertDistribution(insertDistribution),
-            removeDistribution(removeDistribution),
-            rng(rng), deletedValue(deletedValue),
-            readData(readData),
-            removeData(removeData) {}
+    LeafsHandshakeArgsGenerator(Random64& rng, size_t range, std::atomic<size_t>* deletedValue,
+                                Distribution* readDistribution,
+                                MutableDistribution* insertDistribution,
+                                Distribution* removeDistribution, DataMap<K>* readData,
+                                DataMap<K>* removeData)
+        : range(range),
+          readDistribution(readDistribution),
+          insertDistribution(insertDistribution),
+          removeDistribution(removeDistribution),
+          rng(rng),
+          deletedValue(deletedValue),
+          readData(readData),
+          removeData(removeData) {
+    }
 
     K nextGet() {
         return readData->get(readDistribution->next());
@@ -59,7 +62,7 @@ public:
         size_t localDeletedValue = *deletedValue;
         size_t value = removeData->get(removeDistribution->next());
 
-        //todo learn the difference between all kinds of weakCompareAndSet
+        // todo learn the difference between all kinds of weakCompareAndSet
         deletedValue->compare_exchange_weak(localDeletedValue, value);
 
         return value;
@@ -78,7 +81,6 @@ public:
     }
 };
 
-
 #include "workloads/distributions/distribution_builder.h"
 #include "workloads/data_maps/data_map_builder.h"
 #include "workloads/distributions/builders/uniform_distribution_builder.h"
@@ -88,66 +90,65 @@ public:
 #include "workloads/data_maps/data_map_json_convector.h"
 #include "globals_extern.h"
 
-//template<typename K>
+// template<typename K>
 class LeafsHandshakeArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 private:
     size_t range;
 
-    DistributionBuilder *readDistBuilder = new UniformDistributionBuilder();
-    MutableDistributionBuilder *insertDistBuilder = new ZipfianDistributionBuilder();
-    DistributionBuilder *removeDistBuilder = new UniformDistributionBuilder();
+    DistributionBuilder* readDistBuilder = new UniformDistributionBuilder();
+    MutableDistributionBuilder* insertDistBuilder = new ZipfianDistributionBuilder();
+    DistributionBuilder* removeDistBuilder = new UniformDistributionBuilder();
 
-    DataMapBuilder *readDataMapBuilder = new IdDataMapBuilder();
-    DataMapBuilder *removeDataMapBuilder = new IdDataMapBuilder();
-    std::atomic<size_t> *deletedValue;
+    DataMapBuilder* readDataMapBuilder = new IdDataMapBuilder();
+    DataMapBuilder* removeDataMapBuilder = new IdDataMapBuilder();
+    std::atomic<size_t>* deletedValue;
 
 public:
-
-    LeafsHandshakeArgsGeneratorBuilder *setReadDistBuilder(DistributionBuilder *_readDistBuilder) {
+    LeafsHandshakeArgsGeneratorBuilder* setReadDistBuilder(DistributionBuilder* _readDistBuilder) {
         readDistBuilder = _readDistBuilder;
         return this;
     }
 
-    LeafsHandshakeArgsGeneratorBuilder *setInsertDistBuilder(MutableDistributionBuilder *_insertDistBuilder) {
+    LeafsHandshakeArgsGeneratorBuilder* setInsertDistBuilder(
+        MutableDistributionBuilder* _insertDistBuilder) {
         insertDistBuilder = _insertDistBuilder;
         return this;
     }
 
-    LeafsHandshakeArgsGeneratorBuilder *setRemoveDistBuilder(DistributionBuilder *_removeDistBuilder) {
+    LeafsHandshakeArgsGeneratorBuilder* setRemoveDistBuilder(
+        DistributionBuilder* _removeDistBuilder) {
         removeDistBuilder = _removeDistBuilder;
         return this;
     }
 
-    LeafsHandshakeArgsGeneratorBuilder *setReadDataMapBuilder(DataMapBuilder *_readDataMapBuilder) {
+    LeafsHandshakeArgsGeneratorBuilder* setReadDataMapBuilder(DataMapBuilder* _readDataMapBuilder) {
         readDataMapBuilder = _readDataMapBuilder;
         return this;
     }
 
-    LeafsHandshakeArgsGeneratorBuilder *setRemoveDataMapBuilder(DataMapBuilder *_removeDataMapBuilder) {
+    LeafsHandshakeArgsGeneratorBuilder* setRemoveDataMapBuilder(
+        DataMapBuilder* _removeDataMapBuilder) {
         removeDataMapBuilder = _removeDataMapBuilder;
         return this;
     }
 
-
-    LeafsHandshakeArgsGeneratorBuilder *init(size_t _range) override {
+    LeafsHandshakeArgsGeneratorBuilder* init(size_t _range) override {
         range = _range;
-//        readDataMapBuilder->init(_range);
-//        removeDataMapBuilder->init(_range);
+        //        readDataMapBuilder->init(_range);
+        //        removeDataMapBuilder->init(_range);
         deletedValue = new std::atomic<size_t>(range / 2);
 
         return this;
     }
 
-    LeafsHandshakeArgsGenerator<K> *build(Random64 &_rng) override {
-        return new LeafsHandshakeArgsGenerator<K>(_rng, range, deletedValue,
-                                                  readDistBuilder->build(_rng, range),
-                                                  insertDistBuilder->build(_rng),
-                                                  removeDistBuilder->build(_rng, range),
-                                                  readDataMapBuilder->build(),
-                                                  removeDataMapBuilder->build());
+    LeafsHandshakeArgsGenerator<K>* build(Random64& _rng) override {
+        return new LeafsHandshakeArgsGenerator<K>(
+            _rng, range, deletedValue, readDistBuilder->build(_rng, range),
+            insertDistBuilder->build(_rng), removeDistBuilder->build(_rng, range),
+            readDataMapBuilder->build(), removeDataMapBuilder->build());
     }
 
-    void toJson(nlohmann::json &j) const override {
+    void toJson(nlohmann::json& j) const override {
         j["ClassName"] = "LeafsHandshakeArgsGeneratorBuilder";
         j["readDistBuilder"] = *readDistBuilder;
         j["insertDistBuilder"] = *insertDistBuilder;
@@ -156,7 +157,7 @@ public:
         j["removeDataMapBuilder"] = *removeDataMapBuilder;
     }
 
-    void fromJson(const nlohmann::json &j) override {
+    void fromJson(const nlohmann::json& j) override {
         readDistBuilder = getDistributionFromJson(j["readDistBuilder"]);
         insertDistBuilder = getMutableDistributionFromJson(j["insertDistBuilder"]);
         removeDistBuilder = getDistributionFromJson(j["removeDistBuilder"]);
@@ -165,24 +166,22 @@ public:
     }
 
     std::string toString(size_t indents = 1) override {
-        return indented_title_with_str_data("Type", "LEAFS_HANDSHAKE", indents)
-               + indented_title("Read Distribution", indents)
-               + readDistBuilder->toString(indents + 1)
-               + indented_title("Insert Distribution", indents)
-               + insertDistBuilder->toString(indents + 1)
-               + indented_title("Remove Distribution", indents)
-               + removeDistBuilder->toString(indents + 1)
-               + indented_title("Read Data Map", indents)
-               + readDataMapBuilder->toString(indents + 1)
-               + indented_title("Remove Data Map", indents)
-               + removeDataMapBuilder->toString(indents + 1);
+        return indented_title_with_str_data("Type", "LEAFS_HANDSHAKE", indents) +
+               indented_title("Read Distribution", indents) +
+               readDistBuilder->toString(indents + 1) +
+               indented_title("Insert Distribution", indents) +
+               insertDistBuilder->toString(indents + 1) +
+               indented_title("Remove Distribution", indents) +
+               removeDistBuilder->toString(indents + 1) + indented_title("Read Data Map", indents) +
+               readDataMapBuilder->toString(indents + 1) +
+               indented_title("Remove Data Map", indents) +
+               removeDataMapBuilder->toString(indents + 1);
     }
 
     ~LeafsHandshakeArgsGeneratorBuilder() override {
         delete readDistBuilder;
         delete insertDistBuilder;
         delete removeDistBuilder;
-//        delete dataMapBuilder; //TODO may delete twice
+        //        delete dataMapBuilder; //TODO may delete twice
     };
-
 };

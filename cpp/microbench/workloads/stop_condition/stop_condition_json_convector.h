@@ -9,9 +9,9 @@
 #include "workloads/stop_condition/impls/operation_counter.h"
 #include "errors.h"
 
-StopCondition *getStopConditionFromJson(const nlohmann::json &j) {
+StopCondition* getStopConditionFromJson(const nlohmann::json& j) {
     std::string className = j["ClassName"];
-    StopCondition *stopCondition;
+    StopCondition* stopCondition;
     if (className == "Timer") {
         stopCondition = new Timer();
     } else if (className == "OperationCounter") {

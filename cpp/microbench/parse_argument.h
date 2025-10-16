@@ -6,20 +6,23 @@
 struct ParseArgument {
     size_t pointer;
     size_t length;
-    char **args;
+    char** args;
 
-    ParseArgument(size_t _length, char **_args)
-            : length(_length), args(_args), pointer(0) {}
+    ParseArgument(size_t _length, char** _args)
+        : length(_length),
+          args(_args),
+          pointer(0) {
+    }
 
-    char *getCurrent() {
+    char* getCurrent() {
         return args[pointer];
     }
 
-    char *getNext() {
+    char* getNext() {
         return args[++pointer];
     }
 
-    ParseArgument &next() {
+    ParseArgument& next() {
         ++pointer;
         return *this;
     }

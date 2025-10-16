@@ -3,7 +3,7 @@
 //
 #pragma once
 
-template<typename K>
+template <typename K>
 struct DataMap {
     virtual K get(size_t index) = 0;
 

@@ -54,13 +54,13 @@ struct Statistic {
         totalFailRemoves = GSTATS_GET_STAT_METRICS(num_fail_removes, TOTAL)[0].sum;
         totalFailUpdates = totalFailInserts + totalFailRemoves;
 
-        SECONDS_TO_RUN = _SECONDS_TO_RUN; // (MILLIS_TO_RUN)/1000.;
+        SECONDS_TO_RUN = _SECONDS_TO_RUN;  // (MILLIS_TO_RUN)/1000.;
         totalAll = totalUpdates + totalQueries;
-        throughputSearches = (long long) (totalGets / SECONDS_TO_RUN);
-        throughputRQs = (long long) (totalRQs / SECONDS_TO_RUN);
-        throughputQueries = (long long) (totalQueries / SECONDS_TO_RUN);
-        throughputUpdates = (long long) (totalUpdates / SECONDS_TO_RUN);
-        throughputAll = (long long) (totalAll / SECONDS_TO_RUN);
+        throughputSearches = (long long)(totalGets / SECONDS_TO_RUN);
+        throughputRQs = (long long)(totalRQs / SECONDS_TO_RUN);
+        throughputQueries = (long long)(totalQueries / SECONDS_TO_RUN);
+        throughputUpdates = (long long)(totalUpdates / SECONDS_TO_RUN);
+        throughputAll = (long long)(totalAll / SECONDS_TO_RUN);
     }
 
     void printTotalStatisticShort(bool detail = false) const {
@@ -100,23 +100,27 @@ struct Statistic {
         COUTATOMIC(std::endl)
         COUTATOMIC(indented_title_with_data("total gets", totalGets, 1, 32))
         if (detail) {
-            COUTATOMIC(indented_title_with_data("total successful gets", totalSuccessfulGets, 2, 32))
+            COUTATOMIC(
+                indented_title_with_data("total successful gets", totalSuccessfulGets, 2, 32))
             COUTATOMIC(indented_title_with_data("total fail gets", totalFailGets, 2, 32))
         }
         COUTATOMIC(indented_title_with_data("total rq", totalRQs, 1, 32))
         COUTATOMIC(indented_title_with_data("total inserts", totalInserts, 1, 32))
         if (detail) {
-            COUTATOMIC(indented_title_with_data("total successful inserts", totalSuccessfulInserts, 2, 32))
+            COUTATOMIC(
+                indented_title_with_data("total successful inserts", totalSuccessfulInserts, 2, 32))
             COUTATOMIC(indented_title_with_data("total fail inserts", totalFailInserts, 2, 32))
         }
         COUTATOMIC(indented_title_with_data("total removes", totalRemoves, 1, 32))
         if (detail) {
-            COUTATOMIC(indented_title_with_data("total successful removes", totalSuccessfulRemoves, 2, 32))
+            COUTATOMIC(
+                indented_title_with_data("total successful removes", totalSuccessfulRemoves, 2, 32))
             COUTATOMIC(indented_title_with_data("total fail removes", totalFailRemoves, 2, 32))
         }
         COUTATOMIC(indented_title_with_data("total updates", totalUpdates, 1, 32))
         if (detail) {
-            COUTATOMIC(indented_title_with_data("total successful updates", totalSuccessfulUpdates, 2, 32))
+            COUTATOMIC(
+                indented_title_with_data("total successful updates", totalSuccessfulUpdates, 2, 32))
             COUTATOMIC(indented_title_with_data("total fail updates", totalFailUpdates, 2, 32))
         }
         COUTATOMIC(indented_title_with_data("total queries", totalQueries, 1, 32))
@@ -128,10 +132,9 @@ struct Statistic {
         COUTATOMIC(indented_title_with_data("total throughput", throughputAll, 1, 32))
         COUTATOMIC(std::endl)
     }
-
 };
 
-void to_json(nlohmann::json &json, const Statistic &s) {
+void to_json(nlohmann::json& json, const Statistic& s) {
     json["total_gets"] = s.totalGets;
     json["total_successful_gets"] = s.totalSuccessfulGets;
     json["total_fail_gets"] = s.totalFailGets;
@@ -159,7 +162,7 @@ void to_json(nlohmann::json &json, const Statistic &s) {
     json["total_throughput"] = s.throughputAll;
 }
 
-void from_json(const nlohmann::json &json, Statistic &s) {
+void from_json(const nlohmann::json& json, Statistic& s) {
     s.totalGets = json["total_gets"];
     s.totalSuccessfulGets = json["total_successful_gets"];
     s.totalFailGets = json["total_fail_gets"];
@@ -187,6 +190,4 @@ void from_json(const nlohmann::json &json, Statistic &s) {
     s.throughputAll = json["total_throughput"];
 }
 
-struct ThreadStatistic {
-
-};
+struct ThreadStatistic {};

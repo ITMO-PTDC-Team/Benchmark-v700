@@ -3,10 +3,9 @@
 //
 #pragma once
 
-
 #include <utility>
 
-template<typename K>
+template <typename K>
 struct ArgsGenerator {
     virtual K nextGet() = 0;
 

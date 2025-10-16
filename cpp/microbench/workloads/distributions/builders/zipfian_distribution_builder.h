@@ -16,31 +16,31 @@ struct ZipfianDistributionBuilder : public MutableDistributionBuilder {
     double alpha = 1;
     PAD;
 
-    ZipfianDistributionBuilder *setAlpha(double _alpha) {
+    ZipfianDistributionBuilder* setAlpha(double _alpha) {
         alpha = _alpha;
         return this;
     }
 
-    ZipfDistribution *build(Random64 &rng, size_t range) override {
+    ZipfDistribution* build(Random64& rng, size_t range) override {
         return new ZipfDistribution(rng, alpha, range);
     }
 
-    ZipfDistribution *build(Random64 &rng) override {
+    ZipfDistribution* build(Random64& rng) override {
         return new ZipfDistribution(rng, alpha);
     }
 
-    void toJson(nlohmann::json &j) const override {
+    void toJson(nlohmann::json& j) const override {
         j["ClassName"] = "ZipfianDistributionBuilder";
         j["alpha"] = alpha;
     }
 
-    void fromJson(const nlohmann::json &j) override {
+    void fromJson(const nlohmann::json& j) override {
         alpha = j["alpha"];
     }
 
     std::string toString(size_t indents = 1) override {
-        return indented_title_with_str_data("Type", "Zipfian", indents)
-        + indented_title_with_data("alpha", alpha, indents);
+        return indented_title_with_str_data("Type", "Zipfian", indents) +
+               indented_title_with_data("alpha", alpha, indents);
     };
 
     ~ZipfianDistributionBuilder() override = default;

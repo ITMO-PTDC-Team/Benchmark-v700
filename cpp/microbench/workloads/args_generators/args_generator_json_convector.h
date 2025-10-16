@@ -3,7 +3,6 @@
 //
 #pragma once
 
-
 #include "json/single_include/nlohmann/json.hpp"
 #include "args_generator_builder.h"
 #include "workloads/args_generators/impls/default_args_generator.h"
@@ -17,9 +16,9 @@
 #include "workloads/args_generators/impls/range_query_args_generator.h"
 #include "errors.h"
 
-ArgsGeneratorBuilder *getArgsGeneratorFromJson(const nlohmann::json &j) {
+ArgsGeneratorBuilder* getArgsGeneratorFromJson(const nlohmann::json& j) {
     std::string className = j["ClassName"];
-    ArgsGeneratorBuilder *argsGeneratorBuilder;
+    ArgsGeneratorBuilder* argsGeneratorBuilder;
     if (className == "DefaultArgsGeneratorBuilder") {
         argsGeneratorBuilder = new DefaultArgsGeneratorBuilder();
     } else if (className == "SkewedSetsArgsGeneratorBuilder") {

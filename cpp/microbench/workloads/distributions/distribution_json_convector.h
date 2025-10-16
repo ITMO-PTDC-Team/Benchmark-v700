@@ -9,9 +9,9 @@
 #include "workloads/distributions/builders/skewed_uniform_distribution_builder.h"
 #include "errors.h"
 
-DistributionBuilder *getDistributionFromJson(const nlohmann::json &j) {
+DistributionBuilder* getDistributionFromJson(const nlohmann::json& j) {
     std::string className = j["ClassName"];
-    DistributionBuilder *distributionBuilder;
+    DistributionBuilder* distributionBuilder;
     if (className == "UniformDistributionBuilder") {
         distributionBuilder = new UniformDistributionBuilder();
     } else if (className == "ZipfianDistributionBuilder") {
@@ -26,6 +26,6 @@ DistributionBuilder *getDistributionFromJson(const nlohmann::json &j) {
     return distributionBuilder;
 }
 
-MutableDistributionBuilder *getMutableDistributionFromJson(const nlohmann::json &j) {
-    return dynamic_cast<MutableDistributionBuilder *>(getDistributionFromJson(j));
+MutableDistributionBuilder* getMutableDistributionFromJson(const nlohmann::json& j) {
+    return dynamic_cast<MutableDistributionBuilder*>(getDistributionFromJson(j));
 }

@@ -10,27 +10,27 @@
 
 typedef long long K;
 
-//template<typename K>
+// template<typename K>
 struct ArgsGeneratorBuilder {
-    virtual ArgsGeneratorBuilder * init(size_t range) = 0;
+    virtual ArgsGeneratorBuilder* init(size_t range) = 0;
 
-    virtual ArgsGenerator<K> * build(Random64 & _rng) = 0;
+    virtual ArgsGenerator<K>* build(Random64& _rng) = 0;
 
-    virtual void toJson(nlohmann::json &j) const = 0;
+    virtual void toJson(nlohmann::json& j) const = 0;
 
-    virtual void fromJson(const nlohmann::json &j) = 0;
+    virtual void fromJson(const nlohmann::json& j) = 0;
 
     virtual std::string toString(size_t indents = 1) = 0;
 
     virtual ~ArgsGeneratorBuilder() = default;
 };
 
-void to_json(nlohmann::json &j, const ArgsGeneratorBuilder &s) {
+void to_json(nlohmann::json& j, const ArgsGeneratorBuilder& s) {
     s.toJson(j);
     assert(j.contains("ClassName"));
-//    assert(j["argsGeneratorType"] != nullptr);
+    //    assert(j["argsGeneratorType"] != nullptr);
 }
 
-void from_json(const nlohmann::json &j, ArgsGeneratorBuilder &s) {
+void from_json(const nlohmann::json& j, ArgsGeneratorBuilder& s) {
     s.fromJson(j);
 }

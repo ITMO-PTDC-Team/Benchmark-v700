@@ -13,7 +13,7 @@ class Timer : public StopCondition {
     PAD;
     volatile bool stop;
     PAD;
-    std::thread *stopThread;
+    std::thread* stopThread;
     PAD;
     volatile bool isStarted;
     PAD;
@@ -28,9 +28,12 @@ public:
 public:
     size_t workTime;
 
-    Timer(size_t _workTime = 10000) : workTime(_workTime), stop(true) {}
+    Timer(size_t _workTime = 10000)
+        : workTime(_workTime),
+          stop(true) {
+    }
 
-    Timer &setWorkTime(size_t _workTime) {
+    Timer& setWorkTime(size_t _workTime) {
         Timer::workTime = _workTime;
         return *this;
     }
@@ -51,19 +54,19 @@ public:
         return stop;
     }
 
-    void toJson(nlohmann::json &j) const override {
+    void toJson(nlohmann::json& j) const override {
         j["ClassName"] = "Timer";
         j["workTime"] = workTime;
     }
 
-    void fromJson(const nlohmann::json &j) override {
+    void fromJson(const nlohmann::json& j) override {
         workTime = j["workTime"];
     }
 
     ~Timer() override = default;
 
     std::string toString(size_t indents = 1) override {
-        return indented_title_with_str_data("Type", "Timer", indents)
-               + indented_title_with_data("work time", workTime, indents);
+        return indented_title_with_str_data("Type", "Timer", indents) +
+               indented_title_with_data("work time", workTime, indents);
     }
 };

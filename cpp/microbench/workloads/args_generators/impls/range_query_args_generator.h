@@ -4,18 +4,21 @@
 #include "workloads/distributions/distribution.h"
 #include "workloads/data_maps/data_map.h"
 
-template<typename K>
+template <typename K>
 class RangeQueryArgsGenerator : public ArgsGenerator<K> {
 private:
-//    PAD;
-    Distribution *distribution;
-    DataMap<K> *data;
+    //    PAD;
+    Distribution* distribution;
+    DataMap<K>* data;
     size_t interval;
-//    PAD;
+    //    PAD;
 
 public:
-    RangeQueryArgsGenerator(DataMap<K> *_data, Distribution *_distribution, size_t _interval)
-            : data(_data), distribution(_distribution), interval(_interval) {}
+    RangeQueryArgsGenerator(DataMap<K>* _data, Distribution* _distribution, size_t _interval)
+        : data(_data),
+          distribution(_distribution),
+          interval(_interval) {
+    }
 
     K nextGet() {
         setbench_error("Operation not supported");
@@ -45,7 +48,6 @@ public:
     }
 };
 
-
 #include "workloads/distributions/distribution_builder.h"
 #include "workloads/data_maps/data_map_builder.h"
 #include "workloads/distributions/builders/uniform_distribution_builder.h"
@@ -55,48 +57,50 @@ public:
 #include "workloads/data_maps/data_map_json_convector.h"
 #include "globals_extern.h"
 
-//template<typename K>
+// template<typename K>
 class RangeQueryArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 private:
     size_t range;
     size_t interval;
-public:
-    DistributionBuilder *distributionBuilder = new UniformDistributionBuilder();
-    DataMapBuilder *dataMapBuilder = new IdDataMapBuilder();
 
-    RangeQueryArgsGeneratorBuilder *setDistributionBuilder(DistributionBuilder *_distributionBuilder) {
+public:
+    DistributionBuilder* distributionBuilder = new UniformDistributionBuilder();
+    DataMapBuilder* dataMapBuilder = new IdDataMapBuilder();
+
+    RangeQueryArgsGeneratorBuilder* setDistributionBuilder(
+        DistributionBuilder* _distributionBuilder) {
         distributionBuilder = _distributionBuilder;
         return this;
     }
 
-    RangeQueryArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
+    RangeQueryArgsGeneratorBuilder* setDataMapBuilder(DataMapBuilder* _dataMapBuilder) {
         dataMapBuilder = _dataMapBuilder;
         return this;
     }
 
-    RangeQueryArgsGeneratorBuilder *setInterval(size_t _interval) {
+    RangeQueryArgsGeneratorBuilder* setInterval(size_t _interval) {
         interval = _interval;
         return this;
     }
 
-    RangeQueryArgsGeneratorBuilder *init(size_t _range) override {
+    RangeQueryArgsGeneratorBuilder* init(size_t _range) override {
         range = _range;
         return this;
     }
 
-    RangeQueryArgsGenerator<K> *build(Random64 &_rng) override {
+    RangeQueryArgsGenerator<K>* build(Random64& _rng) override {
         return new RangeQueryArgsGenerator<K>(dataMapBuilder->build(),
-                                           distributionBuilder->build(_rng, range), interval);
+                                              distributionBuilder->build(_rng, range), interval);
     }
 
-    void toJson(nlohmann::json &j) const override {
+    void toJson(nlohmann::json& j) const override {
         j["ClassName"] = "RangeQueryArgsGeneratorBuilder";
         j["interval"] = interval;
         j["distributionBuilder"] = *distributionBuilder;
         j["dataMapBuilder"] = *dataMapBuilder;
     }
 
-    void fromJson(const nlohmann::json &j) override {
+    void fromJson(const nlohmann::json& j) override {
         interval = j["interval"];
         distributionBuilder = getDistributionFromJson(j["distributionBuilder"]);
         dataMapBuilder = getDataMapFromJson(j["dataMapBuilder"]);
@@ -115,7 +119,6 @@ public:
 
     ~RangeQueryArgsGeneratorBuilder() override {
         delete distributionBuilder;
-//        delete dataMapBuilder; //TODO may delete twice
+        //        delete dataMapBuilder; //TODO may delete twice
     };
-
 };

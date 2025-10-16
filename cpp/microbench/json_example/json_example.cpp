@@ -50,9 +50,9 @@ ArgsGeneratorBuilder* getNullArgsGeneratorBuilder() {
 
 ArgsGeneratorBuilder* getRangeQueryArgsGeneratorBuilder() {
     return (new RangeQueryArgsGeneratorBuilder())
-    ->setDistributionBuilder((new ZipfianDistributionBuilder())->setAlpha(1.0))
-    ->setDataMapBuilder(new ArrayDataMapBuilder())
-    ->setInterval(100);
+        ->setDistributionBuilder((new ZipfianDistributionBuilder())->setAlpha(1.0))
+        ->setDataMapBuilder(new ArrayDataMapBuilder())
+        ->setInterval(100);
 }
 
 ArgsGeneratorBuilder* getGeneralizedArgsGeneratorBuilder(ArgsGeneratorBuilder* inside) {
@@ -62,8 +62,8 @@ ArgsGeneratorBuilder* getGeneralizedArgsGeneratorBuilder(ArgsGeneratorBuilder* i
         ->addArgsGeneratorBuilder({"insert"}, getCreakersAndWaveArgsGeneratorBuilder())
         ->addArgsGeneratorBuilder({"remove"}, getDefaultArgsGeneratorBuilder())
         ->addArgsGeneratorBuilder({"rangeQuery"}, getRangeQueryArgsGeneratorBuilder());
-        // ->setDistributionBuilder((new ZipfianDistributionBuilder())->setAlpha(1.0))
-        // ->setDataMapBuilder(new ArrayDataMapBuilder()));
+    // ->setDistributionBuilder((new ZipfianDistributionBuilder())->setAlpha(1.0))
+    // ->setDataMapBuilder(new ArrayDataMapBuilder()));
 }
 
 ThreadLoopBuilder* getDefaultThreadLoopBuilder(ArgsGeneratorBuilder* argsGeneratorBuilder) {
@@ -74,7 +74,8 @@ ThreadLoopBuilder* getDefaultThreadLoopBuilder(ArgsGeneratorBuilder* argsGenerat
         ->setArgsGeneratorBuilder(argsGeneratorBuilder);
 }
 
-ThreadLoopBuilder* getTemporaryOperationThreadLoopBuilder(ArgsGeneratorBuilder *argsGeneratorBuilder) {
+ThreadLoopBuilder* getTemporaryOperationThreadLoopBuilder(
+    ArgsGeneratorBuilder* argsGeneratorBuilder) {
     return (new TemporaryOperationsThreadLoopBuilder())
         ->setStagesNumber(3)
         ->setStagesDurations(new size_t[3]{1000, 2000, 3000})
@@ -131,21 +132,20 @@ int main() {
      * TemporarySkewedArgsGeneratorBuilder and CreakersAndWaveArgsGeneratorBuilder are also
      * presented in the corresponding functions
      */
-    ArgsGeneratorBuilder* argsGeneratorBuilder
-                = getDefaultArgsGeneratorBuilder();
-//               = getCreakersAndWaveArgsGeneratorBuilder();
-//                = getTemporarySkewedArgsGeneratorBuilder();
+    ArgsGeneratorBuilder* argsGeneratorBuilder = getDefaultArgsGeneratorBuilder();
+    //               = getCreakersAndWaveArgsGeneratorBuilder();
+    //                = getTemporarySkewedArgsGeneratorBuilder();
     /*
      * Use this argsGeneratorBuilder for Generalized Testing
      */
-//    ArgsGeneratorBuilder*  actualArgsGeneratorBuilde = getGeneralizedArgsGeneratorBuilder(argsGeneratorBuilder);
-            /**
-             * in addition to the DefaultThreadLoopBuilder,
-             * TemporaryOperationThreadLoopBuilder is also presented in the corresponding function
-             */
-    ThreadLoopBuilder* threadLoopBuilder
-                = getDefaultThreadLoopBuilder(argsGeneratorBuilder);
-//                = getTemporaryOperationThreadLoopBuilder(argsGeneratorBuilder);
+    //    ArgsGeneratorBuilder*  actualArgsGeneratorBuilde =
+    //    getGeneralizedArgsGeneratorBuilder(argsGeneratorBuilder);
+    /**
+     * in addition to the DefaultThreadLoopBuilder,
+     * TemporaryOperationThreadLoopBuilder is also presented in the corresponding function
+     */
+    ThreadLoopBuilder* threadLoopBuilder = getDefaultThreadLoopBuilder(argsGeneratorBuilder);
+    //                = getTemporaryOperationThreadLoopBuilder(argsGeneratorBuilder);
 
     /**
      * now add the ThreadLoopBuilders (you can add several different)
@@ -153,10 +153,9 @@ int main() {
      * You can also optionally specify the cores to which threads should bind (-1 without binding).
      */
     test->addThreadLoopBuilder(threadLoopBuilder, 8, "~2.0.0.1-3.3")
-            ->setStopCondition(stopCondition);
+        ->setStopCondition(stopCondition);
 
-    benchParameters.setTest(test)
-        .createDefaultPrefill();
+    benchParameters.setTest(test).createDefaultPrefill();
     //        .setPrefill(getCreakersAndWavePrefiller(
     //            2048, (CreakersAndWaveArgsGeneratorBuilder*)argsGeneratorBuilder));
 

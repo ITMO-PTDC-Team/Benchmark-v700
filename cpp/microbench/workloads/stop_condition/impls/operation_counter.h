@@ -12,7 +12,9 @@ class OperationCounter : public StopCondition {
         long long operCount;
         PAD;
 
-        Counter() : operCount(0) {}
+        Counter()
+            : operCount(0) {
+        }
 
         Counter(long long _operCount) {
             operCount = _operCount;
@@ -24,18 +26,20 @@ class OperationCounter : public StopCondition {
     };
 
     PAD;
-    Counter *counters;
+    Counter* counters;
     PAD;
     size_t commonOperationLimit;
     PAD;
 
 public:
+    OperationCounter() {
+    }
 
-    OperationCounter() {}
+    OperationCounter(size_t _commonOperationLimit)
+        : commonOperationLimit(_commonOperationLimit) {
+    }
 
-    OperationCounter(size_t _commonOperationLimit) : commonOperationLimit(_commonOperationLimit) {}
-
-    OperationCounter &setCommonOperationLimit(size_t _commonOperationLimit) {
+    OperationCounter& setCommonOperationLimit(size_t _commonOperationLimit) {
         OperationCounter::commonOperationLimit = _commonOperationLimit;
         return *this;
     }
@@ -59,20 +63,19 @@ public:
         return counters[id].stop();
     }
 
-    void toJson(nlohmann::json &j) const override {
+    void toJson(nlohmann::json& j) const override {
         j["ClassName"] = "OperationCounter";
         j["commonOperationLimit"] = commonOperationLimit;
     }
 
-    void fromJson(const nlohmann::json &j) override {
+    void fromJson(const nlohmann::json& j) override {
         commonOperationLimit = j["commonOperationLimit"];
     }
 
     std::string toString(size_t indents = 1) override {
-        return indented_title_with_str_data("Type", "OperationCounter", indents)
-               + indented_title_with_data("commonOperationLimit", commonOperationLimit, indents);
+        return indented_title_with_str_data("Type", "OperationCounter", indents) +
+               indented_title_with_data("commonOperationLimit", commonOperationLimit, indents);
     }
 
     ~OperationCounter() = default;
-
 };

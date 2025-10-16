@@ -9,9 +9,9 @@
 #include "workloads/thread_loops/impls/temporary_operations_thread_loop.h"
 #include "errors.h"
 
-ThreadLoopBuilder *getThreadLoopFromJson(const nlohmann::json &j) {
+ThreadLoopBuilder* getThreadLoopFromJson(const nlohmann::json& j) {
     std::string className = j["ClassName"];
-    ThreadLoopBuilder *threadLoopBuilder;
+    ThreadLoopBuilder* threadLoopBuilder;
 
     if (className == "DefaultThreadLoopBuilder") {
         threadLoopBuilder = new DefaultThreadLoopBuilder();

@@ -9,7 +9,8 @@ struct StopCondition {
     virtual void start(size_t numThreads) = 0;
 
     /**
-     * The purpose of the clean method is to free the resources that the StopCondition may have acquired after it started.
+     * The purpose of the clean method is to free the resources that the StopCondition may have
+     * acquired after it started.
      */
     virtual void clean() {};
 
@@ -17,19 +18,19 @@ struct StopCondition {
 
     virtual std::string toString(size_t indents = 1) = 0;
 
-    virtual void toJson(nlohmann::json &j) const = 0;
+    virtual void toJson(nlohmann::json& j) const = 0;
 
-    virtual void fromJson(const nlohmann::json &j) = 0;
+    virtual void fromJson(const nlohmann::json& j) = 0;
 
     virtual ~StopCondition() = default;
 };
 
-void to_json(nlohmann::json &j, const StopCondition &s) {
+void to_json(nlohmann::json& j, const StopCondition& s) {
     s.toJson(j);
     assert(j.contains("ClassName"));
-//    assert(j["stopConditionType"] != nullptr);
+    //    assert(j["stopConditionType"] != nullptr);
 }
 
-void from_json(const nlohmann::json &j, StopCondition &s) {
+void from_json(const nlohmann::json& j, StopCondition& s) {
     s.fromJson(j);
 }

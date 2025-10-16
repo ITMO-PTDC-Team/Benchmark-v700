@@ -11,20 +11,19 @@
 #include "globals_extern.h"
 
 struct UniformDistributionBuilder : public MutableDistributionBuilder {
-    UniformDistribution * build(Random64 &rng, size_t range) override {
+    UniformDistribution* build(Random64& rng, size_t range) override {
         return new UniformDistribution(rng, range);
     }
 
-    UniformDistribution * build(Random64 &rng) override {
+    UniformDistribution* build(Random64& rng) override {
         return new UniformDistribution(rng);
     }
 
-    void toJson(nlohmann::json &j) const override {
+    void toJson(nlohmann::json& j) const override {
         j["ClassName"] = "UniformDistributionBuilder";
     }
 
-    void fromJson(const nlohmann::json &j) override {
-
+    void fromJson(const nlohmann::json& j) override {
     }
 
     std::string toString(size_t indents = 1) override {

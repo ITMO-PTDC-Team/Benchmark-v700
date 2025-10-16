@@ -6,7 +6,7 @@
 
 #include "workloads/args_generators/args_generator.h"
 
-template<typename K>
+template <typename K>
 class GeneralizedArgsGenerator : public ArgsGenerator<K> {
 private:
     std::shared_ptr<ArgsGenerator<K>> _get_generator;
@@ -19,8 +19,11 @@ public:
                              std::shared_ptr<ArgsGenerator<K>> insert_gen,
                              std::shared_ptr<ArgsGenerator<K>> remove_gen,
                              std::shared_ptr<ArgsGenerator<K>> range_gen)
-            : _get_generator(get_gen), _insert_generator(insert_gen), _remove_generator(remove_gen), _range_generator(range_gen) {}
-
+        : _get_generator(get_gen),
+          _insert_generator(insert_gen),
+          _remove_generator(remove_gen),
+          _range_generator(range_gen) {
+    }
 
     K nextGet() override {
         return _get_generator->nextGet();
@@ -50,22 +53,20 @@ public:
 
 static const std::set<std::string> oper_types{"get", "insert", "remove", "rangeQuery"};
 
-ArgsGeneratorBuilder *getArgsGeneratorFromJson(const nlohmann::json &j);
+ArgsGeneratorBuilder* getArgsGeneratorFromJson(const nlohmann::json& j);
 
-//template<typename K>
+// template<typename K>
 class GeneralizedArgsGeneratorBuilder : public ArgsGeneratorBuilder {
-    std::vector<
-        std::pair<std::vector<std::string>,
-                  std::shared_ptr<ArgsGeneratorBuilder>
-                  >> args_generator_builders;
+    std::vector<std::pair<std::vector<std::string>, std::shared_ptr<ArgsGeneratorBuilder>>>
+        args_generator_builders;
 
     std::set<std::string> undec_oper_types = oper_types;
 
 public:
     GeneralizedArgsGeneratorBuilder() = default;
 
-    GeneralizedArgsGeneratorBuilder *addArgsGeneratorBuilder(const std::vector<std::string>& opers,
-                                                         ArgsGeneratorBuilder *_argsGenBuilder) {
+    GeneralizedArgsGeneratorBuilder* addArgsGeneratorBuilder(
+        const std::vector<std::string>& opers, ArgsGeneratorBuilder* _argsGenBuilder) {
         for (auto oper_type : opers) {
             if (oper_types.find(oper_type) == oper_types.end()) {
                 setbench_error("Unsupported operation type: " + oper_type);
@@ -73,7 +74,7 @@ public:
             if (undec_oper_types.find(oper_type) == undec_oper_types.end()) {
                 setbench_error("Multiple declaration of operation type: " + oper_type);
             }
-            std::cout<<undec_oper_types.erase(oper_type);
+            std::cout << undec_oper_types.erase(oper_type);
         }
 
         std::shared_ptr<ArgsGeneratorBuilder> new_builder;
@@ -83,7 +84,7 @@ public:
         return this;
     }
 
-    GeneralizedArgsGeneratorBuilder *init(size_t range) override {
+    GeneralizedArgsGeneratorBuilder* init(size_t range) override {
         if (!undec_oper_types.empty()) {
             addArgsGeneratorBuilder(
                 std::vector<std::string>(undec_oper_types.begin(), undec_oper_types.end()),
@@ -96,7 +97,7 @@ public:
         return this;
     }
 
-    GeneralizedArgsGenerator<K> *build(Random64 &_rng) override {
+    GeneralizedArgsGenerator<K>* build(Random64& _rng) override {
         std::map<std::string, std::shared_ptr<ArgsGenerator<K>>> built;
         for (auto& it : args_generator_builders) {
             std::shared_ptr<ArgsGenerator<K>> u;
@@ -106,16 +107,15 @@ public:
             }
         }
 
-        return new GeneralizedArgsGenerator<K>(std::move(built["get"]),
-                                               std::move(built["insert"]),
+        return new GeneralizedArgsGenerator<K>(std::move(built["get"]), std::move(built["insert"]),
                                                std::move(built["remove"]),
                                                std::move(built["rangeQuery"]));
     }
 
-    void toJson(nlohmann::json &j) const override {
+    void toJson(nlohmann::json& j) const override {
         j["ClassName"] = "GeneralizedArgsGeneratorBuilder";
         nlohmann::json builders = nlohmann::json::array();
-        for (size_t id = 0; id<args_generator_builders.size(); ++id) {
+        for (size_t id = 0; id < args_generator_builders.size(); ++id) {
             nlohmann::json current_builder;
 
             nlohmann::json opers = nlohmann::json::array();
@@ -130,7 +130,7 @@ public:
         j["builders"] = builders;
     }
 
-    void fromJson(const nlohmann::json &j) override {
+    void fromJson(const nlohmann::json& j) override {
         if (!j.contains("builders") || !j["builders"].is_array()) {
             setbench_error("Wrong number of parameters for ArgsGenerator");
         }
@@ -140,7 +140,8 @@ public:
                 setbench_error("Missing required fields in argsGeneratorBuilder item");
             }
 
-            addArgsGeneratorBuilder(item["opers"], getArgsGeneratorFromJson(item["argsGeneratorBuilder"]));
+            addArgsGeneratorBuilder(item["opers"],
+                                    getArgsGeneratorFromJson(item["argsGeneratorBuilder"]));
         }
     }
 
@@ -160,5 +161,4 @@ public:
     }
 
     ~GeneralizedArgsGeneratorBuilder() override = default;
-
 };
