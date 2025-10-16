@@ -10,47 +10,60 @@
 #include "globals_extern.h"
 #include "errors.h"
 
-template<typename K>
-class SkewedInsertArgsGenerator : public ArgsGenerator<K> {
+// template<typename size_t>
+class SkewedInsertArgsGenerator : public ArgsGenerator {
 //    PAD;
     size_t skewedLength;
     size_t insertedNumber;
     Distribution *distribution;
     PAD;
-    DataMap <K> *dataMap;
+    IndexMap *indexMap;
     PAD;
 
 public:
 
-    SkewedInsertArgsGenerator(size_t skewedLength, Distribution *distribution, DataMap <K> *dataMap)
+    SkewedInsertArgsGenerator(size_t skewedLength, Distribution *distribution, IndexMap *indexMap)
             : insertedNumber(0), skewedLength(skewedLength),
-              distribution(distribution), dataMap(dataMap) {}
+              distribution(distribution), indexMap(indexMap) {}
 
-    K nextGet() override {
+    size_t nextGet() override {
         setbench_error("Unsupported operation -- nextGet")
     }
 
-    K nextInsert() override {
-        K value;
+    size_t nextInsert() override {
+        size_t value;
         if (insertedNumber < skewedLength) {
-            value = dataMap->get(insertedNumber++);
+            value = indexMap->get(insertedNumber++);
         } else {
-            value = dataMap->get(skewedLength + distribution->next());
+            value = indexMap->get(skewedLength + distribution->next());
         }
         return value;
     }
 
-    K nextRemove() override {
+    size_t nextRemove() override {
         setbench_error("Unsupported operation -- nextGet")
     }
 
-    std::pair <K, K> nextRange() override {
+    std::pair <size_t, size_t> nextRange() override {
         setbench_error("Unsupported operation -- nextGet")
+    }
+
+    std::vector<shared_ptr<IndexMap>> getInternalIndexMaps() {
+        std::vector<std::shared_ptr<IndexMap>> result;
+        result.reserve(4);
+        for (int i = 0; i<4; ++i) {
+            if (i == 1) {
+                result.emplace_back(indexMap);
+                continue;
+            }
+            result.emplace_back(nullptr);
+        }
+        return result;
     }
 
     ~SkewedInsertArgsGenerator() override {
         delete distribution;
-        delete dataMap;
+        delete indexMap;
     };
 
 
@@ -58,16 +71,16 @@ public:
 
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/distributions/builders/uniform_distribution_builder.h"
-#include "workloads/data_maps/data_map_builder.h"
-#include "workloads/data_maps/builders/array_data_map_builder.h"
+#include "workloads/index_maps/index_map_builder.h"
+#include "workloads/index_maps/builders/array_index_map_builder.h"
 
-//template<typename K>
+// template<typename size_t>
 class SkewedInsertArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     size_t range;
 
     DistributionBuilder *distBuilder = new UniformDistributionBuilder();
 
-    DataMapBuilder *dataMapBuilder = new ArrayDataMapBuilder();
+    IndexMapBuilder *indexMapBuilder = new ArrayIndexMapBuilder();
 
     double skewedSize = 0;
 
@@ -84,23 +97,23 @@ public:
         return this;
     }
 
-    SkewedInsertArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
-        dataMapBuilder = _dataMapBuilder;
+    SkewedInsertArgsGeneratorBuilder *setIndexMapBuilder(IndexMapBuilder *_indexMapBuilder) {
+        indexMapBuilder = _indexMapBuilder;
         return this;
     }
 
     SkewedInsertArgsGeneratorBuilder *init(size_t _range) override {
         range = _range;
-//        dataMapBuilder->init(range);
+//        indexMapBuilder->init(range);
         skewedLength = (size_t) (_range * skewedSize);
         return this;
     }
 
-    SkewedInsertArgsGenerator<K> *build(Random64 &_rng) override {
-        return new SkewedInsertArgsGenerator<K>(
+    SkewedInsertArgsGenerator *build(Random64 &_rng) override {
+        return new SkewedInsertArgsGenerator(
                 skewedLength,
                 distBuilder->build(_rng, range - skewedLength),
-                dataMapBuilder->build()
+                indexMapBuilder->build()
         );
     }
 
@@ -108,13 +121,13 @@ public:
         j["ClassName"] = "SkewedInsertArgsGeneratorBuilder";
         j["distributionBuilder"] = *distBuilder;
         j["skewedSize"] = skewedSize;
-        j["dataMapBuilder"] = *dataMapBuilder;
+        j["indexMapBuilder"] = *indexMapBuilder;
     }
 
     void fromJson(const nlohmann::json &j) override {
         distBuilder = getDistributionFromJson(j["distributionBuilder"]);
         skewedSize = j["skewedSize"];
-        dataMapBuilder = getDataMapFromJson(j["dataMapBuilder"]);
+        indexMapBuilder = getIndexMapFromJson(j["indexMapBuilder"]);
     }
 
     std::string toString(size_t indents) override {
@@ -122,13 +135,13 @@ public:
                + indented_title_with_data("Skewed size", skewedSize, indents)
                + indented_title("Distribution", indents)
                + distBuilder->toString(indents + 1)
-               + indented_title("Data Map", indents)
-               + dataMapBuilder->toString(indents + 1);
+               + indented_title("Index Map", indents)
+               + indexMapBuilder->toString(indents + 1);
     }
 
     ~SkewedInsertArgsGeneratorBuilder() override {
         delete distBuilder;
-//        delete dataMapBuilder; //TODO may delete twice
+//        delete indexMapBuilder; //TODO may delete twice
     };
 
 };

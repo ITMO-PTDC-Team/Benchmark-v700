@@ -16,28 +16,28 @@ private:
     PAD;
     Random64 &rng;
     PAD;
-    ArgsGenerator<K> *argsGenerator;
+    ArgsGenerator *argsGenerator;
     PAD;
     size_t number_of_attempts;
 
 public:
     PrefillInsertThreadLoop(globals_t *_g, Random64 &_rng, size_t _threadId,
                             StopCondition *_stopCondition, size_t _RQ_RANGE,
-                            ArgsGenerator<K> *_argsGenerator, size_t _number_of_attempts)
+                            ArgsGenerator *_argsGenerator, size_t _number_of_attempts)
             : ThreadLoop(_g, _threadId, _stopCondition, _RQ_RANGE),
               rng(_rng), argsGenerator(_argsGenerator), number_of_attempts(_number_of_attempts) {
     }
 
     void step() override {
         size_t counter = 0;
-        K *value;
+        KEY_TYPE *value;
         do {
-            K key = this->argsGenerator->nextInsert();
+            size_t key = this->argsGenerator->nextInsert();
             value = this->executeInsert(key);
             ++counter;
-        } while (value != (K *) this->NO_VALUE && counter < number_of_attempts);
+        } while (value != (KEY_TYPE *) this->NO_VALUE && counter < number_of_attempts);
 
-        if (value != (K *) this->NO_VALUE) {
+        if (value != (KEY_TYPE *) this->NO_VALUE) {
             std::cerr << "WARNING: PrefillInsertThreadLoop with threadId=" << threadId
                       << " have not inserted a new key. Number of attempts is: "
                       << number_of_attempts << "\n";

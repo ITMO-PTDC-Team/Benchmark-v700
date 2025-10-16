@@ -9,57 +9,66 @@
 
 #include "globals_extern.h"
 
-template<typename K>
-class SkewedSetsArgsGenerator : public ArgsGenerator<K> {
+// template<typename size_t>
+class SkewedSetsArgsGenerator : public ArgsGenerator {
 //    PAD;
     size_t range;
     size_t writeSetBegins;
     Distribution *readDist;
     Distribution *writeDist;
-    DataMap<K> *dataMap;
+    IndexMap *indexMap;
 
-    K nextWrite() {
+    size_t nextWrite() {
         size_t index = writeSetBegins + writeDist->next();
         if (index >= range) {
             index -= range;
         }
-        return dataMap->get(index);
+        return indexMap->get(index);
     }
 
 public:
 
     SkewedSetsArgsGenerator(size_t range, size_t writeSetBegins,
                             Distribution *readDist, Distribution *writeDist,
-                            DataMap<K> *dataMap)
+                            IndexMap *indexMap)
             : range(range), writeSetBegins(writeSetBegins),
               readDist(readDist), writeDist(writeDist),
-              dataMap(dataMap) {}
+              indexMap(indexMap) {}
 
-    K nextGet() override {
-        return dataMap->get(readDist->next());
+    size_t nextGet() override {
+        return indexMap->get(readDist->next());
     }
 
-    K nextInsert() override {
+    size_t nextInsert() override {
         return nextWrite();
     }
 
-    K nextRemove() override {
+    size_t nextRemove() override {
         return nextWrite();
     }
 
-    std::pair<K, K> nextRange() override {
-        K left = nextGet();
-        K right = nextGet();
+    std::pair<size_t, size_t> nextRange() override {
+        size_t left = nextGet();
+        size_t right = nextGet();
         if (left > right) {
             std::swap(left, right);
         }
         return {left, right};
     }
 
+    std::vector<shared_ptr<IndexMap>> getInternalIndexMaps() {
+        std::vector<std::shared_ptr<IndexMap>> result;
+        result.reserve(4);
+        for (int i = 0; i<4; ++i) {
+            result.emplace_back(indexMap);
+        }
+        return result;
+    }
+
     ~SkewedSetsArgsGenerator() override {
         delete readDist;
         delete writeDist;
-        delete dataMap;
+        delete indexMap;
     };
 
 
@@ -67,17 +76,17 @@ public:
 
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/distributions/builders/skewed_uniform_distribution_builder.h"
-#include "workloads/data_maps/data_map_builder.h"
-#include "workloads/data_maps/builders/array_data_map_builder.h"
+#include "workloads/index_maps/index_map_builder.h"
+#include "workloads/index_maps/builders/array_index_map_builder.h"
 
-//template<typename K>
+// template<typename size_t>
 class SkewedSetsArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     size_t range;
 
     SkewedUniformDistributionBuilder *readDistBuilder = new SkewedUniformDistributionBuilder();
     SkewedUniformDistributionBuilder *writeDistBuilder = new SkewedUniformDistributionBuilder();
 
-    DataMapBuilder *dataMapBuilder = new ArrayDataMapBuilder();
+    IndexMapBuilder *indexMapBuilder = new ArrayIndexMapBuilder();
 
     double intersection = 0;
     size_t writeSetBegins;
@@ -103,8 +112,8 @@ public:
         return this;
     }
 
-    SkewedSetsArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
-        dataMapBuilder = _dataMapBuilder;
+    SkewedSetsArgsGeneratorBuilder *setIndexMapBuilder(IndexMapBuilder *_indexMapBuilder) {
+        indexMapBuilder = _indexMapBuilder;
         return this;
     }
 
@@ -115,17 +124,17 @@ public:
 
     SkewedSetsArgsGeneratorBuilder *init(size_t _range) override {
         range = _range;
-//        dataMapBuilder->init(range);
+//        indexMapBuilder->init(range);
         writeSetBegins = readDistBuilder->getHotLength(range) - range * intersection;
         return this;
     }
 
-    SkewedSetsArgsGenerator<K> *build(Random64 &_rng) override {
-        return new SkewedSetsArgsGenerator<K>(
+    SkewedSetsArgsGenerator *build(Random64 &_rng) override {
+        return new SkewedSetsArgsGenerator(
                 range, writeSetBegins,
                 readDistBuilder->build(_rng, range),
                 writeDistBuilder->build(_rng, range),
-                dataMapBuilder->build()
+                indexMapBuilder->build()
         );
     }
 
@@ -134,7 +143,7 @@ public:
         j["readDistBuilder"] = *readDistBuilder;
         j["writeDistBuilder"] = *writeDistBuilder;
         j["intersection"] = intersection;
-        j["dataMapBuilder"] = *dataMapBuilder;
+        j["indexMapBuilder"] = *indexMapBuilder;
     }
 
     void fromJson(const nlohmann::json &j) override {
@@ -145,7 +154,7 @@ public:
                 getDistributionFromJson(j["writeDistBuilder"])
         );
         intersection = j["intersection"];
-        dataMapBuilder = getDataMapFromJson(j["dataMapBuilder"]);
+        indexMapBuilder = getIndexMapFromJson(j["indexMapBuilder"]);
     }
 
     std::string toString(size_t indents) override {
@@ -155,14 +164,14 @@ public:
                + readDistBuilder->toString(indents + 1)
                + indented_title("Write Distribution", indents)
                + writeDistBuilder->toString(indents + 1)
-               + indented_title("Data Map", indents)
-               + dataMapBuilder->toString(indents + 1);
+               + indented_title("Index Map", indents)
+               + indexMapBuilder->toString(indents + 1);
     }
 
     ~SkewedSetsArgsGeneratorBuilder() override {
         delete readDistBuilder;
         delete writeDistBuilder;
-//        delete dataMapBuilder; //TODO may delete twice
+//        delete indexMapBuilder; //TODO may delete twice
     };
 
 };

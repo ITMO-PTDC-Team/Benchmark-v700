@@ -6,18 +6,30 @@
 #define SETBENCH_ARGS_GENERATOR_H
 
 #include <utility>
+#include <vector>
 
-template<typename K>
+#include "workloads/index_maps/index_map.h"
+
 struct ArgsGenerator {
-    virtual K nextGet() = 0;
+    virtual size_t nextGet() = 0;
 
-    virtual K nextInsert() = 0;
+    virtual size_t nextInsert() = 0;
 
-    virtual K nextRemove() = 0;
+    virtual size_t nextRemove() = 0;
 
-    virtual std::pair<K, K> nextRange() = 0;
+    virtual std::pair<size_t, size_t> nextRange() = 0;
 
     virtual ~ArgsGenerator() = default;
+
+    /*
+        Function, that returns a vector of IndexMap ptr's, each corresponding to
+        function in a data structure
+        1. get
+        2. insert
+        3. remove
+        4. rangeQuery
+    */
+    virtual std::vector<shared_ptr<IndexMap>> getInternalIndexMaps() = 0;
 };
 
 #endif //SETBENCH_ARGS_GENERATOR_H

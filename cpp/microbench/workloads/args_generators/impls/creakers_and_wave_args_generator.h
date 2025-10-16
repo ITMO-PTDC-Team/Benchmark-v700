@@ -9,7 +9,7 @@
 
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/distributions/distribution.h"
-#include "workloads/data_maps/data_map.h"
+#include "workloads/index_maps/index_map.h"
 
 #include "globals_extern.h"
 
@@ -31,8 +31,8 @@
             // при желании можно переработать на "100% - ca — чтение, ca — запись"
                 (то есть брать ca не от общей вероятности, а только при чтении"
  */
-template<typename K>
-class CreakersAndWaveArgsGenerator : public ArgsGenerator<K> {
+// template<typename size_t>
+class CreakersAndWaveArgsGenerator : public ArgsGenerator {
     PAD;
     Random64 &rng;
     PAD;
@@ -40,7 +40,7 @@ class CreakersAndWaveArgsGenerator : public ArgsGenerator<K> {
     size_t creakersBegin;
     Distribution *creakersDist;
     MutableDistribution *waveDist;
-    DataMap<K> *dataMap;
+    IndexMap *indexMap;
     PAD;
     std::atomic<size_t> *waveBegin;
     PAD;
@@ -61,7 +61,7 @@ class CreakersAndWaveArgsGenerator : public ArgsGenerator<K> {
         return z < creakersRatio;
     }
 
-    K getCreaker() {
+    size_t getCreaker() {
 
         /**
          *                             creakersBegin
@@ -71,10 +71,10 @@ class CreakersAndWaveArgsGenerator : public ArgsGenerator<K> {
          * |____| --- wave or unused data
          */
 
-        return dataMap->get(creakersBegin + creakersDist->next());
+        return indexMap->get(creakersBegin + creakersDist->next());
     }
 
-    K getWave() {
+    size_t getWave() {
         /**
          * In waveDist the first indexes have a higher probability
          */
@@ -103,10 +103,10 @@ class CreakersAndWaveArgsGenerator : public ArgsGenerator<K> {
             index = localWaveBegin + waveDist->next(localWaveLength);
         }
 
-        return dataMap->get(index);
+        return indexMap->get(index);
     };
 
-    K waveShift(std::atomic<size_t> *waveEdge) {
+    size_t waveShift(std::atomic<size_t> *waveEdge) {
         size_t localWaveEdge = *waveEdge;
         size_t newWaveEdge;
         if (localWaveEdge == 0) {
@@ -115,7 +115,7 @@ class CreakersAndWaveArgsGenerator : public ArgsGenerator<K> {
             newWaveEdge = localWaveEdge - 1;
         }
         waveEdge->compare_exchange_weak(localWaveEdge, newWaveEdge);
-        return dataMap->get(newWaveEdge);
+        return indexMap->get(newWaveEdge);
     }
 public:
     CreakersAndWaveArgsGenerator(Random64 &rng, double creakersRatio, size_t creakersBegin,
@@ -123,7 +123,7 @@ public:
                                  std::atomic<size_t> *waveEnd,
                                  Distribution *creakersDist,
                                  MutableDistribution *waveDist,
-                                 DataMap<K> *dataMap) :
+                                 IndexMap *indexMap) :
             rng(rng),
             creakersRatio(creakersRatio),
             creakersBegin(creakersBegin),
@@ -131,10 +131,10 @@ public:
             waveEnd(waveEnd),
             creakersDist(creakersDist),
             waveDist(waveDist),
-            dataMap(dataMap) {}
+            indexMap(indexMap) {}
 
-    K nextGet() override {
-        K value;
+    size_t nextGet() override {
+        size_t value;
         if (next_coin()) {
             value = getCreaker();
         } else {
@@ -144,17 +144,17 @@ public:
     }
 
 
-    K nextInsert() override {
+    size_t nextInsert() override {
         return waveShift(waveBegin);
     }
 
-    K nextRemove() override {
+    size_t nextRemove() override {
         return waveShift(waveEnd);
     }
 
-    std::pair<K, K> nextRange() override {
-        K left;
-        K right;
+    std::pair<size_t, size_t> nextRange() override {
+        size_t left;
+        size_t right;
         if (next_coin()) {
             left = getCreaker();
             right = getCreaker();
@@ -168,34 +168,42 @@ public:
         return {left, right};
     }
 
+    std::vector<shared_ptr<IndexMap>> getInternalIndexMaps() {
+        std::vector<std::shared_ptr<IndexMap>> result;
+        result.reserve(4);
+        for (int i = 0; i<4; ++i) {
+            result.emplace_back(indexMap);
+        }
+        return result;
+    }
+
     ~CreakersAndWaveArgsGenerator() override {
         delete creakersDist;
         delete waveDist;
-        delete dataMap;
+        delete indexMap;
     };
 };
 
 #include "errors.h"
 
-template<typename K>
-class CreakersAndWavePrefillArgsGenerator : public ArgsGenerator<K> {
+class CreakersAndWavePrefillArgsGenerator : public ArgsGenerator {
     PAD;
     Random64 &rng;
     PAD;
-    DataMap<K> *dataMap;
+    IndexMap *indexMap;
     size_t waveBegin;
     size_t prefillLength;
     PAD;
 
 public:
-    CreakersAndWavePrefillArgsGenerator(Random64 &rng, size_t waveBegin, size_t prefillLength, DataMap<K> *dataMap) :
-            rng(rng), waveBegin(waveBegin), prefillLength(prefillLength), dataMap(dataMap) {}
+    CreakersAndWavePrefillArgsGenerator(Random64 &rng, size_t waveBegin, size_t prefillLength, IndexMap *indexMap) :
+            rng(rng), waveBegin(waveBegin), prefillLength(prefillLength), indexMap(indexMap) {}
 
-    K nextGet() override {
+    size_t nextGet() override {
         setbench_error("Unsupported operation -- nextGet")
     }
 
-    K nextInsert() override {
+    size_t nextInsert() override {
         /**
              *                       waveBegin           creakersBegin
              * |_________________________|....................|,,,,,,,,,,,,,,,,,,,,|
@@ -204,31 +212,42 @@ public:
              * |,,,,| --- creakers
              * |____| --- unused data
          */
-        return dataMap->get(waveBegin + rng.next(prefillLength));
+        return indexMap->get(waveBegin + rng.next(prefillLength));
     }
 
-    K nextRemove() override {
+    size_t nextRemove() override {
         setbench_error("Unsupported operation -- nextRemove")
     }
 
-    std::pair<K, K> nextRange() override {
+    std::pair<size_t, size_t> nextRange() override {
         setbench_error("Unsupported operation -- nextRange")
     }
 
+    std::vector<shared_ptr<IndexMap>> getInternalIndexMaps() {
+        std::vector<std::shared_ptr<IndexMap>> result;
+        result.reserve(4);
+        for (int i = 0; i<4; ++i) {
+            if (i == 1) {
+                result.emplace_back(indexMap);
+                continue;
+            }
+            result.emplace_back(nullptr);
+        }
+        return result;
+    }
+
     ~CreakersAndWavePrefillArgsGenerator() override {
-        delete dataMap;
+        delete indexMap;
     };
 };
 
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/distributions/builders/uniform_distribution_builder.h"
 #include "workloads/distributions/builders/zipfian_distribution_builder.h"
-#include "workloads/data_maps/data_map_builder.h"
-#include "workloads/data_maps/builders/array_data_map_builder.h"
+#include "workloads/index_maps/index_map_builder.h"
+#include "workloads/index_maps/builders/array_index_map_builder.h"
 #include "workloads/distributions/distribution_json_convector.h"
-#include "workloads/data_maps/data_map_json_convector.h"
-
-//typedef long long K;
+#include "workloads/index_maps/index_map_json_convector.h"
 
 class CreakersAndWaveArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     size_t creakersLength;
@@ -248,7 +267,7 @@ class CreakersAndWaveArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     DistributionBuilder *creakersDistBuilder = new UniformDistributionBuilder();
     MutableDistributionBuilder *waveDistBuilder = new ZipfianDistributionBuilder();
 
-    DataMapBuilder *dataMapBuilder = new ArrayDataMapBuilder();
+    IndexMapBuilder *indexMapBuilder = new ArrayIndexMapBuilder();
 
 public:
     double getCreakersSize() const {
@@ -259,8 +278,8 @@ public:
         return waveSize;
     }
 
-    DataMapBuilder *getDataMapBuilder() const {
-        return dataMapBuilder;
+    IndexMapBuilder *getIndexMapBuilder() const {
+        return indexMapBuilder;
     }
 
 
@@ -289,13 +308,13 @@ public:
         return this;
     }
 
-    CreakersAndWaveArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
-        dataMapBuilder = _dataMapBuilder;
+    CreakersAndWaveArgsGeneratorBuilder *setIndexMapBuilder(IndexMapBuilder *_indexMapBuilder) {
+        indexMapBuilder = _indexMapBuilder;
         return this;
     }
 
     CreakersAndWaveArgsGeneratorBuilder *init(size_t range) override {
-//        dataMapBuilder->init(range);
+//        indexMapBuilder->init(range);
         creakersLength = range * creakersSize;
         creakersBegin = range - creakersLength;
         startWaveLength = range * waveSize;
@@ -304,13 +323,13 @@ public:
         return this;
     }
 
-    CreakersAndWaveArgsGenerator<K> *build(Random64 &_rng) override {
-        return new CreakersAndWaveArgsGenerator<K>(_rng, creakersRatio, creakersBegin,
-                                                   waveBegin,
-                                                   waveEnd,
-                                                   creakersDistBuilder->build(_rng, creakersLength),
-                                                   waveDistBuilder->build(_rng),
-                                                   dataMapBuilder->build());
+    CreakersAndWaveArgsGenerator *build(Random64 &_rng) override {
+        return new CreakersAndWaveArgsGenerator(_rng, creakersRatio, creakersBegin,
+                                                waveBegin,
+                                                waveEnd,
+                                                creakersDistBuilder->build(_rng, creakersLength),
+                                                waveDistBuilder->build(_rng),
+                                                indexMapBuilder->build());
     }
 
     void toJson(nlohmann::json &j) const override {
@@ -320,7 +339,7 @@ public:
         j["waveSize"] = waveSize;
         j["creakersDistBuilder"] = *creakersDistBuilder;
         j["waveDistBuilder"] = *waveDistBuilder;
-        j["dataMapBuilder"] = *dataMapBuilder;
+        j["indexMapBuilder"] = *indexMapBuilder;
     }
 
     void fromJson(const nlohmann::json &j) override {
@@ -329,7 +348,7 @@ public:
         waveSize = j["waveSize"];
         creakersDistBuilder = getDistributionFromJson(j["creakersDistBuilder"]);
         waveDistBuilder = getMutableDistributionFromJson(j["waveDistBuilder"]);
-        dataMapBuilder = getDataMapFromJson(j["dataMapBuilder"]);
+        indexMapBuilder = getIndexMapFromJson(j["indexMapBuilder"]);
     }
 
     std::string toString(size_t indents) override {
@@ -341,8 +360,8 @@ public:
                + creakersDistBuilder->toString(indents + 1)
                + indented_title("Wave Distribution", indents)
                + waveDistBuilder->toString(indents + 1)
-               + indented_title("Data Map", indents)
-               + dataMapBuilder->toString(indents + 1);
+               + indented_title("Index Map", indents)
+               + indexMapBuilder->toString(indents + 1);
     }
 
     ~CreakersAndWaveArgsGeneratorBuilder() override {
@@ -350,7 +369,7 @@ public:
         delete waveEnd;
         delete creakersDistBuilder;
         delete waveDistBuilder;
-//        delete dataMapBuilder;
+//        delete indexMapBuilder;
     };
 };
 
@@ -362,7 +381,7 @@ class CreakersAndWavePrefillArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     double creakersSize = 0;
     double waveSize = 0;
 
-    DataMapBuilder *dataMapBuilder = new ArrayDataMapBuilder();
+    IndexMapBuilder *indexMapBuilder = new ArrayIndexMapBuilder();
 
 public:
     size_t getPrefillLength() const {
@@ -383,7 +402,7 @@ public:
                 CreakersAndWaveArgsGeneratorBuilder *builder) {
         creakersSize = builder->getCreakersSize();
         waveSize = builder->getWaveSize();
-        dataMapBuilder = builder->getDataMapBuilder();
+        indexMapBuilder = builder->getIndexMapBuilder();
         return this;
     }
 
@@ -397,46 +416,46 @@ public:
         return this;
     }
 
-    CreakersAndWavePrefillArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
-        dataMapBuilder = _dataMapBuilder;
+    CreakersAndWavePrefillArgsGeneratorBuilder *setIndexMapBuilder(IndexMapBuilder *_indexMapBuilder) {
+        indexMapBuilder = _indexMapBuilder;
         return this;
     }
 
     CreakersAndWavePrefillArgsGeneratorBuilder *init(size_t range) override {
-//        dataMapBuilder->init(range);
+//        indexMapBuilder->init(range);
         prefillLength = range * creakersSize + range * waveSize;
         waveBegin = range - prefillLength;
         return this;
     }
 
-    CreakersAndWavePrefillArgsGenerator<K> *build(Random64 &_rng) override {
-        return new CreakersAndWavePrefillArgsGenerator<K>(_rng, waveBegin, prefillLength,
-                                                          dataMapBuilder->build());
+    CreakersAndWavePrefillArgsGenerator *build(Random64 &_rng) override {
+        return new CreakersAndWavePrefillArgsGenerator(_rng, waveBegin, prefillLength,
+                                                          indexMapBuilder->build());
     }
 
     void toJson(nlohmann::json &j) const override {
         j["ClassName"] = "CreakersAndWavePrefillArgsGeneratorBuilder";
         j["creakersSize"] = creakersSize;
         j["waveSize"] = waveSize;
-        j["dataMapBuilder"] = *dataMapBuilder;
+        j["indexMapBuilder"] = *indexMapBuilder;
     }
 
     void fromJson(const nlohmann::json &j) override {
         creakersSize = j["creakersSize"];
         waveSize = j["waveSize"];
-        dataMapBuilder = getDataMapFromJson(j["dataMapBuilder"]);
+        indexMapBuilder = getIndexMapFromJson(j["indexMapBuilder"]);
     }
 
     std::string toString(size_t indents) override {
         return indented_title_with_str_data("Type", "CREAKERS_AND_WAVE_PREFILL", indents)
                + indented_title_with_data("Creakers Size", creakersSize, indents)
                + indented_title_with_data("Wave Size", waveSize, indents)
-               + indented_title("Data Map", indents)
-               + dataMapBuilder->toString(indents + 1);
+               + indented_title("Index Map", indents)
+               + indexMapBuilder->toString(indents + 1);
     }
 
     ~CreakersAndWavePrefillArgsGeneratorBuilder() override {
-//        delete dataMapBuilder;
+//        delete indexMapBuilder;
     };
 };
 

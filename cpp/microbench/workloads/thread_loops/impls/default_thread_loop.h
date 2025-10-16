@@ -9,18 +9,18 @@
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/thread_loops/ratio_thread_loop_parameters.h"
 
-//template<typename K>
+//template<typename KEY_TYPE>
 class DefaultThreadLoop : public ThreadLoop {
     PAD;
     double *cdf;
     Random64 &rng;
     PAD;
-    ArgsGenerator<K> *argsGenerator;
+    ArgsGenerator *argsGenerator;
     PAD;
 
 public:
     DefaultThreadLoop(globals_t *_g, Random64 &_rng, size_t _threadId, StopCondition *_stopCondition, size_t _RQ_RANGE,
-                      ArgsGenerator<K> *_argsGenerator,
+                      ArgsGenerator *_argsGenerator,
                       RatioThreadLoopParameters &threadLoopParameters)
             : ThreadLoop(_g, _threadId, _stopCondition, _RQ_RANGE),
               rng(_rng), argsGenerator(_argsGenerator) {
@@ -33,16 +33,16 @@ public:
     void step() override {
         double op = (double) rng.next() / (double) rng.max_value;
         if (op < cdf[0]) { // insert
-            K key = this->argsGenerator->nextInsert();
+            size_t key = this->argsGenerator->nextInsert();
             this->executeInsert(key);
         } else if (op < cdf[1]) { // remove
-            K key = this->argsGenerator->nextRemove();
+            size_t key = this->argsGenerator->nextRemove();
             this->executeRemove(key);
         } else if (op < cdf[2]) { // range query
-            std::pair<K, K> keys = this->argsGenerator->nextRange();
+            std::pair<size_t, size_t> keys = this->argsGenerator->nextRange();
             this->executeRangeQuery(keys.first, keys.second);
         } else { // read
-            K key = this->argsGenerator->nextGet();
+            size_t key = this->argsGenerator->nextGet();
             this->GET_FUNC(key);
         }
     }
@@ -54,7 +54,7 @@ public:
 #include "workloads/args_generators/args_generator_json_convector.h"
 #include "globals_extern.h"
 
-//template<typename K>
+//template<typename KEY_TYPE>
 struct DefaultThreadLoopBuilder : public ThreadLoopBuilder {
     RatioThreadLoopParameters parameters;
 
@@ -86,7 +86,7 @@ struct DefaultThreadLoopBuilder : public ThreadLoopBuilder {
         return this;
     }
 
-//    template<typename K>
+//    template<typename KEY_TYPE>
     ThreadLoop *build(globals_t *_g, Random64 &_rng, size_t _threadId, StopCondition *_stopCondition) override {
         return new DefaultThreadLoop(_g, _rng, _threadId, _stopCondition, this->RQ_RANGE,
                                      argsGeneratorBuilder->build(_rng),

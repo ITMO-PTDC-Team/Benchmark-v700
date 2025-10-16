@@ -7,6 +7,9 @@ set(DS_DIR "ds")
 set(BUILD_DIR "bin/")
 set(RECLAIM ".debra")
 
+# Flag for key type usage
+add_definitions("-DUSE_LONG_LONG")
+
 #set(SOURCE_EXE main.cpp)
 #set(CMAKE_CXX_FLAGS "-lpthread -ldl -mrtm")
 list(APPEND CMAKE_CXX_FLAGS_LIST "-lpthread -ldl -mrtm ")

@@ -7,7 +7,7 @@
 
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/distributions/distribution.h"
-#include "workloads/data_maps/data_map.h"
+#include "workloads/index_maps/index_map.h"
 
 #include "globals_extern.h"
 
@@ -22,15 +22,15 @@
           // rt — если relax time всегда одинаковый
           // rti — relax time после горячей работы с i-ым множеством
  */
-template<typename K>
-class TemporarySkewedArgsGenerator : public ArgsGenerator<K> {
+// template<typename size_t>
+class TemporarySkewedArgsGenerator : public ArgsGenerator {
     size_t time;
     size_t pointer;
     bool isRelaxTime;
 
     Distribution **hotDists;
     Distribution *relaxDist;
-    DataMap<K> *dataMap;
+    IndexMap *indexMap;
     PAD;
     long long *hotTimes;
     PAD;
@@ -60,19 +60,19 @@ class TemporarySkewedArgsGenerator : public ArgsGenerator<K> {
         ++time;
     }
 
-    K next() {
+    size_t next() {
         update_pointer();
-        K value;
+        size_t value;
 
         if (isRelaxTime) {
-            value = dataMap->get(relaxDist->next());
+            value = indexMap->get(relaxDist->next());
         } else {
             size_t index = setBegins[pointer] + hotDists[pointer]->next();
             if (index >= range) {
                 index -= range;
             }
 
-            value = dataMap->get(index);
+            value = indexMap->get(index);
         }
 
         return value;
@@ -81,26 +81,26 @@ class TemporarySkewedArgsGenerator : public ArgsGenerator<K> {
 public:
     TemporarySkewedArgsGenerator(size_t setNumber, size_t range,
                                  long long *hotTimes, long long *relaxTimes, size_t *setBegins,
-                                 Distribution **hotDists, Distribution *relaxDist, DataMap<K> *dataMap)
-            : hotDists(hotDists), relaxDist(relaxDist), dataMap(dataMap), hotTimes(hotTimes), relaxTimes(relaxTimes),
+                                 Distribution **hotDists, Distribution *relaxDist, IndexMap *indexMap)
+            : hotDists(hotDists), relaxDist(relaxDist), indexMap(indexMap), hotTimes(hotTimes), relaxTimes(relaxTimes),
               setBegins(setBegins), setNumber(setNumber), range(range), time(0), pointer(0), isRelaxTime(false) {}
 
-    K nextGet() override {
+    size_t nextGet() override {
         return next();
     }
 
-    K nextInsert() override {
+    size_t nextInsert() override {
         return next();
     }
 
-    K nextRemove() override {
+    size_t nextRemove() override {
         return next();
     }
 
-    std::pair<K, K> nextRange() override {
+    std::pair<size_t, size_t> nextRange() override {
         --time;
-        K left = next();
-        K right = next();
+        size_t left = next();
+        size_t right = next();
 
         if (left > right) {
             std::swap(left, right);
@@ -108,20 +108,29 @@ public:
         return {left, right};
     }
 
+    std::vector<shared_ptr<IndexMap>> getInternalIndexMaps() {
+        std::vector<std::shared_ptr<IndexMap>> result;
+        result.reserve(4);
+        for (int i = 0; i<4; ++i) {
+            result.emplace_back(indexMap);
+        }
+        return result;
+    }
+
     ~TemporarySkewedArgsGenerator() override {
         delete[] hotDists;
         delete relaxDist;
-//        delete dataMap; //TODO may deleted twice
+//        delete indexMap; //TODO may deleted twice
     };
 
 };
 
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/distributions/builders/uniform_distribution_builder.h"
-#include "workloads/data_maps/data_map_builder.h"
-#include "workloads/data_maps/builders/array_data_map_builder.h"
+#include "workloads/index_maps/index_map_builder.h"
+#include "workloads/index_maps/builders/array_index_map_builder.h"
 #include "workloads/distributions/distribution_json_convector.h"
-#include "workloads/data_maps/data_map_json_convector.h"
+#include "workloads/index_maps/index_map_json_convector.h"
 
 class TemporarySkewedArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     size_t range;
@@ -145,7 +154,7 @@ class TemporarySkewedArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     size_t *setBeginIndexes;
     PAD;
 
-    DataMapBuilder *dataMapBuilder = new ArrayDataMapBuilder();
+    IndexMapBuilder *indexMapBuilder = new ArrayIndexMapBuilder();
 
 public:
     TemporarySkewedArgsGeneratorBuilder *enableManualSettingSetBegins() {
@@ -269,8 +278,8 @@ public:
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
-        dataMapBuilder = _dataMapBuilder;
+    TemporarySkewedArgsGeneratorBuilder *setIndexMapBuilder(IndexMapBuilder *_indexMapBuilder) {
+        indexMapBuilder = _indexMapBuilder;
         return this;
     }
 
@@ -304,21 +313,21 @@ public:
             }
         }
 
-//        dataMapBuilder->init(range);
+//        indexMapBuilder->init(range);
         return this;
     }
 
-    TemporarySkewedArgsGenerator<K> *build(Random64 &_rng) override {
+    TemporarySkewedArgsGenerator *build(Random64 &_rng) override {
         Distribution **hotDists = new Distribution *[setNumber];
 
         for (size_t i = 0; i < setNumber; ++i) {
             hotDists[i] = hotDistBuilders[i]->build(_rng, range);
         }
 
-        return new TemporarySkewedArgsGenerator<K>(setNumber, range,
-                                                   hotTimes, relaxTimes, setBeginIndexes,
-                                                   hotDists, relaxDistBuilder->build(_rng, range),
-                                                   dataMapBuilder->build());
+        return new TemporarySkewedArgsGenerator(setNumber, range,
+                                                hotTimes, relaxTimes, setBeginIndexes,
+                                                hotDists, relaxDistBuilder->build(_rng, range),
+                                                indexMapBuilder->build());
     }
 
     void toJson(nlohmann::json &j) const override {
@@ -335,7 +344,7 @@ public:
             }
         }
         j["relaxDistBuilder"] = *relaxDistBuilder;
-        j["dataMapBuilder"] = *dataMapBuilder;
+        j["indexMapBuilder"] = *indexMapBuilder;
         j["manualSettingSetBegins"] = manualSettingSetBegins;
     }
 
@@ -354,7 +363,7 @@ public:
         }
 
         relaxDistBuilder = getDistributionFromJson(j["relaxDistBuilder"]);
-        dataMapBuilder = getDataMapFromJson(j["dataMapBuilder"]);
+        indexMapBuilder = getIndexMapFromJson(j["indexMapBuilder"]);
 
         size_t i = 0;
         for (const auto &j_i: j["hotDistBuilders"]) {
@@ -405,8 +414,8 @@ public:
         result +=
                 indented_title("Relax Distribution", indents)
                 + relaxDistBuilder->toString(indents + 1)
-                + indented_title("Data Map", indents)
-                + dataMapBuilder->toString(indents + 1);
+                + indented_title("Index Map", indents)
+                + indexMapBuilder->toString(indents + 1);
 
         return result;
     }
@@ -420,7 +429,7 @@ public:
         }
         delete[] hotDistBuilders;
         delete relaxDistBuilder;
-//        delete dataMapBuilder;
+//        delete indexMapBuilder;
     }
 
 
