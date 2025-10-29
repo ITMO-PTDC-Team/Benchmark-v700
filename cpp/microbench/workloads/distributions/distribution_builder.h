@@ -11,11 +11,11 @@
 struct DistributionBuilder {
     virtual Distribution* build(Random64& rng, size_t range) = 0;
 
-    virtual std::string toString(size_t indents) = 0;
+    virtual std::string to_string(size_t indents) = 0;
 
-    virtual void toJson(nlohmann::json& j) const = 0;
+    virtual void to_json(nlohmann::json& j) const = 0;
 
-    virtual void fromJson(const nlohmann::json& j) = 0;
+    virtual void from_json(const nlohmann::json& j) = 0;
 
     virtual ~DistributionBuilder() = default;
 };
@@ -25,10 +25,10 @@ struct MutableDistributionBuilder : public DistributionBuilder {
 };
 
 void to_json(nlohmann::json& j, const DistributionBuilder& s) {
-    s.toJson(j);
+    s.to_json(j);
     assert(j.contains("ClassName"));
 }
 
 void from_json(const nlohmann::json& j, DistributionBuilder& s) {
-    s.fromJson(j);
+    s.from_json(j);
 }

@@ -6,49 +6,52 @@
 #include "workloads/args_generators/args_generator.h"
 
 #include "globals_extern.h"
+#include "workloads/data_maps/data_map.h"
+#include "workloads/data_maps/data_map_json_convector.h"
+#include "workloads/distributions/distribution.h"
 
 template <typename K>
 class SkewedSetsArgsGenerator : public ArgsGenerator<K> {
     //    PAD;
-    size_t range;
-    size_t writeSetBegins;
-    Distribution* readDist;
-    Distribution* writeDist;
-    DataMap<K>* dataMap;
+    size_t range_;
+    size_t write_set_begins_;
+    Distribution* read_dist_;
+    Distribution* write_dist_;
+    DataMap<K>* data_map_;
 
-    K nextWrite() {
-        size_t index = writeSetBegins + writeDist->next();
-        if (index >= range) {
-            index -= range;
+    K next_write() {
+        size_t index = write_set_begins_ + write_dist_->next();
+        if (index >= range_) {
+            index -= range_;
         }
-        return dataMap->get(index);
+        return data_map_->get(index);
     }
 
 public:
-    SkewedSetsArgsGenerator(size_t range, size_t writeSetBegins, Distribution* readDist,
-                            Distribution* writeDist, DataMap<K>* dataMap)
-        : range(range),
-          writeSetBegins(writeSetBegins),
-          readDist(readDist),
-          writeDist(writeDist),
-          dataMap(dataMap) {
+    SkewedSetsArgsGenerator(size_t range, size_t write_set_begins, Distribution* read_dist,
+                            Distribution* write_dist, DataMap<K>* data_map)
+        : range_(range),
+          write_set_begins_(write_set_begins),
+          read_dist_(read_dist),
+          write_dist_(write_dist),
+          data_map_(data_map) {
     }
 
-    K nextGet() override {
-        return dataMap->get(readDist->next());
+    K next_get() override {
+        return data_map_->get(read_dist_->next());
     }
 
-    K nextInsert() override {
-        return nextWrite();
+    K next_insert() override {
+        return next_write();
     }
 
-    K nextRemove() override {
-        return nextWrite();
+    K next_remove() override {
+        return next_write();
     }
 
-    std::pair<K, K> nextRange() override {
-        K left = nextGet();
-        K right = nextGet();
+    std::pair<K, K> next_range() override {
+        K left = next_get();
+        K right = next_get();
         if (left > right) {
             std::swap(left, right);
         }
@@ -56,9 +59,9 @@ public:
     }
 
     ~SkewedSetsArgsGenerator() override {
-        delete readDist;
-        delete writeDist;
-        delete dataMap;
+        delete read_dist_;
+        delete write_dist_;
+        delete data_map_;
     };
 };
 
@@ -69,90 +72,90 @@ public:
 
 // template<typename K>
 class SkewedSetsArgsGeneratorBuilder : public ArgsGeneratorBuilder {
-    size_t range;
+    size_t range_;
 
-    SkewedUniformDistributionBuilder* readDistBuilder = new SkewedUniformDistributionBuilder();
-    SkewedUniformDistributionBuilder* writeDistBuilder = new SkewedUniformDistributionBuilder();
+    SkewedUniformDistributionBuilder* read_dist_builder_ = new SkewedUniformDistributionBuilder();
+    SkewedUniformDistributionBuilder* write_dist_builder_ = new SkewedUniformDistributionBuilder();
 
-    DataMapBuilder* dataMapBuilder = new ArrayDataMapBuilder();
+    DataMapBuilder* data_map_builder_ = new ArrayDataMapBuilder();
 
-    double intersection = 0;
-    size_t writeSetBegins;
+    double intersection_ = 0;
+    size_t write_set_begins_;
 
 public:
-    SkewedSetsArgsGeneratorBuilder* setReadHotSize(double _hotSize) {
-        readDistBuilder->setHotSize(_hotSize);
+    SkewedSetsArgsGeneratorBuilder* set_read_hot_size(double hot_size) {
+        read_dist_builder_->set_hot_size(hot_size);
         return this;
     }
 
-    SkewedSetsArgsGeneratorBuilder* setReadHotProb(double _hotProb) {
-        readDistBuilder->setHotRatio(_hotProb);
+    SkewedSetsArgsGeneratorBuilder* set_read_hot_prob(double hot_prob) {
+        read_dist_builder_->set_hot_ratio(hot_prob);
         return this;
     }
 
-    SkewedSetsArgsGeneratorBuilder* setWriteHotSize(double _hotSize) {
-        writeDistBuilder->setHotSize(_hotSize);
+    SkewedSetsArgsGeneratorBuilder* set_write_hot_size(double hot_size) {
+        write_dist_builder_->set_hot_size(hot_size);
         return this;
     }
 
-    SkewedSetsArgsGeneratorBuilder* setWriteHotProb(double _hotProb) {
-        writeDistBuilder->setHotRatio(_hotProb);
+    SkewedSetsArgsGeneratorBuilder* set_write_hot_prob(double hot_prob) {
+        write_dist_builder_->set_hot_ratio(hot_prob);
         return this;
     }
 
-    SkewedSetsArgsGeneratorBuilder* setDataMapBuilder(DataMapBuilder* _dataMapBuilder) {
-        dataMapBuilder = _dataMapBuilder;
+    SkewedSetsArgsGeneratorBuilder* set_data_map_builder(DataMapBuilder* data_map_builder) {
+        data_map_builder_ = data_map_builder;
         return this;
     }
 
-    SkewedSetsArgsGeneratorBuilder* setIntersection(double _intersection) {
-        intersection = _intersection;
+    SkewedSetsArgsGeneratorBuilder* set_intersection(double intersection) {
+        intersection_ = intersection;
         return this;
     }
 
-    SkewedSetsArgsGeneratorBuilder* init(size_t _range) override {
-        range = _range;
+    SkewedSetsArgsGeneratorBuilder* init(size_t range) override {
+        range_ = range;
         //        dataMapBuilder->init(range);
-        writeSetBegins = readDistBuilder->getHotLength(range) - range * intersection;
+        write_set_begins_ = read_dist_builder_->get_hot_length(range_) - range_ * intersection_;
         return this;
     }
 
-    SkewedSetsArgsGenerator<K>* build(Random64& _rng) override {
+    SkewedSetsArgsGenerator<K>* build(Random64& rng) override {
         return new SkewedSetsArgsGenerator<K>(
-            range, writeSetBegins, readDistBuilder->build(_rng, range),
-            writeDistBuilder->build(_rng, range), dataMapBuilder->build());
+            range_, write_set_begins_, read_dist_builder_->build(rng, range_),
+            write_dist_builder_->build(rng, range_), data_map_builder_->build());
     }
 
-    void toJson(nlohmann::json& j) const override {
+    void to_json(nlohmann::json& j) const override {
         j["ClassName"] = "SkewedSetsArgsGeneratorBuilder";
-        j["readDistBuilder"] = *readDistBuilder;
-        j["writeDistBuilder"] = *writeDistBuilder;
-        j["intersection"] = intersection;
-        j["dataMapBuilder"] = *dataMapBuilder;
+        j["readDistBuilder"] = *read_dist_builder_;
+        j["writeDistBuilder"] = *write_dist_builder_;
+        j["intersection"] = intersection_;
+        j["dataMapBuilder"] = *data_map_builder_;
     }
 
-    void fromJson(const nlohmann::json& j) override {
-        readDistBuilder = dynamic_cast<SkewedUniformDistributionBuilder*>(
-            getDistributionFromJson(j["readDistBuilder"]));
-        writeDistBuilder = dynamic_cast<SkewedUniformDistributionBuilder*>(
-            getDistributionFromJson(j["writeDistBuilder"]));
-        intersection = j["intersection"];
-        dataMapBuilder = getDataMapFromJson(j["dataMapBuilder"]);
+    void from_json(const nlohmann::json& j) override {
+        read_dist_builder_ = dynamic_cast<SkewedUniformDistributionBuilder*>(
+            get_distribution_from_json(j["readDistBuilder"]));
+        write_dist_builder_ = dynamic_cast<SkewedUniformDistributionBuilder*>(
+            get_distribution_from_json(j["writeDistBuilder"]));
+        intersection_ = j["intersection"];
+        data_map_builder_ = get_data_map_from_json(j["dataMapBuilder"]);
     }
 
-    std::string toString(size_t indents) override {
+    std::string to_string(size_t indents) override {
         return indented_title_with_str_data("Type", "SKEWED_SETS", indents) +
-               indented_title_with_data("Intersection", intersection, indents) +
+               indented_title_with_data("Intersection", intersection_, indents) +
                indented_title("Read Distribution", indents) +
-               readDistBuilder->toString(indents + 1) +
+               read_dist_builder_->to_string(indents + 1) +
                indented_title("Write Distribution", indents) +
-               writeDistBuilder->toString(indents + 1) + indented_title("Data Map", indents) +
-               dataMapBuilder->toString(indents + 1);
+               write_dist_builder_->to_string(indents + 1) + indented_title("Data Map", indents) +
+               data_map_builder_->to_string(indents + 1);
     }
 
     ~SkewedSetsArgsGeneratorBuilder() override {
-        delete readDistBuilder;
-        delete writeDistBuilder;
+        delete read_dist_builder_;
+        delete write_dist_builder_;
         //        delete dataMapBuilder; //TODO may delete twice
     };
 };

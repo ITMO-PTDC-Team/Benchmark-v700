@@ -3,7 +3,6 @@
 //
 #pragma once
 
-#include <algorithm>
 #include <cassert>
 #include "random_xoshiro256p.h"
 #include "plaf.h"
@@ -12,22 +11,22 @@
 class SkewedUniformDistribution : public Distribution {
 private:
     PAD;
-    Random64& rng;
-    Distribution* hotDistribution;
-    Distribution* coldDistribution;
-    double hotProb;
-    size_t hotSetLength;
+    Random64& rng_;
+    Distribution* hot_distribution_;
+    Distribution* cold_distribution_;
+    double hot_prob_;
+    size_t hot_set_length_;
     PAD;
 
 public:
-    SkewedUniformDistribution(Random64& _rng, Distribution* _hotDistribution,
-                              Distribution* _coldDistribution, const double _hotProb,
-                              const size_t _hotSetLength)
-        : hotDistribution(_hotDistribution),
-          coldDistribution(_coldDistribution),
-          rng(_rng),
-          hotProb(_hotProb),
-          hotSetLength(_hotSetLength) {
+    SkewedUniformDistribution(Random64& rng, Distribution* hot_distribution,
+                              Distribution* cold_distribution, const double hot_prob,
+                              const size_t hot_set_length)
+        : hot_distribution_(hot_distribution),
+          cold_distribution_(cold_distribution),
+          rng_(rng),
+          hot_prob_(hot_prob),
+          hot_set_length_(hot_set_length) {
     }
 
     size_t next() override {
@@ -35,18 +34,18 @@ public:
         double z;  // Uniform random number (0 < z < 1)
         // Pull a uniform random number (0 < z < 1)
         do {
-            z = ((double)rng.next() / (double)rng.max_value);
+            z = ((double)rng_.next() / (double)rng_.max_value);
         } while ((z == 0) || (z == 1));
-        if (z < hotProb) {
-            value = hotDistribution->next();
+        if (z < hot_prob_) {
+            value = hot_distribution_->next();
         } else {
-            value = hotSetLength + coldDistribution->next();
+            value = hot_set_length_ + cold_distribution_->next();
         }
         return value;
     }
 
     ~SkewedUniformDistribution() override {
-        delete hotDistribution;
-        delete coldDistribution;
+        delete hot_distribution_;
+        delete cold_distribution_;
     }
 };

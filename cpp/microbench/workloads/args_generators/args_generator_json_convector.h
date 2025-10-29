@@ -16,33 +16,33 @@
 #include "workloads/args_generators/impls/range_query_args_generator.h"
 #include "errors.h"
 
-ArgsGeneratorBuilder* getArgsGeneratorFromJson(const nlohmann::json& j) {
-    std::string className = j["ClassName"];
-    ArgsGeneratorBuilder* argsGeneratorBuilder;
-    if (className == "DefaultArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new DefaultArgsGeneratorBuilder();
-    } else if (className == "SkewedSetsArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new SkewedSetsArgsGeneratorBuilder();
-    } else if (className == "TemporarySkewedArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new TemporarySkewedArgsGeneratorBuilder();
-    } else if (className == "CreakersAndWaveArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new CreakersAndWaveArgsGeneratorBuilder();
-    } else if (className == "CreakersAndWavePrefillArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new CreakersAndWavePrefillArgsGeneratorBuilder();
-    } else if (className == "LeafsHandshakeArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new LeafsHandshakeArgsGeneratorBuilder();
-    } else if (className == "SkewedInsertArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new SkewedInsertArgsGeneratorBuilder();
-    } else if (className == "GeneralizedArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new GeneralizedArgsGeneratorBuilder();
-    } else if (className == "NullArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new NullArgsGeneratorBuilder();
-    } else if (className == "RangeQueryArgsGeneratorBuilder") {
-        argsGeneratorBuilder = new RangeQueryArgsGeneratorBuilder();
+ArgsGeneratorBuilder* get_args_generator_from_json(const nlohmann::json& j) {
+    std::string class_name = j["ClassName"];
+    ArgsGeneratorBuilder* args_generator_builder;
+    if (class_name == "DefaultArgsGeneratorBuilder") {
+        args_generator_builder = new DefaultArgsGeneratorBuilder();
+    } else if (class_name == "SkewedSetsArgsGeneratorBuilder") {
+        args_generator_builder = new SkewedSetsArgsGeneratorBuilder();
+    } else if (class_name == "TemporarySkewedArgsGeneratorBuilder") {
+        args_generator_builder = new TemporarySkewedArgsGeneratorBuilder();
+    } else if (class_name == "CreakersAndWaveArgsGeneratorBuilder") {
+        args_generator_builder = new CreakersAndWaveArgsGeneratorBuilder();
+    } else if (class_name == "CreakersAndWavePrefillArgsGeneratorBuilder") {
+        args_generator_builder = new CreakersAndWavePrefillArgsGeneratorBuilder();
+    } else if (class_name == "LeafsHandshakeArgsGeneratorBuilder") {
+        args_generator_builder = new LeafsHandshakeArgsGeneratorBuilder();
+    } else if (class_name == "SkewedInsertArgsGeneratorBuilder") {
+        args_generator_builder = new SkewedInsertArgsGeneratorBuilder();
+    } else if (class_name == "GeneralizedArgsGeneratorBuilder") {
+        args_generator_builder = new GeneralizedArgsGeneratorBuilder();
+    } else if (class_name == "NullArgsGeneratorBuilder") {
+        args_generator_builder = new NullArgsGeneratorBuilder();
+    } else if (class_name == "RangeQueryArgsGeneratorBuilder") {
+        args_generator_builder = new RangeQueryArgsGeneratorBuilder();
     } else {
-        setbench_error("JSON PARSER: Unknown class name ArgsGeneratorBuilder -- " + className)
+        setbench_error("JSON PARSER: Unknown class name ArgsGeneratorBuilder -- " + class_name)
     }
 
-    argsGeneratorBuilder->fromJson(j);
-    return argsGeneratorBuilder;
+    args_generator_builder->from_json(j);
+    return args_generator_builder;
 }

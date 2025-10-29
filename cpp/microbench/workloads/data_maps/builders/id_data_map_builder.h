@@ -16,14 +16,14 @@ struct IdDataMapBuilder : public DataMapBuilder {
         return new IdDataMap();
     };
 
-    void toJson(nlohmann::json& j) const override {
+    void to_json(nlohmann::json& j) const override {
         j["ClassName"] = "IdDataMapBuilder";
     }
 
-    void fromJson(const nlohmann::json& j) override {
+    void from_json(const nlohmann::json& j) override {
     }
 
-    std::string toString(size_t indents = 1) override {
+    std::string to_string(size_t indents = 1) override {
         return indented_title_with_str_data("Type", "IdDataMap", indents) +
                indented_title_with_data("ID", id, indents);
     }

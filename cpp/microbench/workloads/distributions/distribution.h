@@ -3,6 +3,7 @@
 //
 #pragma once
 
+#include <cstddef>
 struct Distribution {
     virtual size_t next() = 0;
 
@@ -10,12 +11,12 @@ struct Distribution {
 };
 
 struct MutableDistribution : public Distribution {
-    virtual void setRange(size_t range) = 0;
+    virtual void set_range(size_t range) = 0;
 
     virtual size_t next() = 0;
 
     size_t next(size_t range) {
-        setRange(range);
+        set_range(range);
         return this->next();
     }
 };

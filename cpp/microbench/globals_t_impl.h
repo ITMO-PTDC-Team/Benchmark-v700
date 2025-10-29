@@ -3,7 +3,9 @@
 //
 #pragma once
 
-typedef long long test_type;
+#include <cstdint>
+
+typedef int64_t test_type;
 
 // #ifdef REDIS
 //     #define VALUE_TYPE test_type
@@ -66,13 +68,13 @@ struct globals_t {
     volatile bool debug_print;
     PAD;
 
-    globals_t(BenchParameters* _benchParameters)
+    globals_t(workload::BenchParameters* bench_parameters)
         : NO_VALUE(NULL),
           KEY_MIN(0) /*std::numeric_limits<test_type>::min()+1)*/
           ,
-          KEY_MAX(_benchParameters->range + 1),
+          KEY_MAX(bench_parameters->range + 1),
           PREFILL_INTERVAL_MILLIS(200),
-          benchParameters(_benchParameters) {
+          benchParameters(bench_parameters) {
         debug_print = 0;
         srand(time(0));
         for (int i = 0; i < MAX_THREADS_POW2; ++i) {
@@ -82,18 +84,18 @@ struct globals_t {
         start = false;
         done = false;
         running = 0;
-        dsAdapter = NULL;
+        dsAdapter = nullptr;
         garbage = 0;
         curKeySum = 0;
         curSize = 0;
     }
 
     void enable_debug_print() {
-        debug_print = 1;
+        debug_print = true;
     }
 
     void disable_debug_print() {
-        debug_print = 0;
+        debug_print = false;
     }
 
     ~globals_t() {

@@ -11,36 +11,36 @@ template <typename K>
 class DefaultArgsGenerator : public ArgsGenerator<K> {
 private:
     //    PAD;
-    Distribution* distribution;
-    DataMap<K>* data;
+    Distribution* distribution_;
+    DataMap<K>* data_;
     //    PAD;
 
     K next() {
-        size_t index = distribution->next();
-        return data->get(index);
+        size_t index = distribution_->next();
+        return data_->get(index);
     }
 
 public:
-    DefaultArgsGenerator(DataMap<K>* _data, Distribution* _distribution)
-        : data(_data),
-          distribution(_distribution) {
+    DefaultArgsGenerator(DataMap<K>* data, Distribution* distribution)
+        : data_(data),
+          distribution_(distribution) {
     }
 
-    K nextGet() {
+    K next_get() {
         return next();
     }
 
-    K nextInsert() {
+    K next_insert() {
         return next();
     }
 
-    K nextRemove() {
+    K next_remove() {
         return next();
     }
 
-    std::pair<K, K> nextRange() {
-        K left = nextGet();
-        K right = nextGet();
+    std::pair<K, K> next_range() {
+        K left = next_get();
+        K right = next_get();
         if (left > right) {
             std::swap(left, right);
         }
@@ -48,8 +48,8 @@ public:
     }
 
     ~DefaultArgsGenerator() {
-        delete distribution;
-        delete data;
+        delete distribution_;
+        delete data_;
     }
 };
 
@@ -65,51 +65,51 @@ public:
 // template<typename K>
 class DefaultArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 private:
-    size_t range;
+    size_t range_;
 
 public:
     DistributionBuilder* distributionBuilder = new UniformDistributionBuilder();
     DataMapBuilder* dataMapBuilder = new IdDataMapBuilder();
 
-    DefaultArgsGeneratorBuilder* setDistributionBuilder(DistributionBuilder* _distributionBuilder) {
-        distributionBuilder = _distributionBuilder;
+    DefaultArgsGeneratorBuilder* set_distribution_builder(DistributionBuilder* distribution_builder) {
+        distributionBuilder = distribution_builder;
         return this;
     }
 
-    DefaultArgsGeneratorBuilder* setDataMapBuilder(DataMapBuilder* _dataMapBuilder) {
-        dataMapBuilder = _dataMapBuilder;
+    DefaultArgsGeneratorBuilder* set_data_map_builder(DataMapBuilder* data_map_builder) {
+        dataMapBuilder = data_map_builder;
         return this;
     }
 
-    DefaultArgsGeneratorBuilder* init(size_t _range) override {
-        range = _range;
+    DefaultArgsGeneratorBuilder* init(size_t range) override {
+        range_ = range;
         //        dataMapBuilder->init(_range);
         return this;
     }
 
-    DefaultArgsGenerator<K>* build(Random64& _rng) override {
+    DefaultArgsGenerator<K>* build(Random64& rng) override {
         return new DefaultArgsGenerator<K>(dataMapBuilder->build(),
-                                           distributionBuilder->build(_rng, range));
+                                           distributionBuilder->build(rng, range_));
     }
 
-    void toJson(nlohmann::json& j) const override {
+    void to_json(nlohmann::json& j) const override {
         j["ClassName"] = "DefaultArgsGeneratorBuilder";
         j["distributionBuilder"] = *distributionBuilder;
         j["dataMapBuilder"] = *dataMapBuilder;
     }
 
-    void fromJson(const nlohmann::json& j) override {
-        distributionBuilder = getDistributionFromJson(j["distributionBuilder"]);
-        dataMapBuilder = getDataMapFromJson(j["dataMapBuilder"]);
+    void from_json(const nlohmann::json& j) override {
+        distributionBuilder = get_distribution_from_json(j["distributionBuilder"]);
+        dataMapBuilder = get_data_map_from_json(j["dataMapBuilder"]);
     }
 
-    std::string toString(size_t indents = 1) override {
+    std::string to_string(size_t indents = 1) override {
         std::string res;
         res += indented_title_with_str_data("Type", "DEFAULT", indents);
         res += indented_title("Distribution", indents);
-        res += distributionBuilder->toString(indents + 1);
+        res += distributionBuilder->to_string(indents + 1);
         res += indented_title("Data Map", indents);
-        res += dataMapBuilder->toString(indents + 1);
+        res += dataMapBuilder->to_string(indents + 1);
         return res;
 
         //        return indented_title_with_str_data("Type", "DEFAULT", indents)

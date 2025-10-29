@@ -3,11 +3,10 @@
 //
 #pragma once
 
-#include <algorithm>
 #include <cassert>
+#include "globals_extern.h"
 #include "random_xoshiro256p.h"
 #include "plaf.h"
-#include "workloads/distributions/distribution.h"
 #include "workloads/distributions/distribution_builder.h"
 #include "workloads/distributions/impls/zipf_distribution.h"
 
@@ -16,8 +15,8 @@ struct ZipfianDistributionBuilder : public MutableDistributionBuilder {
     double alpha = 1;
     PAD;
 
-    ZipfianDistributionBuilder* setAlpha(double _alpha) {
-        alpha = _alpha;
+    ZipfianDistributionBuilder* set_alpha(double alpha) {
+        alpha = alpha;
         return this;
     }
 
@@ -29,16 +28,16 @@ struct ZipfianDistributionBuilder : public MutableDistributionBuilder {
         return new ZipfDistribution(rng, alpha);
     }
 
-    void toJson(nlohmann::json& j) const override {
+    void to_json(nlohmann::json& j) const override {
         j["ClassName"] = "ZipfianDistributionBuilder";
         j["alpha"] = alpha;
     }
 
-    void fromJson(const nlohmann::json& j) override {
+    void from_json(const nlohmann::json& j) override {
         alpha = j["alpha"];
     }
 
-    std::string toString(size_t indents = 1) override {
+    std::string to_string(size_t indents = 1) override {
         return indented_title_with_str_data("Type", "Zipfian", indents) +
                indented_title_with_data("alpha", alpha, indents);
     };

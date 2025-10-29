@@ -3,6 +3,8 @@
 //
 #pragma once
 
+#include <cstddef>
+
 template <typename K>
 struct DataMap {
     virtual K get(size_t index) = 0;

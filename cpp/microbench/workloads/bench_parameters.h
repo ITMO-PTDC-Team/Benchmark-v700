@@ -6,7 +6,6 @@
 #include "globals_extern.h"
 #include "parameters.h"
 #include "workloads/stop_condition/impls/operation_counter.h"
-#include "workloads/thread_loops/impls/default_thread_loop.h"
 
 struct BenchParameters {
     size_t range;
@@ -27,47 +26,47 @@ struct BenchParameters {
 
     BenchParameters(const BenchParameters& p) = default;
 
-    BenchParameters& createDefaultPrefill(size_t threadNum) {
+    BenchParameters& create_default_prefill(size_t thread_num) {
         prefill = (new Parameters())
-                      ->setStopCondition(new OperationCounter(range / 2))
-                      ->addThreadLoopBuilder(new PrefillInsertThreadLoopBuilder(), threadNum);
+                      ->set_stop_condition(new OperationCounter(range / 2))
+                      ->add_thread_loop_builder(new PrefillInsertThreadLoopBuilder(), thread_num);
         return *this;
     }
 
-    BenchParameters& createDefaultPrefill() {
+    BenchParameters& create_default_prefill() {
         prefill = new Parameters();
         prefill->stopCondition = new OperationCounter(range / 2);
-        prefill->addThreadLoopBuilder(new PrefillInsertThreadLoopBuilder(), 1);
-        return createDefaultPrefill(1);
+        prefill->add_thread_loop_builder(new PrefillInsertThreadLoopBuilder(), 1);
+        return create_default_prefill(1);
     }
 
-    BenchParameters& setRange(size_t _range) {
-        range = _range;
+    BenchParameters& set_range(size_t range) {
+        range = range;
         return *this;
     }
 
-    BenchParameters& setTest(Parameters* _test) {
-        test = _test;
+    BenchParameters& set_test(Parameters* test) {
+        test = test;
         return *this;
     }
 
-    BenchParameters& setPrefill(Parameters* _prefill) {
-        prefill = _prefill;
+    BenchParameters& set_prefill(Parameters* prefill) {
+        prefill = prefill;
         return *this;
     }
 
-    BenchParameters& setWarmUp(Parameters* _warmUp) {
-        warmUp = _warmUp;
+    BenchParameters& set_warm_up(Parameters* warm_up) {
+        warmUp = warm_up;
         return *this;
     }
 
-    size_t getTotalThreads() {
-        return prefill->getNumThreads() + warmUp->getNumThreads() + test->getNumThreads();
+    size_t get_total_threads() {
+        return prefill->get_num_threads() + warmUp->get_num_threads() + test->get_num_threads();
     }
 
-    size_t getMaxThreads() {
-        return std::max(prefill->getNumThreads(),
-                        std::max(warmUp->getNumThreads(), test->getNumThreads()));
+    size_t get_max_threads() {
+        return std::max(prefill->get_num_threads(),
+                        std::max(warmUp->get_num_threads(), test->get_num_threads()));
     }
 
     void init() {
@@ -80,28 +79,28 @@ struct BenchParameters {
         //        if (warmUp == nullptr) {
         //            warmUp = new Parameters();
         //        }
-        initDataMapBuilders(range);
+        init_data_map_builders(range);
         prefill->init(range);
         warmUp->init(range);
         test->init(range);
     }
 
-    std::string toString(size_t indents = 1) {
+    std::string to_string(size_t indents = 1) {
         return indented_title_with_data("Range", range, indents) +
-               (prefill->getNumThreads() == 0
-                    ? toStringStage("without prefill")
-                    : toStringStage("prefill parameters") + prefill->toString(indents + 1)) +
-               (warmUp->getNumThreads() == 0
-                    ? toStringStage("without warmUp")
-                    : toStringStage("warmUp parameters") + warmUp->toString(indents + 1)) +
-               toStringStage("test parameters") + test->toString(indents + 1);
+               (prefill->get_num_threads() == 0
+                    ? to_string_stage("without prefill")
+                    : to_string_stage("prefill parameters") + prefill->to_string(indents + 1)) +
+               (warmUp->get_num_threads() == 0
+                    ? to_string_stage("without warmUp")
+                    : to_string_stage("warmUp parameters") + warmUp->to_string(indents + 1)) +
+               to_string_stage("test parameters") + test->to_string(indents + 1);
     }
 
     ~BenchParameters() {
         delete test;
         delete prefill;
         delete warmUp;
-        deleteDataMapBuilders();
+        delete_data_map_builders();
     }
 };
 

@@ -7,7 +7,7 @@
 #include "data_map.h"
 #include "json/single_include/nlohmann/json.hpp"
 
-typedef long long K;
+using K = long long;
 
 // template<typename K>
 struct DataMapBuilder {
@@ -19,11 +19,11 @@ struct DataMapBuilder {
 
     virtual DataMap<K>* build() = 0;
 
-    virtual std::string toString(size_t indents = 1) = 0;
+    virtual std::string to_string(size_t indents = 1) = 0;
 
-    virtual void toJson(nlohmann::json& j) const = 0;
+    virtual void to_json(nlohmann::json& j) const = 0;
 
-    virtual void fromJson(const nlohmann::json& j) = 0;
+    virtual void from_json(const nlohmann::json& j) = 0;
 
     virtual ~DataMapBuilder() = default;
 };
@@ -31,11 +31,11 @@ struct DataMapBuilder {
 size_t DataMapBuilder::id_counter = 0;
 
 void to_json(nlohmann::json& j, const DataMapBuilder& s) {
-    s.toJson(j);
+    s.to_json(j);
     j["id"] = s.id;
     assert(j.contains("ClassName"));
 }
 
 void from_json(const nlohmann::json& j, DataMapBuilder& s) {
-    s.fromJson(j);
+    s.from_json(j);
 }

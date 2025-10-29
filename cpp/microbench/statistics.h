@@ -36,7 +36,7 @@ struct Statistic {
     long long throughputUpdates;
     long long throughputAll;
 
-    Statistic(double _SECONDS_TO_RUN) {
+    explicit Statistic(double seconds_to_run) {
         totalGets = GSTATS_GET_STAT_METRICS(num_searches, TOTAL)[0].sum;
         totalRQs = GSTATS_GET_STAT_METRICS(num_rq, TOTAL)[0].sum;
         totalQueries = totalGets + totalRQs;
@@ -54,7 +54,7 @@ struct Statistic {
         totalFailRemoves = GSTATS_GET_STAT_METRICS(num_fail_removes, TOTAL)[0].sum;
         totalFailUpdates = totalFailInserts + totalFailRemoves;
 
-        SECONDS_TO_RUN = _SECONDS_TO_RUN;  // (MILLIS_TO_RUN)/1000.;
+        SECONDS_TO_RUN = seconds_to_run;  // (MILLIS_TO_RUN)/1000.;
         totalAll = totalUpdates + totalQueries;
         throughputSearches = (long long)(totalGets / SECONDS_TO_RUN);
         throughputRQs = (long long)(totalRQs / SECONDS_TO_RUN);
@@ -63,7 +63,7 @@ struct Statistic {
         throughputAll = (long long)(totalAll / SECONDS_TO_RUN);
     }
 
-    void printTotalStatisticShort(bool detail = false) const {
+    void print_total_statistic_short(bool detail = false) const {
         COUTATOMIC(std::endl);
         COUTATOMIC("total_gets=" << totalGets << std::endl)
         if (detail) {
@@ -96,7 +96,7 @@ struct Statistic {
         COUTATOMIC(std::endl);
     }
 
-    void printTotalStatistic(bool detail = false) const {
+    void print_total_statistic(bool detail = false) const {
         COUTATOMIC(std::endl)
         COUTATOMIC(indented_title_with_data("total gets", totalGets, 1, 32))
         if (detail) {

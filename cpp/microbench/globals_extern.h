@@ -121,37 +121,37 @@ extern std::atomic_bool ___validateops;
 
 #endif
 
-std::string indented_title(const std::string& title, size_t indents = 1, size_t indentLength = 2) {
-    return std::string(indents * indentLength, ' ') + title + ":\n";
+std::string indented_title(const std::string& title, size_t indents = 1, size_t indent_length = 2) {
+    return std::string(indents * indent_length, ' ') + title + ":\n";
 }
 
 template <typename T>
 std::string indented_title_with_data(const std::string& title, const T& data, size_t indents = 1,
-                                     size_t lineLength = 28, size_t indentLength = 2) {
-    return std::string(indents * indentLength, ' ') + title + ":" +
-           (title.size() + indents * indentLength < lineLength
-                ? std::string(lineLength - title.size() - indents * indentLength, ' ')
+                                     size_t line_length = 28, size_t indent_length = 2) {
+    return std::string(indents * indent_length, ' ') + title + ":" +
+           (title.size() + indents * indent_length < line_length
+                ? std::string(line_length - title.size() - indents * indent_length, ' ')
                 : "\t") +
            std::to_string(data) + "\n";
 }
 
 std::string indented_title_with_str_data(const std::string& title, const std::string& data,
-                                         size_t indents = 1, size_t lineLength = 28,
-                                         size_t indentLength = 2) {
-    return std::string(indents * indentLength, ' ') + title + ":" +
-           (title.size() + indents * indentLength < lineLength
-                ? std::string(lineLength - title.size() - indents * indentLength, ' ')
+                                         size_t indents = 1, size_t line_length = 28,
+                                         size_t indent_length = 2) {
+    return std::string(indents * indent_length, ' ') + title + ":" +
+           (title.size() + indents * indent_length < line_length
+                ? std::string(line_length - title.size() - indents * indent_length, ' ')
                 : "\t") +
            data + "\n";
 }
 
-std::string toStringStage(const std::string& stageName) {
-    return std::string(80, '-') + "\n" + stageName + "\n" + std::string(80, '-') + "\n";
+std::string to_string_stage(const std::string& stage_name) {
+    return std::string(80, '-') + "\n" + stage_name + "\n" + std::string(80, '-') + "\n";
 }
 
-std::string toStringBigStage(const std::string& stageName) {
-    size_t size = (78 - stageName.size()) / 2;
+std::string to_string_big_stage(const std::string& stage_name) {
+    size_t size = (78 - stage_name.size()) / 2;
     return std::string(80, '#') + "\n" +
-           std::string(78 - size * 2 - stageName.size() == 0 ? size : size + 1, '#') + ' ' +
-           stageName + ' ' + std::string(size, '#') + "\n" + std::string(80, '#') + "\n";
+           std::string(78 - size * 2 - stage_name.size() == 0 ? size : size + 1, '#') + ' ' +
+           stage_name + ' ' + std::string(size, '#') + "\n" + std::string(80, '#') + "\n";
 }

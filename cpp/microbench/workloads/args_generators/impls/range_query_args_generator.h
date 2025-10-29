@@ -8,34 +8,34 @@ template <typename K>
 class RangeQueryArgsGenerator : public ArgsGenerator<K> {
 private:
     //    PAD;
-    Distribution* distribution;
-    DataMap<K>* data;
-    size_t interval;
+    Distribution* distribution_;
+    DataMap<K>* data_;
+    size_t interval_;
     //    PAD;
 
 public:
-    RangeQueryArgsGenerator(DataMap<K>* _data, Distribution* _distribution, size_t _interval)
-        : data(_data),
-          distribution(_distribution),
-          interval(_interval) {
+    RangeQueryArgsGenerator(DataMap<K>* data, Distribution* distribution, size_t interval)
+        : data_(data),
+          distribution_(distribution),
+          interval_(interval) {
     }
 
-    K nextGet() {
+    K next_get() {
         setbench_error("Operation not supported");
     }
 
-    K nextInsert() {
+    K next_insert() {
         setbench_error("Operation not supported");
     }
 
-    K nextRemove() {
+    K next_remove() {
         setbench_error("Operation not supported");
     }
 
-    std::pair<K, K> nextRange() {
-        size_t index = distribution->next();
-        K left = data->get(index);
-        K right = data->get(index + interval);
+    std::pair<K, K> next_range() {
+        size_t index = distribution_->next();
+        K left = data_->get(index);
+        K right = data_->get(index + interval_);
         if (left > right) {
             std::swap(left, right);
         }
@@ -43,8 +43,8 @@ public:
     }
 
     ~RangeQueryArgsGenerator() {
-        delete distribution;
-        delete data;
+        delete distribution_;
+        delete data_;
     }
 };
 
@@ -60,60 +60,60 @@ public:
 // template<typename K>
 class RangeQueryArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 private:
-    size_t range;
-    size_t interval;
+    size_t range_;
+    size_t interval_;
 
 public:
     DistributionBuilder* distributionBuilder = new UniformDistributionBuilder();
     DataMapBuilder* dataMapBuilder = new IdDataMapBuilder();
 
-    RangeQueryArgsGeneratorBuilder* setDistributionBuilder(
-        DistributionBuilder* _distributionBuilder) {
-        distributionBuilder = _distributionBuilder;
+    RangeQueryArgsGeneratorBuilder* set_distribution_builder(
+        DistributionBuilder* distribution_builder) {
+        distributionBuilder = distribution_builder;
         return this;
     }
 
-    RangeQueryArgsGeneratorBuilder* setDataMapBuilder(DataMapBuilder* _dataMapBuilder) {
-        dataMapBuilder = _dataMapBuilder;
+    RangeQueryArgsGeneratorBuilder* set_data_map_builder(DataMapBuilder* data_map_builder) {
+        dataMapBuilder = data_map_builder;
         return this;
     }
 
-    RangeQueryArgsGeneratorBuilder* setInterval(size_t _interval) {
-        interval = _interval;
+    RangeQueryArgsGeneratorBuilder* set_interval(size_t interval) {
+        interval_ = interval;
         return this;
     }
 
-    RangeQueryArgsGeneratorBuilder* init(size_t _range) override {
-        range = _range;
+    RangeQueryArgsGeneratorBuilder* init(size_t range) override {
+        range_ = range;
         return this;
     }
 
-    RangeQueryArgsGenerator<K>* build(Random64& _rng) override {
+    RangeQueryArgsGenerator<K>* build(Random64& rng) override {
         return new RangeQueryArgsGenerator<K>(dataMapBuilder->build(),
-                                              distributionBuilder->build(_rng, range), interval);
+                                              distributionBuilder->build(rng, range_), interval_);
     }
 
-    void toJson(nlohmann::json& j) const override {
+    void to_json(nlohmann::json& j) const override {
         j["ClassName"] = "RangeQueryArgsGeneratorBuilder";
-        j["interval"] = interval;
+        j["interval"] = interval_;
         j["distributionBuilder"] = *distributionBuilder;
         j["dataMapBuilder"] = *dataMapBuilder;
     }
 
-    void fromJson(const nlohmann::json& j) override {
-        interval = j["interval"];
-        distributionBuilder = getDistributionFromJson(j["distributionBuilder"]);
-        dataMapBuilder = getDataMapFromJson(j["dataMapBuilder"]);
+    void from_json(const nlohmann::json& j) override {
+        interval_ = j["interval"];
+        distributionBuilder = get_distribution_from_json(j["distributionBuilder"]);
+        dataMapBuilder = get_data_map_from_json(j["dataMapBuilder"]);
     }
 
-    std::string toString(size_t indents = 1) override {
+    std::string to_string(size_t indents = 1) override {
         std::string res;
         res += indented_title_with_str_data("Type", "RangeQuery", indents);
-        res += indented_title_with_str_data("Interval", std::to_string(interval), indents);
+        res += indented_title_with_str_data("Interval", std::to_string(interval_), indents);
         res += indented_title("Distribution", indents);
-        res += distributionBuilder->toString(indents + 1);
+        res += distributionBuilder->to_string(indents + 1);
         res += indented_title("Data Map", indents);
-        res += dataMapBuilder->toString(indents + 1);
+        res += dataMapBuilder->to_string(indents + 1);
         return res;
     }
 

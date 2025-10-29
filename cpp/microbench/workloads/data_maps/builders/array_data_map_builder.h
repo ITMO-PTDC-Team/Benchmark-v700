@@ -4,8 +4,8 @@
 #pragma once
 
 #include <random>
+#include "globals_extern.h"
 #include "workloads/data_maps/data_map_builder.h"
-#include "workloads/data_maps/impls/id_data_map.h"
 #include "workloads/data_maps/impls/array_data_map.h"
 
 class ArrayDataMapBuilder : public DataMapBuilder {
@@ -29,14 +29,14 @@ public:
         return new ArrayDataMap(data);
     }
 
-    void toJson(nlohmann::json& j) const override {
+    void to_json(nlohmann::json& j) const override {
         j["ClassName"] = "ArrayDataMapBuilder";
     }
 
-    void fromJson(const nlohmann::json& j) override {
+    void from_json(const nlohmann::json& j) override {
     }
 
-    std::string toString(size_t indents = 1) override {
+    std::string to_string(size_t indents = 1) override {
         return indented_title_with_str_data("Type", "ArrayDataMap", indents) +
                indented_title_with_data("ID", id, indents);
     }

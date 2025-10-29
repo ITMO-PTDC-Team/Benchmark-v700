@@ -78,4 +78,4 @@
     gstats_handle_stat(LONG_LONG, timer_duration, 1, {}) \
     gstats_handle_stat(LONG_LONG, duration_all_ops, 1, { /* note: used by brown_ext_ist_lf */ \
             gstats_output_item(PRINT_RAW, SUM, TOTAL) \
-    }) \
+    })

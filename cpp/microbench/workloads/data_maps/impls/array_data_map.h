@@ -8,18 +8,18 @@
 
 class ArrayDataMap : public DataMap<long long> {
 private:
-    long long* data;
+    long long* data_;
 
 public:
-    ArrayDataMap(long long int* data)
-        : data(data) {
+    explicit ArrayDataMap(long long int* data)
+        : data_(data) {
     }
 
     long long get(size_t index) override {
-        return data[index];
+        return data_[index];
     }
 
     ~ArrayDataMap() {
-        delete[] data;
+        delete[] data_;
     }
 };

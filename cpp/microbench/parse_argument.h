@@ -3,22 +3,24 @@
 //
 #pragma once
 
+#include <cstddef>
+
 struct ParseArgument {
     size_t pointer;
     size_t length;
     char** args;
 
-    ParseArgument(size_t _length, char** _args)
-        : length(_length),
-          args(_args),
+    ParseArgument(size_t length, char** args)
+        : length(length),
+          args(args),
           pointer(0) {
     }
 
-    char* getCurrent() {
+    char* get_current() {
         return args[pointer];
     }
 
-    char* getNext() {
+    char* get_next() {
         return args[++pointer];
     }
 
@@ -27,7 +29,7 @@ struct ParseArgument {
         return *this;
     }
 
-    bool hasNext() {
+    bool has_next() {
         return pointer < length;
     }
 };

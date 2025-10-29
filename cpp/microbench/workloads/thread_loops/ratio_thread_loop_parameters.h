@@ -15,30 +15,30 @@ struct RatioThreadLoopParameters {
         : RatioThreadLoopParameters(0, 0, 0) {
     }
 
-    RatioThreadLoopParameters(double insRatio, double remRatio, double rqRatio)
-        : INS_RATIO(insRatio),
-          REM_RATIO(remRatio),
-          RQ_RATIO(rqRatio) {
+    RatioThreadLoopParameters(double ins_ratio, double rem_ratio, double rq_ratio)
+        : INS_RATIO(ins_ratio),
+          REM_RATIO(rem_ratio),
+          RQ_RATIO(rq_ratio) {
     }
 
     RatioThreadLoopParameters(const RatioThreadLoopParameters& ratio) = default;
 
-    RatioThreadLoopParameters* setInsRatio(double insRatio) {
-        INS_RATIO = insRatio;
+    RatioThreadLoopParameters* set_ins_ratio(double ins_ratio) {
+        INS_RATIO = ins_ratio;
         return this;
     }
 
-    RatioThreadLoopParameters* setRemRatio(double remRatio) {
-        REM_RATIO = remRatio;
+    RatioThreadLoopParameters* set_rem_ratio(double rem_ratio) {
+        REM_RATIO = rem_ratio;
         return this;
     }
 
-    RatioThreadLoopParameters* setRqRatio(double rqRatio) {
-        RQ_RATIO = rqRatio;
+    RatioThreadLoopParameters* set_rq_ratio(double rq_ratio) {
+        RQ_RATIO = rq_ratio;
         return this;
     }
 
-    std::string toString(const size_t indents = 1) {
+    std::string to_string(const size_t indents = 1) {
         return indented_title_with_data("INS_RATIO", INS_RATIO, indents) +
                indented_title_with_data("REM_RATIO", REM_RATIO, indents) +
                indented_title_with_data("RQ_RATIO", RQ_RATIO, indents);

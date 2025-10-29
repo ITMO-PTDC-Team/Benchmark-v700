@@ -11,22 +11,22 @@
 class UniformDistribution : public MutableDistribution {
 private:
     PAD;
-    Random64& rng;
-    size_t range;
+    Random64& rng_;
+    size_t range_;
     PAD;
 
 public:
-    UniformDistribution(Random64& _rng, const size_t _range = 0)
-        : rng(_rng),
-          range(_range) {
+    explicit UniformDistribution(Random64& rng, const size_t range = 0)
+        : rng_(rng),
+          range_(range) {
     }
 
-    void setRange(size_t _maxKey) override {
-        range = _maxKey;
+    void set_range(size_t max_key) override {
+        range_ = max_key;
     }
 
     size_t next() override {
-        size_t result = rng.next(range);
+        size_t result = rng_.next(range_);
         return result;
     }
 

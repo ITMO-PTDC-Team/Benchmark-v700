@@ -7,19 +7,19 @@ class NullArgsGenerator : public ArgsGenerator<K> {
 public:
     NullArgsGenerator() = default;
 
-    K nextGet() {
+    K next_get() {
         setbench_error("Operation not supported");
     }
 
-    K nextInsert() {
+    K next_insert() {
         setbench_error("Operation not supported");
     }
 
-    K nextRemove() {
+    K next_remove() {
         setbench_error("Operation not supported");
     }
 
-    std::pair<K, K> nextRange() {
+    std::pair<K, K> next_range() {
         setbench_error("Operation not supported");
     }
 
@@ -32,23 +32,23 @@ public:
 // template<typename K>
 class NullArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 public:
-    NullArgsGeneratorBuilder* init(size_t _range) override {
+    NullArgsGeneratorBuilder* init(size_t range) override {
         //        dataMapBuilder->init(_range);
         return this;
     }
 
-    NullArgsGenerator<K>* build(Random64& _rng) override {
+    NullArgsGenerator<K>* build(Random64& rng) override {
         return new NullArgsGenerator<K>();
     }
 
-    void toJson(nlohmann::json& j) const override {
+    void to_json(nlohmann::json& j) const override {
         j["ClassName"] = "NullArgsGeneratorBuilder";
     }
 
-    void fromJson(const nlohmann::json& j) override {
+    void from_json(const nlohmann::json& j) override {
     }
 
-    std::string toString(size_t indents = 1) override {
+    std::string to_string(size_t indents = 1) override {
         std::string res;
         res += indented_title_with_str_data("Type", "NULL", indents);
         return res;

@@ -16,6 +16,8 @@
 #include <perftools.h>
 #include <regex>
 
+#include "random_xoshiro256p.h"
+
 #define MAIN_BENCH
 
 #ifdef PRINT_JEMALLOC_STATS
@@ -67,7 +69,6 @@ __thread int tid = 0;
 
 #include "globals_extern.h"
 #include "json/single_include/nlohmann/json.hpp"
-#include "random_xoshiro256p.h"
 #include "binding.h"
 #include "papi_util_impl.h"
 #include "rq_provider.h"
@@ -173,7 +174,7 @@ GSTATS_DECLARE_STATS_OBJECT(MAX_THREADS_POW2);
 #include "statistics.h"
 #include "parse_argument.h"
 
-void bindThreads(int nthreads) {
+void bind_threads(int nthreads) {
     // setup thread pinning/binding
 
     binding_configurePolicy(nthreads);
@@ -188,30 +189,30 @@ void bindThreads(int nthreads) {
     //    }
 }
 
-void createDataStructure(globals_t* g) {
-    g->dsAdapter = new DS_ADAPTER_T(g->benchParameters->getMaxThreads(), g->KEY_MIN, g->KEY_MAX,
+void create_data_structure(globals_t* g) {
+    g->dsAdapter = new DS_ADAPTER_T(g->benchParameters->get_max_threads(), g->KEY_MIN, g->KEY_MAX,
                                     g->NO_VALUE, g->rngs);
 }
 
-Statistic getStatistic(long long elapsedMillis) {
-    return Statistic(elapsedMillis / 1000.);
+Statistic get_statistic(long long elapsed_millis) {
+    return Statistic(elapsed_millis / 1000.);
 }
 
 void execute(globals_t* g, Parameters* parameters) {
     std::thread** threads = new std::thread*[MAX_THREADS_POW2];
-    ThreadLoop** threadLoops = parameters->getWorkload(g, g->rngs);
+    ThreadLoop** thread_loops = parameters->get_workload(g, g->rngs);
 
     std::cout << "binding threads...\n";
-    binding_setCustom(parameters->getPin());
-    bindThreads(parameters->getNumThreads());
+    binding_setCustom(parameters->get_pin());
+    bind_threads(parameters->get_num_threads());
 
     std::cout << "creating threads...\n";
 
-    for (int i = 0; i < parameters->getNumThreads(); ++i) {
-        threads[i] = new std::thread(&ThreadLoop::run, threadLoops[i]);
+    for (int i = 0; i < parameters->get_num_threads(); ++i) {
+        threads[i] = new std::thread(&ThreadLoop::run, thread_loops[i]);
     }
 
-    while (g->running < parameters->getNumThreads()) {
+    while (g->running < parameters->get_num_threads()) {
         TRACE COUTATOMIC("main thread: waiting for threads to START running=" << g->running
                                                                               << std::endl);
     }  // wait for all threads to be ready
@@ -227,11 +228,11 @@ void execute(globals_t* g, Parameters* parameters) {
     ___timeline_use = 1;
 #endif
 
-    parameters->stopCondition->start(parameters->getNumThreads());
+    parameters->stopCondition->start(parameters->get_num_threads());
     g->start = true;
     SOFTWARE_BARRIER;
 
-    for (size_t i = 0; i < parameters->getNumThreads(); ++i) {
+    for (size_t i = 0; i < parameters->get_num_threads(); ++i) {
         threads[i]->join();
     }
 
@@ -294,7 +295,7 @@ void execute(globals_t* g, Parameters* parameters) {
 
     parameters->stopCondition->clean();
     delete[] threads;
-    delete[] threadLoops;
+    delete[] thread_loops;
     binding_deinit();
 
     g->start = false;
@@ -302,10 +303,10 @@ void execute(globals_t* g, Parameters* parameters) {
 }
 
 void run(globals_t* g) {
-    int TOTAL_THREADS = g->benchParameters->getTotalThreads();
+    int total_threads = g->benchParameters->get_total_threads();
 
     using namespace std::chrono;
-    papi_init_program(TOTAL_THREADS);
+    papi_init_program(total_threads);
 
 #ifdef KEY_DEPTH_TOTAL_STAT
     key_depth_total_sum__ = 0;
@@ -323,7 +324,7 @@ void run(globals_t* g) {
 #endif
 
     // create the actual data structure
-    createDataStructure(g);
+    create_data_structure(g);
 
     INIT_ALL;
 
@@ -333,32 +334,32 @@ void run(globals_t* g) {
 
     DEBUG_PRINT_ARENA_STATS;
     COUTATOMIC(std::endl);
-    COUTATOMIC(toStringBigStage("BEGIN RUNNING"))
+    COUTATOMIC(to_string_big_stage("BEGIN RUNNING"))
     COUTATOMIC(std::endl);
 
     /**
      * PREFILL STAGE
      */
-    if (g->benchParameters->prefill->getNumThreads() != 0) {
-        COUTATOMIC(toStringStage("Prefill stage"))
+    if (g->benchParameters->prefill->get_num_threads() != 0) {
+        COUTATOMIC(to_string_stage("Prefill stage"))
 
         execute(g, g->benchParameters->prefill);
 
         {
             // print prefilling status information
             using namespace std::chrono;
-            const long long totalUpdates = GSTATS_OBJECT_NAME.get_sum<long long>(num_inserts) +
+            const long long total_updates = GSTATS_OBJECT_NAME.get_sum<long long>(num_inserts) +
                                            GSTATS_OBJECT_NAME.get_sum<long long>(num_removes);
             g->curKeySum += GSTATS_OBJECT_NAME.get_sum<long long>(key_checksum);
             g->curSize += GSTATS_OBJECT_NAME.get_sum<long long>(num_successful_inserts) -
                           GSTATS_OBJECT_NAME.get_sum<long long>(num_successful_removes);
-            auto elapsedMillis = duration_cast<milliseconds>(g->endTime - g->startTime).count();
+            auto elapsed_millis = duration_cast<milliseconds>(g->endTime - g->startTime).count();
             COUTATOMIC("finished prefilling to size "
                        << g->curSize  // << " for expected size "// << expectedSize
-                       << " keysum=" << g->curKeySum << ", performing " << totalUpdates
-                       << " updates; total_prefilling_elapsed_ms=" << elapsedMillis << " ms)"
+                       << " keysum=" << g->curKeySum << ", performing " << total_updates
+                       << " updates; total_prefilling_elapsed_ms=" << elapsed_millis << " ms)"
                        << std::endl)
-            std::cout << "prefill_millis=" << elapsedMillis << std::endl;
+            std::cout << "prefill_millis=" << elapsed_millis << std::endl;
             GSTATS_CLEAR_ALL;
 
             // print total prefilling time
@@ -366,47 +367,47 @@ void run(globals_t* g) {
         }
 
     } else {
-        COUTATOMIC(toStringStage("Without Prefill stage"))
+        COUTATOMIC(to_string_stage("Without Prefill stage"))
     }
 
     /**
      * WARM UP STAGE
      */
-    if (g->benchParameters->warmUp->getNumThreads() != 0) {
-        COUTATOMIC(toStringStage("WarmUp stage"))
+    if (g->benchParameters->warmUp->get_num_threads() != 0) {
+        COUTATOMIC(to_string_stage("WarmUp stage"))
 
         execute(g, g->benchParameters->warmUp);
 
         // print warm up status information
         using namespace std::chrono;
-        const long long totalUpdates = GSTATS_OBJECT_NAME.get_sum<long long>(num_inserts) +
+        const long long total_updates = GSTATS_OBJECT_NAME.get_sum<long long>(num_inserts) +
                                        GSTATS_OBJECT_NAME.get_sum<long long>(num_removes);
         g->curKeySum += GSTATS_OBJECT_NAME.get_sum<long long>(key_checksum);
         g->curSize += GSTATS_OBJECT_NAME.get_sum<long long>(num_successful_inserts) -
                       GSTATS_OBJECT_NAME.get_sum<long long>(num_successful_removes);
         auto now = high_resolution_clock::now();
-        auto elapsedMillis = duration_cast<milliseconds>(g->endTime - g->startTime).count();
+        auto elapsed_millis = duration_cast<milliseconds>(g->endTime - g->startTime).count();
         COUTATOMIC("finished warm up to size "
                    << g->curSize  // << " for expected size "// << expectedSize
-                   << " keysum=" << g->curKeySum << ", performing " << totalUpdates
-                   << " updates; total_prefilling_elapsed_ms=" << elapsedMillis << " ms)"
+                   << " keysum=" << g->curKeySum << ", performing " << total_updates
+                   << " updates; total_prefilling_elapsed_ms=" << elapsed_millis << " ms)"
                    << std::endl)
-        std::cout << "warm up millis=" << elapsedMillis << std::endl;
+        std::cout << "warm up millis=" << elapsed_millis << std::endl;
         GSTATS_CLEAR_ALL;
     } else {
-        COUTATOMIC(toStringStage("Without WarmUp stage"))
+        COUTATOMIC(to_string_stage("Without WarmUp stage"))
     }
 
     /**
      * TEST STAGE
      */
 
-    std::cout << toStringStage("Test stage");
+    std::cout << to_string_stage("Test stage");
 
     execute(g, g->benchParameters->test);
 
     COUTATOMIC(std::endl);
-    COUTATOMIC(toStringBigStage("END RUNNING"))
+    COUTATOMIC(to_string_big_stage("END RUNNING"))
     COUTATOMIC(std::endl);
 
     COUTATOMIC(((g->elapsedMillis + g->elapsedMillisNapping) / 1000.) << "s" << std::endl);
@@ -415,16 +416,16 @@ void run(globals_t* g) {
     DEINIT_ALL;
 }
 
-void printExecutionTime(globals_t* g) {
-    auto programExecutionElapsed =
+void print_execution_time(globals_t* g) {
+    auto program_execution_elapsed =
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::high_resolution_clock::now() - g->programExecutionStartTime)
             .count();
-    std::cout << "total_execution_walltime=" << (programExecutionElapsed / 1000.) << "s"
+    std::cout << "total_execution_walltime=" << (program_execution_elapsed / 1000.) << "s"
               << std::endl;
 }
 
-void printOutput(globals_t* g, bool detailStats = true) {
+void print_output(globals_t* g, bool detail_stats = true) {
     std::cout << "PRODUCING OUTPUT" << std::endl;
 
 #ifdef KEY_DEPTH_TOTAL_STAT
@@ -483,24 +484,24 @@ void printOutput(globals_t* g, bool detailStats = true) {
 
 #ifdef USE_GSTATS
     GSTATS_COMPUTE_STATS;
-    if (detailStats) {
+    if (detail_stats) {
         GSTATS_PRINT;
         std::cout << std::endl;
     }
 #endif
 
-    long long threadsKeySum = 0;
-    long long threadsSize = 0;
+    long long threads_key_sum = 0;
+    long long threads_size = 0;
 
 #ifdef USE_GSTATS
     {
-        threadsKeySum = GSTATS_GET_STAT_METRICS(key_checksum, TOTAL)[0].sum + g->curKeySum;
+        threads_key_sum = GSTATS_GET_STAT_METRICS(key_checksum, TOTAL)[0].sum + g->curKeySum;
 //        threadsSize = GSTATS_GET_STAT_METRICS(size_checksum, TOTAL)[0].sum + g->curSize;
 #ifdef USE_TREE_STATS
         long long dsKeySum = (treeStats) ? treeStats->getSumOfKeys() : threadsKeySum;
         long long dsSize = (treeStats) ? treeStats->getKeys() : -1;  // threadsSize;
 #endif
-        std::cout << "threads_final_keysum=" << threadsKeySum << std::endl;
+        std::cout << "threads_final_keysum=" << threads_key_sum << std::endl;
 //         std::cout<<"threads_final_size="<<threadsSize<<std::endl;
 #ifdef USE_TREE_STATS
         std::cout << "final_keysum=" << dsKeySum << std::endl;
@@ -532,18 +533,18 @@ void printOutput(globals_t* g, bool detailStats = true) {
         std::cout << "Structural validation OK." << std::endl;
     } else {
         std::cout << "Structural validation FAILURE." << std::endl;
-        printExecutionTime(g);
+        print_execution_time(g);
         exit(-1);
     }
 #endif
 
-    long long totalAll = 0;
+    long long total_all = 0;
 
 #ifdef USE_GSTATS
     {
-        Statistic statistic = getStatistic(g->elapsedMillis);
-        statistic.printTotalStatistic(true);
-        totalAll = statistic.totalAll;
+        Statistic statistic = get_statistic(g->elapsedMillis);
+        statistic.print_total_statistic(true);
+        total_all = statistic.totalAll;
     }
 #endif
 
@@ -570,7 +571,7 @@ void printOutput(globals_t* g, bool detailStats = true) {
     delete[] key_depth_sum__;
     delete[] key_depth_cnt__;
 #endif
-    papi_print_counters(totalAll);
+    papi_print_counters(total_all);
 #ifdef USE_TREE_STATS
     if (treeStats)
         delete treeStats;
@@ -589,9 +590,9 @@ void printOutput(globals_t* g, bool detailStats = true) {
 }
 
 template <typename T>
-T* parseJsonFile(const std::string& fileName) {
+T* parse_json_file(const std::string& file_name) {
     std::ifstream fin;
-    fin.open(fileName);
+    fin.open(file_name);
 
     nlohmann::json j = nlohmann::json::parse(fin);
     T* t = new T(j);
@@ -601,9 +602,9 @@ T* parseJsonFile(const std::string& fileName) {
 }
 
 template <typename T>
-void writeJsonFile(const std::string& fileName, T& t) {
+void write_json_file(const std::string& file_name, T& t) {
     std::ofstream fout;
-    fout.open(fileName);
+    fout.open(file_name);
 
     nlohmann::json j = t;
 
@@ -617,59 +618,59 @@ int main(int argc, char** argv) {
 
     std::cout << "binary=" << argv[0] << std::endl;
 
-    BenchParameters* benchParameters = new BenchParameters();
+    BenchParameters* bench_parameters = new BenchParameters();
     Parameters* test = nullptr;
-    Parameters* warmUp = nullptr;
+    Parameters* warm_up = nullptr;
     Parameters* prefill = nullptr;
     long long range = -1;
 
     ParseArgument args = ParseArgument(argc, argv).next();
-    bool detailStats = false;
-    bool createDefaultPrefill = false;
-    bool resultStatisticToFile = false;
-    std::string resultStatisticFileName;
+    bool detail_stats = false;
+    bool create_default_prefill = false;
+    bool result_statistic_to_file = false;
+    std::string result_statistic_file_name;
 
-    while (args.hasNext()) {
-        if (strcmp(args.getCurrent(), "-json-file") == 0) {
-            delete benchParameters;
-            benchParameters = parseJsonFile<BenchParameters>(args.getNext());
-        } else if (strcmp(args.getCurrent(), "-result-file") == 0) {
-            resultStatisticToFile = true;
-            resultStatisticFileName = args.getNext();
-        } else if (strcmp(args.getCurrent(), "-detail-stats") == 0) {
-            detailStats = true;
-        } else if (strcmp(args.getCurrent(), "-prefill") == 0) {
-            prefill = parseJsonFile<Parameters>(args.getNext());
-        } else if (strcmp(args.getCurrent(), "-warm-up") == 0) {
-            warmUp = parseJsonFile<Parameters>(args.getNext());
-        } else if (strcmp(args.getCurrent(), "-test") == 0) {
-            test = parseJsonFile<Parameters>(args.getNext());
-        } else if (strcmp(args.getCurrent(), "-range") == 0) {
-            range = atoll(args.getNext());
-        } else if (strcmp(args.getCurrent(), "-create-default-prefill") == 0) {
-            createDefaultPrefill = true;
+    while (args.has_next()) {
+        if (strcmp(args.get_current(), "-json-file") == 0) {
+            delete bench_parameters;
+            bench_parameters = parse_json_file<BenchParameters>(args.get_next());
+        } else if (strcmp(args.get_current(), "-result-file") == 0) {
+            result_statistic_to_file = true;
+            result_statistic_file_name = args.get_next();
+        } else if (strcmp(args.get_current(), "-detail-stats") == 0) {
+            detail_stats = true;
+        } else if (strcmp(args.get_current(), "-prefill") == 0) {
+            prefill = parse_json_file<Parameters>(args.get_next());
+        } else if (strcmp(args.get_current(), "-warm-up") == 0) {
+            warm_up = parse_json_file<Parameters>(args.get_next());
+        } else if (strcmp(args.get_current(), "-test") == 0) {
+            test = parse_json_file<Parameters>(args.get_next());
+        } else if (strcmp(args.get_current(), "-range") == 0) {
+            range = atoll(args.get_next());
+        } else if (strcmp(args.get_current(), "-create-default-prefill") == 0) {
+            create_default_prefill = true;
         } else {
-            std::cerr << "Unexpected option: " << args.getCurrent() << "\nindex: " << args.pointer
+            std::cerr << "Unexpected option: " << args.get_current() << "\nindex: " << args.pointer
                       << ". Ignoring..." << std::endl;
         }
         args.next();
     }
 
     if (prefill != nullptr) {
-        benchParameters->setPrefill(prefill);
+        bench_parameters->set_prefill(prefill);
     }
     if (test != nullptr) {
-        benchParameters->setTest(test);
+        bench_parameters->set_test(test);
     }
-    if (warmUp != nullptr) {
-        benchParameters->setWarmUp(warmUp);
+    if (warm_up != nullptr) {
+        bench_parameters->set_warm_up(warm_up);
     }
     if (range != -1) {
-        benchParameters->setRange(range);
+        bench_parameters->set_range(range);
     }
-    if (createDefaultPrefill) {
+    if (create_default_prefill) {
         if (prefill == nullptr) {
-            benchParameters->createDefaultPrefill();
+            bench_parameters->create_default_prefill();
         } else {
             std::cerr << "WARNING: The \'-prefill\' argument was already specified. Ignoring...\n";
         }
@@ -690,19 +691,19 @@ int main(int argc, char** argv) {
 
     std::cout << "\ninitialization of parameters...\n";
 
-    benchParameters->init();
+    bench_parameters->init();
 
     std::cout << std::endl;
 
-    COUTATOMIC(toStringBigStage("BENCH PARAMETERS"))
+    COUTATOMIC(to_string_big_stage("BENCH PARAMETERS"))
 
     std::cout << std::endl;
 
-    std::cout << benchParameters->toString();
+    std::cout << bench_parameters->to_string();
 
     std::cout << std::endl;
 
-    globals_t* g = new globals_t(benchParameters);
+    globals_t* g = new globals_t(bench_parameters);
 
     g->programExecutionStartTime = std::chrono::high_resolution_clock::now();
 
@@ -739,12 +740,12 @@ int main(int argc, char** argv) {
     std::cout << std::endl;
 
     run(g);
-    printOutput(g, detailStats);
+    print_output(g, detail_stats);
 
-    if (resultStatisticToFile) {
+    if (result_statistic_to_file) {
         nlohmann::json json;
         GSTATS_JSON(json);
-        writeJsonFile(resultStatisticFileName, json);
+        write_json_file(result_statistic_file_name, json);
     }
 
     printUptimeStampForPERF("MAIN_END");

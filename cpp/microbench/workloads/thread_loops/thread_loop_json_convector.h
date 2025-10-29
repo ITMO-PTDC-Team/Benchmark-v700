@@ -9,20 +9,20 @@
 #include "workloads/thread_loops/impls/temporary_operations_thread_loop.h"
 #include "errors.h"
 
-ThreadLoopBuilder* getThreadLoopFromJson(const nlohmann::json& j) {
-    std::string className = j["ClassName"];
-    ThreadLoopBuilder* threadLoopBuilder;
+ThreadLoopBuilder* get_thread_loop_from_json(const nlohmann::json& j) {
+    std::string class_name = j["ClassName"];
+    ThreadLoopBuilder* thread_loop_builder;
 
-    if (className == "DefaultThreadLoopBuilder") {
-        threadLoopBuilder = new DefaultThreadLoopBuilder();
-    } else if (className == "TemporaryOperationsThreadLoopBuilder") {
-        threadLoopBuilder = new TemporaryOperationsThreadLoopBuilder();
-    } else if (className == "PrefillInsertThreadLoopBuilder") {
-        threadLoopBuilder = new PrefillInsertThreadLoopBuilder();
+    if (class_name == "DefaultThreadLoopBuilder") {
+        thread_loop_builder = new DefaultThreadLoopBuilder();
+    } else if (class_name == "TemporaryOperationsThreadLoopBuilder") {
+        thread_loop_builder = new TemporaryOperationsThreadLoopBuilder();
+    } else if (class_name == "PrefillInsertThreadLoopBuilder") {
+        thread_loop_builder = new PrefillInsertThreadLoopBuilder();
     } else {
-        setbench_error("JSON PARSER: Unknown class name ThreadLoopBuilder -- " + className)
+        setbench_error("JSON PARSER: Unknown class name ThreadLoopBuilder -- " + class_name)
     }
 
-    threadLoopBuilder->fromJson(j);
-    return threadLoopBuilder;
+    thread_loop_builder->from_json(j);
+    return thread_loop_builder;
 }
