@@ -9,6 +9,8 @@
 #include "workloads/distributions/builders/skewed_uniform_distribution_builder.h"
 #include "errors.h"
 
+namespace microbench::workload {
+
 DistributionBuilder* get_distribution_from_json(const nlohmann::json& j) {
     std::string class_name = j["ClassName"];
     DistributionBuilder* distribution_builder;
@@ -29,3 +31,5 @@ DistributionBuilder* get_distribution_from_json(const nlohmann::json& j) {
 MutableDistributionBuilder* get_mutable_distribution_from_json(const nlohmann::json& j) {
     return dynamic_cast<MutableDistributionBuilder*>(get_distribution_from_json(j));
 }
+
+}  // namespace microbench::workload

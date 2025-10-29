@@ -9,6 +9,8 @@
 
 #include "globals_extern.h"
 
+namespace microbench::workload {
+
 /**
     n — { xi — yi — ti — rti } // либо   n — rt — { xi — yi — ti }
         n — количество элементов
@@ -79,9 +81,8 @@ class TemporarySkewedArgsGenerator : public ArgsGenerator<K> {
 
 public:
     TemporarySkewedArgsGenerator(size_t set_number, size_t range, int64_t* hot_times,
-                                 int64_t* relax_times, size_t* set_begins,
-                                 Distribution** hot_dists, Distribution* relax_dist,
-                                 DataMap<K>* data_map)
+                                 int64_t* relax_times, size_t* set_begins, Distribution** hot_dists,
+                                 Distribution* relax_dist, DataMap<K>* data_map)
         : hot_dists_(hot_dists),
           relax_dist_(relax_dist),
           data_map_(data_map),
@@ -125,12 +126,16 @@ public:
     };
 };
 
+}  // namespace microbench::workload
+
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/distributions/builders/uniform_distribution_builder.h"
 #include "workloads/data_maps/data_map_builder.h"
 #include "workloads/data_maps/builders/array_data_map_builder.h"
 #include "workloads/distributions/distribution_json_convector.h"
 #include "workloads/data_maps/data_map_json_convector.h"
+
+namespace microbench::workload {
 
 class TemporarySkewedArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     size_t range_;
@@ -244,8 +249,7 @@ public:
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_hot_time(const size_t index,
-                                                      const int64_t hot_time) {
+    TemporarySkewedArgsGeneratorBuilder* set_hot_time(const size_t index, const int64_t hot_time) {
         assert(index < setNumber);
 
         hot_times_[index] = hot_time;
@@ -413,8 +417,8 @@ public:
         }
 
         result += indented_title("Relax Distribution", indents) +
-                  relax_dist_builder_->to_string(indents + 1) + indented_title("Data Map", indents) +
-                  data_map_builder_->to_string(indents + 1);
+                  relax_dist_builder_->to_string(indents + 1) +
+                  indented_title("Data Map", indents) + data_map_builder_->to_string(indents + 1);
 
         return result;
     }
@@ -431,3 +435,5 @@ public:
         //        delete dataMapBuilder;
     }
 };
+
+}  // namespace microbench::workload

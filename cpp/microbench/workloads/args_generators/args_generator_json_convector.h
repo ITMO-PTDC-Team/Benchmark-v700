@@ -16,6 +16,8 @@
 #include "workloads/args_generators/impls/range_query_args_generator.h"
 #include "errors.h"
 
+namespace microbench::workload {
+
 ArgsGeneratorBuilder* get_args_generator_from_json(const nlohmann::json& j) {
     std::string class_name = j["ClassName"];
     ArgsGeneratorBuilder* args_generator_builder;
@@ -46,3 +48,5 @@ ArgsGeneratorBuilder* get_args_generator_from_json(const nlohmann::json& j) {
     args_generator_builder->from_json(j);
     return args_generator_builder;
 }
+
+}  // namespace microbench::workload

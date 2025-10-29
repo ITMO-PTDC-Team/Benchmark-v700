@@ -9,6 +9,8 @@
 #include "workloads/data_maps/builders/array_data_map_builder.h"
 #include "errors.h"
 
+namespace microbench::workload {
+
 std::map<size_t, DataMapBuilder*> data_map_builders;
 
 DataMapBuilder* get_data_map_from_json(const nlohmann::json& j) {
@@ -47,3 +49,5 @@ void init_data_map_builders(size_t range) {
         it.second->init(range);
     }
 }
+
+}  // namespace microbench::workload

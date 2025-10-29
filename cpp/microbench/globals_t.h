@@ -2,9 +2,15 @@
 // Created by Ravil Galiev on 26.07.2023.
 //
 #pragma once
-
 #include <cstdint>
-typedef int64_t test_type;
+#include "adapter.h"
+#include "allocator_new.h"
+#include "pool_none.h"
+#include "reclaimer_debra.h"
+
+namespace microbench {
+
+using test_type = int64_t;
 
 #ifdef REDIS
 #define VALUE_TYPE test_type
@@ -16,6 +22,8 @@ typedef int64_t test_type;
 #define GET_FUNC execute_get
 #endif
 
-#define DS_ADAPTER_T ds_adapter<test_type, VALUE_TYPE, RECLAIM<>, ALLOC<>, POOL<> >
+using DS_ADAPTER_T = ds_adapter<test_type, VALUE_TYPE, reclaimer_debra<>, allocator_new<>, pool_none<>>;
 
 struct globals_t;
+
+}  // namespace microbench

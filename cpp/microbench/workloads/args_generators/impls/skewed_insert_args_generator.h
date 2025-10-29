@@ -12,6 +12,8 @@
 #include "workloads/distributions/builders/skewed_uniform_distribution_builder.h"
 #include "workloads/distributions/distribution.h"
 
+namespace microbench::workload {
+
 template <typename K>
 class SkewedInsertArgsGenerator : public ArgsGenerator<K> {
     //    PAD;
@@ -55,12 +57,15 @@ public:
     };
 };
 
+}  // namespace microbench::workload
+
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/distributions/builders/uniform_distribution_builder.h"
 #include "workloads/data_maps/data_map_builder.h"
 #include "workloads/data_maps/builders/array_data_map_builder.h"
 
-// template<typename K>
+namespace microbench::workload {
+
 class SkewedInsertArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     size_t range_;
 
@@ -126,3 +131,5 @@ public:
         //        delete dataMapBuilder; //TODO may delete twice
     };
 };
+
+}  // namespace microbench::workload

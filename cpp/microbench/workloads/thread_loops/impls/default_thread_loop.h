@@ -9,7 +9,8 @@
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/thread_loops/ratio_thread_loop_parameters.h"
 
-// template<typename K>
+namespace microbench::workload {
+
 class DefaultThreadLoop : public ThreadLoop {
     PAD;
     double* cdf_;
@@ -19,9 +20,8 @@ class DefaultThreadLoop : public ThreadLoop {
     PAD;
 
 public:
-    DefaultThreadLoop(globals_t* g, Random64& rng, size_t thread_id,
-                      StopCondition* stop_condition, size_t rq_range,
-                      ArgsGenerator<K>* args_generator,
+    DefaultThreadLoop(globals_t* g, Random64& rng, size_t thread_id, StopCondition* stop_condition,
+                      size_t rq_range, ArgsGenerator<K>* args_generator,
                       RatioThreadLoopParameters& thread_loop_parameters)
         : ThreadLoop(g, thread_id, stop_condition, rq_range),
           rng_(rng),
@@ -50,13 +50,16 @@ public:
     }
 };
 
+}  // namespace microbench::workload
+
 #include "workloads/thread_loops/thread_loop_builder.h"
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/args_generators/impls/default_args_generator.h"
 #include "workloads/args_generators/args_generator_json_convector.h"
 #include "globals_extern.h"
 
-// template<typename K>
+namespace microbench::workload {
+
 struct DefaultThreadLoopBuilder : public ThreadLoopBuilder {
     RatioThreadLoopParameters parameters;
 
@@ -77,7 +80,8 @@ struct DefaultThreadLoopBuilder : public ThreadLoopBuilder {
         return this;
     }
 
-    DefaultThreadLoopBuilder* set_args_generator_builder(ArgsGeneratorBuilder* args_generator_builder) {
+    DefaultThreadLoopBuilder* set_args_generator_builder(
+        ArgsGeneratorBuilder* args_generator_builder) {
         argsGeneratorBuilder = args_generator_builder;
         return this;
     }
@@ -119,3 +123,5 @@ struct DefaultThreadLoopBuilder : public ThreadLoopBuilder {
         delete argsGeneratorBuilder;
     };
 };
+
+}  // namespace microbench::workload

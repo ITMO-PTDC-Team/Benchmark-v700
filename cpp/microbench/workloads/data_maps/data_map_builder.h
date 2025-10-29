@@ -7,9 +7,10 @@
 #include "data_map.h"
 #include "json/single_include/nlohmann/json.hpp"
 
+namespace microbench::workload {
+
 using K = int64_t;
 
-// template<typename K>
 struct DataMapBuilder {
     static size_t id_counter;
 
@@ -39,3 +40,5 @@ void to_json(nlohmann::json& j, const DataMapBuilder& s) {
 void from_json(const nlohmann::json& j, DataMapBuilder& s) {
     s.from_json(j);
 }
+
+}  // namespace microbench::workload

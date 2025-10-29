@@ -17,6 +17,8 @@
 #include "workloads/thread_loops/thread_loop_json_convector.h"
 #include "binding.h"
 
+namespace microbench::workload {
+
 struct ThreadLoopSettings {
     ThreadLoopBuilder* threadLoopBuilder;
     size_t quantity;
@@ -256,3 +258,5 @@ void to_json(nlohmann::json& json, const Parameters& s) {
 void from_json(const nlohmann::json& j, Parameters& s) {
     s.from_json(j);
 }
+
+}  // namespace microbench::workload

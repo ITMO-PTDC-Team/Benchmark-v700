@@ -11,7 +11,8 @@
 #include "workloads/thread_loops/thread_loop.h"
 #include "workloads/thread_loops/ratio_thread_loop_parameters.h"
 
-// template<typename K>
+namespace microbench::workload {
+
 class TemporaryOperationThreadLoop : public ThreadLoop {
     PAD;
     double** cdf_;
@@ -220,3 +221,5 @@ struct TemporaryOperationsThreadLoopBuilder : public ThreadLoopBuilder {
         delete argsGeneratorBuilder;
     };
 };
+
+}  // namespace microbench::workload

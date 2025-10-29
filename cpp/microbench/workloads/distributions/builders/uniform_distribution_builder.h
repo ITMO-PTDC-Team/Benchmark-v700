@@ -9,6 +9,8 @@
 #include "workloads/distributions/impls/uniform_distribution.h"
 #include "globals_extern.h"
 
+namespace microbench::workload {
+
 struct UniformDistributionBuilder : public MutableDistributionBuilder {
     UniformDistribution* build(Random64& rng, size_t range) override {
         return new UniformDistribution(rng, range);
@@ -31,3 +33,5 @@ struct UniformDistributionBuilder : public MutableDistributionBuilder {
 
     ~UniformDistributionBuilder() override = default;
 };
+
+}  // namespace microbench::workload

@@ -8,6 +8,8 @@
 #include "random_xoshiro256p.h"
 #include "json/single_include/nlohmann/json.hpp"
 
+namespace microbench::workload {
+
 struct DistributionBuilder {
     virtual Distribution* build(Random64& rng, size_t range) = 0;
 
@@ -32,3 +34,5 @@ void to_json(nlohmann::json& j, const DistributionBuilder& s) {
 void from_json(const nlohmann::json& j, DistributionBuilder& s) {
     s.from_json(j);
 }
+
+}  // namespace microbench::workload

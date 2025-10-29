@@ -4,6 +4,9 @@
 #pragma once
 
 #include <cstddef>
+
+namespace microbench::workload {
+
 struct Distribution {
     virtual size_t next() = 0;
 
@@ -20,3 +23,5 @@ struct MutableDistribution : public Distribution {
         return this->next();
     }
 };
+
+}  // namespace microbench::workload

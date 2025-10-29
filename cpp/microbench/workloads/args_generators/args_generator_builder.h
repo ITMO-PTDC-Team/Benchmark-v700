@@ -8,9 +8,10 @@
 #include "random_xoshiro256p.h"
 #include "json/single_include/nlohmann/json.hpp"
 
+namespace microbench::workload {
+
 using K = int64_t;
 
-// template<typename K>
 struct ArgsGeneratorBuilder {
     virtual ArgsGeneratorBuilder* init(size_t range) = 0;
 
@@ -34,3 +35,5 @@ void to_json(nlohmann::json& j, const ArgsGeneratorBuilder& s) {
 void from_json(const nlohmann::json& j, ArgsGeneratorBuilder& s) {
     s.from_json(j);
 }
+
+}  // namespace microbench::workload

@@ -8,6 +8,8 @@
 
 #include "workloads/args_generators/args_generator.h"
 
+namespace microbench::workload {
+
 template <typename K>
 class GeneralizedArgsGenerator : public ArgsGenerator<K> {
 private:
@@ -46,12 +48,16 @@ public:
     ~GeneralizedArgsGenerator() = default;
 };
 
+}  // namespace microbench::workload
+
 #include "workloads/args_generators/args_generator_builder.h"
 #include "null_args_generator.h"
 
 #include "globals_extern.h"
 
 #include <set>
+
+namespace microbench::workload {
 
 static const std::set<std::string> OPER_TYPES{"get", "insert", "remove", "rangeQuery"};
 
@@ -164,3 +170,5 @@ public:
 
     ~GeneralizedArgsGeneratorBuilder() override = default;
 };
+
+}  // namespace microbench::workload

@@ -10,7 +10,8 @@
 #include "workloads/thread_loops/thread_loop.h"
 #include "workloads/args_generators/args_generator.h"
 
-// template<typename K>
+namespace microbench::workload {
+
 class PrefillInsertThreadLoop : public ThreadLoop {
 private:
     PAD;
@@ -47,13 +48,16 @@ public:
     }
 };
 
+}  // namespace microbench::workload
+
 #include "workloads/thread_loops/thread_loop_builder.h"
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/args_generators/impls/default_args_generator.h"
 #include "workloads/args_generators/args_generator_json_convector.h"
 #include "globals_extern.h"
 
-// template<typename K>
+namespace microbench::workload {
+
 struct PrefillInsertThreadLoopBuilder : public ThreadLoopBuilder {
     ArgsGeneratorBuilder* argsGeneratorBuilder = new DefaultArgsGeneratorBuilder();
     size_t numberOfAttempts = 10e+6;
@@ -106,3 +110,5 @@ struct PrefillInsertThreadLoopBuilder : public ThreadLoopBuilder {
         delete argsGeneratorBuilder;
     };
 };
+
+}  // namespace microbench::workload

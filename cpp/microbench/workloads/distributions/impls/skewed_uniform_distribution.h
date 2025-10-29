@@ -8,6 +8,8 @@
 #include "plaf.h"
 #include "workloads/distributions/distribution.h"
 
+namespace microbench::workload {
+
 class SkewedUniformDistribution : public Distribution {
 private:
     PAD;
@@ -49,3 +51,5 @@ public:
         delete cold_distribution_;
     }
 };
+
+}  // namespace microbench::workload

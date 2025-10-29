@@ -10,6 +10,8 @@
 #include "workloads/distributions/distribution_builder.h"
 #include "workloads/distributions/impls/zipf_distribution.h"
 
+namespace microbench::workload {
+
 struct ZipfianDistributionBuilder : public MutableDistributionBuilder {
     PAD;
     double alpha = 1;
@@ -44,3 +46,5 @@ struct ZipfianDistributionBuilder : public MutableDistributionBuilder {
 
     ~ZipfianDistributionBuilder() override = default;
 };
+
+}  // namespace microbench::workload

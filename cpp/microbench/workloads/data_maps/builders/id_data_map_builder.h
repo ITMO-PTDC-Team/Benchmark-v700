@@ -7,6 +7,8 @@
 #include "workloads/data_maps/impls/id_data_map.h"
 #include "globals_extern.h"
 
+namespace microbench::workload {
+
 struct IdDataMapBuilder : public DataMapBuilder {
     IdDataMapBuilder* init(size_t range) override {
         return this;
@@ -30,3 +32,5 @@ struct IdDataMapBuilder : public DataMapBuilder {
 
     ~IdDataMapBuilder() override = default;
 };
+
+}  // namespace microbench::workload

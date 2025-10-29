@@ -6,7 +6,7 @@
 #include "workloads/stop_condition/stop_condition.h"
 #include "globals_t.h"
 
-// #define VALUE_TYPE void *
+namespace microbench::workload {
 
 using K = int64_t;
 
@@ -84,3 +84,5 @@ void ThreadLoop::run() {
 }
 
 #endif
+
+}  // namespace microbench::workload

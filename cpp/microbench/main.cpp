@@ -18,6 +18,7 @@
 
 #include "random_xoshiro256p.h"
 
+
 #define MAIN_BENCH
 
 #ifdef PRINT_JEMALLOC_STATS
@@ -173,6 +174,9 @@ GSTATS_DECLARE_STATS_OBJECT(MAX_THREADS_POW2);
 #include "globals_t_impl.h"
 #include "statistics.h"
 #include "parse_argument.h"
+
+using namespace microbench;
+using namespace microbench::workload;
 
 void bind_threads(int nthreads) {
     // setup thread pinning/binding

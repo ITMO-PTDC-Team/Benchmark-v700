@@ -9,6 +9,8 @@
 #include "plaf.h"
 #include "workloads/distributions/distribution.h"
 
+namespace microbench::workload {
+
 class ZipfDistribution : public MutableDistribution {
 private:
     PAD;
@@ -57,3 +59,5 @@ public:
 
     ~ZipfDistribution() override = default;
 };
+
+}  // namespace microbench::workload

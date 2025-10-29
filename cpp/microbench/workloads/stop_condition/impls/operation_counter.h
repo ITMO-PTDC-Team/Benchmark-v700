@@ -7,6 +7,8 @@
 #include "plaf.h"
 #include "workloads/stop_condition/stop_condition.h"
 
+namespace microbench::workload {
+
 class OperationCounter : public StopCondition {
     struct Counter {
         PAD;
@@ -80,3 +82,5 @@ public:
 
     ~OperationCounter() = default;
 };
+
+}  // namespace microbench::workload

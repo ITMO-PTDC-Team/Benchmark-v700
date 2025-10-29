@@ -9,6 +9,8 @@
 #include "workloads/stop_condition/impls/operation_counter.h"
 #include "errors.h"
 
+namespace microbench::workload {
+
 StopCondition* get_stop_condition_from_json(const nlohmann::json& j) {
     std::string class_name = j["ClassName"];
     StopCondition* stop_condition;
@@ -23,3 +25,5 @@ StopCondition* get_stop_condition_from_json(const nlohmann::json& j) {
     stop_condition->from_json(j);
     return stop_condition;
 }
+
+}  // namespace microbench::workload

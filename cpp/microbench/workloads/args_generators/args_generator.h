@@ -5,6 +5,8 @@
 
 #include <utility>
 
+namespace microbench::workload {
+
 template <typename K>
 struct ArgsGenerator {
     virtual K next_get() = 0;
@@ -17,3 +19,5 @@ struct ArgsGenerator {
 
     virtual ~ArgsGenerator() = default;
 };
+
+}  // namespace microbench::workload

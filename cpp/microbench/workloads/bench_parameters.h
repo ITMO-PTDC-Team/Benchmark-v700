@@ -7,6 +7,8 @@
 #include "parameters.h"
 #include "workloads/stop_condition/impls/operation_counter.h"
 
+namespace microbench::workload {
+
 struct BenchParameters {
     size_t range;
 
@@ -117,3 +119,5 @@ void from_json(const nlohmann::json& json, BenchParameters& s) {
     s.prefill = new Parameters(json["prefill"]);
     s.warmUp = new Parameters(json["warmUp"]);
 }
+
+}  // namespace microbench::workload

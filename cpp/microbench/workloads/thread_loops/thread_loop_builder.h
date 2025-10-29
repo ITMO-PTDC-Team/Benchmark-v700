@@ -9,7 +9,8 @@
 #include "json/single_include/nlohmann/json.hpp"
 #include "globals_t.h"
 
-// template<typename K>
+namespace microbench::workload {
+
 struct ThreadLoopBuilder {
     size_t RQ_RANGE;
 
@@ -38,3 +39,5 @@ void to_json(nlohmann::json& j, const ThreadLoopBuilder& s) {
 void from_json(const nlohmann::json& j, ThreadLoopBuilder& s) {
     s.from_json(j);
 }
+
+}  // namespace microbench::workload

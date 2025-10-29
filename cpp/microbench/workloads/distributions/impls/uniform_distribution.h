@@ -8,6 +8,8 @@
 #include "plaf.h"
 #include "workloads/distributions/distribution.h"
 
+namespace microbench::workload {
+
 class UniformDistribution : public MutableDistribution {
 private:
     PAD;
@@ -32,3 +34,5 @@ public:
 
     ~UniformDistribution() override = default;
 };
+
+}  // namespace microbench::workload

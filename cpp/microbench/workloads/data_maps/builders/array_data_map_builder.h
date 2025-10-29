@@ -8,6 +8,8 @@
 #include "workloads/data_maps/data_map_builder.h"
 #include "workloads/data_maps/impls/array_data_map.h"
 
+namespace microbench::workload {
+
 class ArrayDataMapBuilder : public DataMapBuilder {
     int64_t* data_ = nullptr;
 
@@ -43,3 +45,5 @@ public:
 
     ~ArrayDataMapBuilder() override = default;
 };
+
+}  // namespace microbench::workload

@@ -5,6 +5,8 @@
 
 #include "json/single_include/nlohmann/json.hpp"
 
+namespace microbench::workload {
+
 struct StopCondition {
     virtual void start(size_t num_threads) = 0;
 
@@ -34,3 +36,5 @@ void to_json(nlohmann::json& j, const StopCondition& s) {
 void from_json(const nlohmann::json& j, StopCondition& s) {
     s.from_json(j);
 }
+
+}  // namespace microbench::workload

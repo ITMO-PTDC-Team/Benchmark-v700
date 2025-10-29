@@ -6,6 +6,8 @@
 #include "adapter.h"
 #include "globals_t_impl.h"
 
+namespace microbench::workload {
+
 #define THREAD_MEASURED_PRE                                                        \
     tid = this->threadId;                                                          \
     binding_bindThread(tid);                                                       \
@@ -154,3 +156,5 @@ void ThreadLoop::run() {
     }
     THREAD_MEASURED_POST
 }
+
+}  // namespace microbench::workload

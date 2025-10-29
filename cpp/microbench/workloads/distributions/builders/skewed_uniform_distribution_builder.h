@@ -10,6 +10,8 @@
 #include "uniform_distribution_builder.h"
 #include "workloads/distributions/impls/skewed_uniform_distribution.h"
 
+namespace microbench::workload {
+
 DistributionBuilder* get_distribution_from_json(const nlohmann::json& j);
 
 struct SkewedUniformDistributionBuilder : public DistributionBuilder {
@@ -83,3 +85,5 @@ struct SkewedUniformDistributionBuilder : public DistributionBuilder {
         delete coldDistBuilder;
     }
 };
+
+}  // namespace microbench::workload

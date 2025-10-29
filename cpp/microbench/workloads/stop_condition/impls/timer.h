@@ -10,6 +10,8 @@
 #include "workloads/stop_condition/stop_condition.h"
 #include "json/single_include/nlohmann/json.hpp"
 
+namespace microbench::workload {
+
 class Timer : public StopCondition {
     PAD;
     volatile bool stop_;
@@ -72,3 +74,5 @@ public:
                indented_title_with_data("work time", workTime, indents);
     }
 };
+
+}  // namespace microbench::workload

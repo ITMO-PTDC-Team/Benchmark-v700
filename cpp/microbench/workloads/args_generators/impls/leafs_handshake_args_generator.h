@@ -9,6 +9,8 @@
 #include "workloads/distributions/distribution.h"
 #include "workloads/data_maps/data_map.h"
 
+namespace microbench::workload {
+
 template <typename K>
 class LeafsHandshakeArgsGenerator : public ArgsGenerator<K> {
     size_t range_;
@@ -84,6 +86,8 @@ public:
     }
 };
 
+}  // namespace microbench::workload
+
 #include "workloads/distributions/distribution_builder.h"
 #include "workloads/data_maps/data_map_builder.h"
 #include "workloads/distributions/builders/uniform_distribution_builder.h"
@@ -93,7 +97,8 @@ public:
 #include "workloads/data_maps/data_map_json_convector.h"
 #include "globals_extern.h"
 
-// template<typename K>
+namespace microbench::workload {
+
 class LeafsHandshakeArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 private:
     size_t range_;
@@ -191,3 +196,5 @@ public:
         //        delete dataMapBuilder; //TODO may delete twice
     };
 };
+
+}  // namespace microbench::workload

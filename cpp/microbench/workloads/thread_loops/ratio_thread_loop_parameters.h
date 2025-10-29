@@ -6,6 +6,8 @@
 #include "globals_extern.h"
 #include "json/single_include/nlohmann/json.hpp"
 
+namespace microbench::workload {
+
 struct RatioThreadLoopParameters {
     double INS_RATIO;
     double REM_RATIO;
@@ -58,3 +60,5 @@ void from_json(const nlohmann::json& j, RatioThreadLoopParameters& s) {
         s.RQ_RATIO = j["rqRatio"];
     }
 }
+
+}  // namespace microbench::workload

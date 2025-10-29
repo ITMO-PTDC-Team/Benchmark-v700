@@ -6,6 +6,8 @@
 #include <algorithm>
 #include "workloads/data_maps/data_map.h"
 
+namespace microbench::workload {
+
 class ArrayDataMap : public DataMap<int64_t> {
 private:
     int64_t* data_;
@@ -23,3 +25,5 @@ public:
         delete[] data_;
     }
 };
+
+}  // namespace microbench::workload

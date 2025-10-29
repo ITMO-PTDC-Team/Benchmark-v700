@@ -12,6 +12,8 @@
 
 #include "globals_extern.h"
 
+namespace microbench::workload {
+
 /**
     старички + волна
     n — g — gx — gk — cp — ca
@@ -173,8 +175,11 @@ public:
     };
 };
 
+}  // namespace microbench::workload
+
 #include "errors.h"
 
+namespace microbench::workload {
 template <typename K>
 class CreakersAndWavePrefillArgsGenerator : public ArgsGenerator<K> {
     PAD;
@@ -219,6 +224,8 @@ public:
     };
 };
 
+}  // namespace microbench::workload
+
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/distributions/builders/uniform_distribution_builder.h"
 #include "workloads/distributions/builders/zipfian_distribution_builder.h"
@@ -227,7 +234,7 @@ public:
 #include "workloads/distributions/distribution_json_convector.h"
 #include "workloads/data_maps/data_map_json_convector.h"
 
-// typedef int64_t K;
+namespace microbench::workload {
 
 class CreakersAndWaveArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     size_t creakers_length_;
@@ -437,3 +444,5 @@ public:
         //        delete dataMapBuilder;
     };
 };
+
+}  // namespace microbench::workload

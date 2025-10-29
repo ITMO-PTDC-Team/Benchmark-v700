@@ -2,6 +2,8 @@
 
 #include "workloads/args_generators/args_generator.h"
 
+namespace microbench::workload {
+
 template <typename K>
 class NullArgsGenerator : public ArgsGenerator<K> {
 public:
@@ -26,10 +28,13 @@ public:
     ~NullArgsGenerator() = default;
 };
 
+}  // namespace microbench::workload
+
 #include "workloads/args_generators/args_generator_builder.h"
 #include "globals_extern.h"
 
-// template<typename K>
+namespace microbench::workload {
+
 class NullArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 public:
     NullArgsGeneratorBuilder* init(size_t range) override {
@@ -56,3 +61,5 @@ public:
 
     ~NullArgsGeneratorBuilder() override = default;
 };
+
+}  // namespace microbench::workload

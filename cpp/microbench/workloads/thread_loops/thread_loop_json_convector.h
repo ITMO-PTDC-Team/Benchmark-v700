@@ -9,6 +9,8 @@
 #include "workloads/thread_loops/impls/temporary_operations_thread_loop.h"
 #include "errors.h"
 
+namespace microbench::workload {
+
 ThreadLoopBuilder* get_thread_loop_from_json(const nlohmann::json& j) {
     std::string class_name = j["ClassName"];
     ThreadLoopBuilder* thread_loop_builder;
@@ -26,3 +28,5 @@ ThreadLoopBuilder* get_thread_loop_from_json(const nlohmann::json& j) {
     thread_loop_builder->from_json(j);
     return thread_loop_builder;
 }
+
+}  // namespace microbench::workload

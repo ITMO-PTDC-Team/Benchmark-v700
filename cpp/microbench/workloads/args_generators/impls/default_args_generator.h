@@ -7,6 +7,8 @@
 #include "workloads/distributions/distribution.h"
 #include "workloads/data_maps/data_map.h"
 
+namespace microbench::workload {
+
 template <typename K>
 class DefaultArgsGenerator : public ArgsGenerator<K> {
 private:
@@ -53,6 +55,8 @@ public:
     }
 };
 
+}  // namespace microbench::workload
+
 #include "workloads/distributions/distribution_builder.h"
 #include "workloads/data_maps/data_map_builder.h"
 #include "workloads/distributions/builders/uniform_distribution_builder.h"
@@ -62,7 +66,8 @@ public:
 #include "workloads/data_maps/data_map_json_convector.h"
 #include "globals_extern.h"
 
-// template<typename K>
+namespace microbench::workload {
+
 class DefaultArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 private:
     size_t range_;
@@ -71,7 +76,8 @@ public:
     DistributionBuilder* distributionBuilder = new UniformDistributionBuilder();
     DataMapBuilder* dataMapBuilder = new IdDataMapBuilder();
 
-    DefaultArgsGeneratorBuilder* set_distribution_builder(DistributionBuilder* distribution_builder) {
+    DefaultArgsGeneratorBuilder* set_distribution_builder(
+        DistributionBuilder* distribution_builder) {
         distributionBuilder = distribution_builder;
         return this;
     }
@@ -124,3 +130,5 @@ public:
         //        delete dataMapBuilder; //TODO may delete twice
     };
 };
+
+}  // namespace microbench::workload
