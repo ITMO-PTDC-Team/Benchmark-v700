@@ -7,7 +7,7 @@
 #include "data_map.h"
 #include "json/single_include/nlohmann/json.hpp"
 
-using K = long long;
+using K = int64_t;
 
 // template<typename K>
 struct DataMapBuilder {

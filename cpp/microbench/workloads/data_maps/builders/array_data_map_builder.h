@@ -9,24 +9,24 @@
 #include "workloads/data_maps/impls/array_data_map.h"
 
 class ArrayDataMapBuilder : public DataMapBuilder {
-    long long* data = nullptr;
+    int64_t* data_ = nullptr;
 
 public:
     ArrayDataMapBuilder* init(size_t range) override {
-        delete[] data;
+        delete[] data_;
 
-        data = new long long[range];
-        for (long long i = 0; i < range; i++) {
-            data[i] = i + 1;
+        data_ = new int64_t[range];
+        for (int64_t i = 0; i < range; i++) {
+            data_[i] = i + 1;
         }
 
         //        std::random_shuffle(data, data + range - 1);
-        std::shuffle(data, data + range, std::mt19937(std::random_device()()));
+        std::shuffle(data_, data_ + range, std::mt19937(std::random_device()()));
         return this;
     }
 
     ArrayDataMap* build() override {
-        return new ArrayDataMap(data);
+        return new ArrayDataMap(data_);
     }
 
     void to_json(nlohmann::json& j) const override {

@@ -8,7 +8,7 @@
 
 // #define VALUE_TYPE void *
 
-using K = long long;
+using K = int64_t;
 
 class ThreadLoop {
 protected:

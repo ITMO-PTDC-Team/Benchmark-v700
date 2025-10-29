@@ -194,7 +194,7 @@ void create_data_structure(globals_t* g) {
                                     g->NO_VALUE, g->rngs);
 }
 
-Statistic get_statistic(long long elapsed_millis) {
+Statistic get_statistic(int64_t elapsed_millis) {
     return Statistic(elapsed_millis / 1000.);
 }
 
@@ -348,11 +348,11 @@ void run(globals_t* g) {
         {
             // print prefilling status information
             using namespace std::chrono;
-            const long long total_updates = GSTATS_OBJECT_NAME.get_sum<long long>(num_inserts) +
-                                           GSTATS_OBJECT_NAME.get_sum<long long>(num_removes);
-            g->curKeySum += GSTATS_OBJECT_NAME.get_sum<long long>(key_checksum);
-            g->curSize += GSTATS_OBJECT_NAME.get_sum<long long>(num_successful_inserts) -
-                          GSTATS_OBJECT_NAME.get_sum<long long>(num_successful_removes);
+            const int64_t total_updates = GSTATS_OBJECT_NAME.get_sum<int64_t>(num_inserts) +
+                                           GSTATS_OBJECT_NAME.get_sum<int64_t>(num_removes);
+            g->curKeySum += GSTATS_OBJECT_NAME.get_sum<int64_t>(key_checksum);
+            g->curSize += GSTATS_OBJECT_NAME.get_sum<int64_t>(num_successful_inserts) -
+                          GSTATS_OBJECT_NAME.get_sum<int64_t>(num_successful_removes);
             auto elapsed_millis = duration_cast<milliseconds>(g->endTime - g->startTime).count();
             COUTATOMIC("finished prefilling to size "
                        << g->curSize  // << " for expected size "// << expectedSize
@@ -380,11 +380,11 @@ void run(globals_t* g) {
 
         // print warm up status information
         using namespace std::chrono;
-        const long long total_updates = GSTATS_OBJECT_NAME.get_sum<long long>(num_inserts) +
-                                       GSTATS_OBJECT_NAME.get_sum<long long>(num_removes);
-        g->curKeySum += GSTATS_OBJECT_NAME.get_sum<long long>(key_checksum);
-        g->curSize += GSTATS_OBJECT_NAME.get_sum<long long>(num_successful_inserts) -
-                      GSTATS_OBJECT_NAME.get_sum<long long>(num_successful_removes);
+        const int64_t total_updates = GSTATS_OBJECT_NAME.get_sum<int64_t>(num_inserts) +
+                                       GSTATS_OBJECT_NAME.get_sum<int64_t>(num_removes);
+        g->curKeySum += GSTATS_OBJECT_NAME.get_sum<int64_t>(key_checksum);
+        g->curSize += GSTATS_OBJECT_NAME.get_sum<int64_t>(num_successful_inserts) -
+                      GSTATS_OBJECT_NAME.get_sum<int64_t>(num_successful_removes);
         auto now = high_resolution_clock::now();
         auto elapsed_millis = duration_cast<milliseconds>(g->endTime - g->startTime).count();
         COUTATOMIC("finished warm up to size "
@@ -490,16 +490,16 @@ void print_output(globals_t* g, bool detail_stats = true) {
     }
 #endif
 
-    long long threads_key_sum = 0;
-    long long threads_size = 0;
+    int64_t threads_key_sum = 0;
+    int64_t threads_size = 0;
 
 #ifdef USE_GSTATS
     {
         threads_key_sum = GSTATS_GET_STAT_METRICS(key_checksum, TOTAL)[0].sum + g->curKeySum;
 //        threadsSize = GSTATS_GET_STAT_METRICS(size_checksum, TOTAL)[0].sum + g->curSize;
 #ifdef USE_TREE_STATS
-        long long dsKeySum = (treeStats) ? treeStats->getSumOfKeys() : threadsKeySum;
-        long long dsSize = (treeStats) ? treeStats->getKeys() : -1;  // threadsSize;
+        int64_t dsKeySum = (treeStats) ? treeStats->getSumOfKeys() : threadsKeySum;
+        int64_t dsSize = (treeStats) ? treeStats->getKeys() : -1;  // threadsSize;
 #endif
         std::cout << "threads_final_keysum=" << threads_key_sum << std::endl;
 //         std::cout<<"threads_final_size="<<threadsSize<<std::endl;
@@ -538,7 +538,7 @@ void print_output(globals_t* g, bool detail_stats = true) {
     }
 #endif
 
-    long long total_all = 0;
+    int64_t total_all = 0;
 
 #ifdef USE_GSTATS
     {
@@ -622,7 +622,7 @@ int main(int argc, char** argv) {
     Parameters* test = nullptr;
     Parameters* warm_up = nullptr;
     Parameters* prefill = nullptr;
-    long long range = -1;
+    int64_t range = -1;
 
     ParseArgument args = ParseArgument(argc, argv).next();
     bool detail_stats = false;

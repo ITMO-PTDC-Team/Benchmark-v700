@@ -6,16 +6,16 @@
 #include <algorithm>
 #include "workloads/data_maps/data_map.h"
 
-class ArrayDataMap : public DataMap<long long> {
+class ArrayDataMap : public DataMap<int64_t> {
 private:
-    long long* data_;
+    int64_t* data_;
 
 public:
-    explicit ArrayDataMap(long long int* data)
+    explicit ArrayDataMap(int64_t* data)
         : data_(data) {
     }
 
-    long long get(size_t index) override {
+    int64_t get(size_t index) override {
         return data_[index];
     }
 

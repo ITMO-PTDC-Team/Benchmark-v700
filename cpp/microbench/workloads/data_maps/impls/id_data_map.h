@@ -5,8 +5,8 @@
 
 #include "workloads/data_maps/data_map.h"
 
-struct IdDataMap : public DataMap<long long> {
-    long long get(size_t index) override {
+struct IdDataMap : public DataMap<int64_t> {
+    int64_t get(size_t index) override {
         return index + 1;
     }
 };

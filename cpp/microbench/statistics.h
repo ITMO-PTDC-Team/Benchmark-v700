@@ -10,31 +10,31 @@
 #include "globals_extern.h"
 
 struct Statistic {
-    long long totalAll = 0;
+    int64_t totalAll = 0;
 
-    long long totalGets;
-    long long totalRQs;
-    long long totalQueries;
-    long long totalInserts;
-    long long totalRemoves;
-    long long totalUpdates;
+    int64_t totalGets;
+    int64_t totalRQs;
+    int64_t totalQueries;
+    int64_t totalInserts;
+    int64_t totalRemoves;
+    int64_t totalUpdates;
 
-    long long totalSuccessfulGets;
-    long long totalSuccessfulInserts;
-    long long totalSuccessfulRemoves;
-    long long totalSuccessfulUpdates;
+    int64_t totalSuccessfulGets;
+    int64_t totalSuccessfulInserts;
+    int64_t totalSuccessfulRemoves;
+    int64_t totalSuccessfulUpdates;
 
-    long long totalFailGets;
-    long long totalFailInserts;
-    long long totalFailRemoves;
-    long long totalFailUpdates;
+    int64_t totalFailGets;
+    int64_t totalFailInserts;
+    int64_t totalFailRemoves;
+    int64_t totalFailUpdates;
 
     double SECONDS_TO_RUN;
-    long long throughputSearches;
-    long long throughputRQs;
-    long long throughputQueries;
-    long long throughputUpdates;
-    long long throughputAll;
+    int64_t throughputSearches;
+    int64_t throughputRQs;
+    int64_t throughputQueries;
+    int64_t throughputUpdates;
+    int64_t throughputAll;
 
     explicit Statistic(double seconds_to_run) {
         totalGets = GSTATS_GET_STAT_METRICS(num_searches, TOTAL)[0].sum;
@@ -56,11 +56,11 @@ struct Statistic {
 
         SECONDS_TO_RUN = seconds_to_run;  // (MILLIS_TO_RUN)/1000.;
         totalAll = totalUpdates + totalQueries;
-        throughputSearches = (long long)(totalGets / SECONDS_TO_RUN);
-        throughputRQs = (long long)(totalRQs / SECONDS_TO_RUN);
-        throughputQueries = (long long)(totalQueries / SECONDS_TO_RUN);
-        throughputUpdates = (long long)(totalUpdates / SECONDS_TO_RUN);
-        throughputAll = (long long)(totalAll / SECONDS_TO_RUN);
+        throughputSearches = (int64_t)(totalGets / SECONDS_TO_RUN);
+        throughputRQs = (int64_t)(totalRQs / SECONDS_TO_RUN);
+        throughputQueries = (int64_t)(totalQueries / SECONDS_TO_RUN);
+        throughputUpdates = (int64_t)(totalUpdates / SECONDS_TO_RUN);
+        throughputAll = (int64_t)(totalAll / SECONDS_TO_RUN);
     }
 
     void print_total_statistic_short(bool detail = false) const {

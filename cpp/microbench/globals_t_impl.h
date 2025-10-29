@@ -36,19 +36,19 @@ struct globals_t {
     const test_type
         KEY_MAX;  // must be less than std::max(), because the snap collector needs a reserved key
                   // larger than this! (and larger than any key that can be inserted/deleted)
-    const long long PREFILL_INTERVAL_MILLIS;
+    const int64_t PREFILL_INTERVAL_MILLIS;
     PAD;
     // write once
-    long long elapsedMillis;
-    long long curKeySum = 0;
-    long long curSize = 0;
+    int64_t elapsedMillis;
+    int64_t curKeySum = 0;
+    int64_t curSize = 0;
     std::chrono::time_point<std::chrono::high_resolution_clock> programExecutionStartTime;
     std::chrono::time_point<std::chrono::high_resolution_clock> endTime;
     PAD;
     std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
-    long long startClockTicks;
+    int64_t startClockTicks;
     PAD;
-    long elapsedMillisNapping;
+    int64_t elapsedMillisNapping;
     PAD;
     volatile test_type garbage;  // used to prevent optimizing out some code
     PAD;

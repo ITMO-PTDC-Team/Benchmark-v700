@@ -31,9 +31,9 @@ class TemporarySkewedArgsGenerator : public ArgsGenerator<K> {
     Distribution* relax_dist_;
     DataMap<K>* data_map_;
     // PAD;
-    long long* hot_times_;
+    int64_t* hot_times_;
     // PAD;
-    long long* relax_times_;
+    int64_t* relax_times_;
     // PAD;
     size_t* set_begins_;
     // PAD;
@@ -78,8 +78,8 @@ class TemporarySkewedArgsGenerator : public ArgsGenerator<K> {
     }
 
 public:
-    TemporarySkewedArgsGenerator(size_t set_number, size_t range, long long* hot_times,
-                                 long long* relax_times, size_t* set_begins,
+    TemporarySkewedArgsGenerator(size_t set_number, size_t range, int64_t* hot_times,
+                                 int64_t* relax_times, size_t* set_begins,
                                  Distribution** hot_dists, Distribution* relax_dist,
                                  DataMap<K>* data_map)
         : hot_dists_(hot_dists),
@@ -138,12 +138,12 @@ class TemporarySkewedArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     SkewedUniformDistributionBuilder** hot_dist_builders_;
     DistributionBuilder* relax_dist_builder_ = new UniformDistributionBuilder();
     PAD;
-    long long* hot_times_;
+    int64_t* hot_times_;
     PAD;
-    long long* relax_times_;
+    int64_t* relax_times_;
     PAD;
-    long long default_hot_time_ = -1;
-    long long default_relax_time_ = -1;
+    int64_t default_hot_time_ = -1;
+    int64_t default_relax_time_ = -1;
 
     /**
      * manual setting of the begins of sets
@@ -172,8 +172,8 @@ public:
     TemporarySkewedArgsGeneratorBuilder* set_set_number(const size_t set_number) {
         set_number_ = set_number;
         hot_dist_builders_ = new SkewedUniformDistributionBuilder*[set_number];
-        hot_times_ = new long long[set_number_];
-        relax_times_ = new long long[set_number_];
+        hot_times_ = new int64_t[set_number_];
+        relax_times_ = new int64_t[set_number_];
 
         if (manual_setting_set_begins_) {
             set_begins_ = new double[set_number_];
@@ -234,18 +234,18 @@ public:
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_hot_times(long long* hot_times) {
+    TemporarySkewedArgsGeneratorBuilder* set_hot_times(int64_t* hot_times) {
         hot_times_ = hot_times;
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_relax_times(long long* relax_times) {
+    TemporarySkewedArgsGeneratorBuilder* set_relax_times(int64_t* relax_times) {
         relax_times_ = relax_times;
         return this;
     }
 
     TemporarySkewedArgsGeneratorBuilder* set_hot_time(const size_t index,
-                                                      const long long hot_time) {
+                                                      const int64_t hot_time) {
         assert(index < setNumber);
 
         hot_times_[index] = hot_time;
@@ -253,19 +253,19 @@ public:
     }
 
     TemporarySkewedArgsGeneratorBuilder* set_relax_time(const size_t index,
-                                                        const long long relax_time) {
+                                                        const int64_t relax_time) {
         assert(index < setNumber);
 
         relax_times_[index] = relax_time;
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_default_hot_time(const long long hot_time) {
+    TemporarySkewedArgsGeneratorBuilder* set_default_hot_time(const int64_t hot_time) {
         default_hot_time_ = hot_time;
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_default_relax_time(const long long relax_time) {
+    TemporarySkewedArgsGeneratorBuilder* set_default_relax_time(const int64_t relax_time) {
         default_relax_time_ = relax_time;
         return this;
     }

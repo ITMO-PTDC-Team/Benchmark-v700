@@ -10,14 +10,14 @@
 class OperationCounter : public StopCondition {
     struct Counter {
         PAD;
-        long long operCount;
+        int64_t operCount;
         PAD;
 
         Counter()
             : operCount(0) {
         }
 
-        explicit Counter(long long oper_count) {
+        explicit Counter(int64_t oper_count) {
             operCount = oper_count;
         }
 
@@ -46,8 +46,8 @@ public:
     }
 
     void start(size_t num_threads) override {
-        long long operation_limit = common_operation_limit_ / num_threads;
-        long long remainder = common_operation_limit_ % num_threads;
+        int64_t operation_limit = common_operation_limit_ / num_threads;
+        int64_t remainder = common_operation_limit_ % num_threads;
 
         counters_ = new Counter[num_threads];
 

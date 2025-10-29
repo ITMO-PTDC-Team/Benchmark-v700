@@ -4,7 +4,7 @@
 #pragma once
 
 #include <cstdint>
-typedef long long test_type;
+typedef int64_t test_type;
 
 #ifdef REDIS
 #define VALUE_TYPE test_type
