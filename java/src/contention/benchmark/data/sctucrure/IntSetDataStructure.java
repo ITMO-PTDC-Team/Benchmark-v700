@@ -34,8 +34,7 @@ public class IntSetDataStructure implements DataStructure<Integer> {
 
     @Override
     public int rangeQuery(Integer lo, Integer hi) {
-        // TODO: Make a proper implementation
-        return 0;
+        throw new UnsupportedOperationException("IntSet DS does not currently support rangeQuery operation");
     }
 
     @Override

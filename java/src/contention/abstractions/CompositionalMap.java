@@ -28,7 +28,7 @@ public interface CompositionalMap<K, V> extends Map<K, V> {
     };
 
     default public int rangeQuery(K lo, K hi) {
-        return 0;
+        throw new UnsupportedOperationException("Call to a defaulted rangeQuery method - lacking implementation");
     }
 	
 	public V putIfAbsent(K k, V v);

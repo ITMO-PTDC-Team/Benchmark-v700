@@ -33,7 +33,7 @@ public class DefaultThreadLoop extends ThreadLoop {
         cdf[0] = parameters.writeAllsRatio;
         cdf[1] = cdf[0] + parameters.insertRatio;
         cdf[2] = cdf[1] + parameters.removeRatio;
-        cdf[3] = cdf[2] + parameters.removeRatio;
+        cdf[3] = cdf[2] + parameters.rangeQueryRatio;
         cdf[4] = cdf[3] + parameters.snapshotsRatio;
     }
 

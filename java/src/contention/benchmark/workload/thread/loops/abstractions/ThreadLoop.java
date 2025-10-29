@@ -93,11 +93,8 @@ public abstract class ThreadLoop implements Runnable {
 
     public Integer executeRangeQuery(Pair<Integer, Integer> keys) {
         Integer result;
-        if ((result = dataStructure.rangeQuery(keys.first, keys.second)) != 0) {
-            stats.numRangeQuery++;
-        } else {
-            stats.numRangeQuery++;
-        }
+        result = dataStructure.rangeQuery(keys.first, keys.second);
+        stats.numRangeQuery++;
         return result;
     }
 
