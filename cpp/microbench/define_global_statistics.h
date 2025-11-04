@@ -4,9 +4,7 @@
  *
  * Created on August 5, 2019, 5:25 PM
  */
-
-#ifndef GSTATS_OUTPUT_DEFS_H
-#define GSTATS_OUTPUT_DEFS_H
+#pragma once
 
 #define USE_GSTATS
 #ifndef __AND
@@ -80,7 +78,4 @@
     gstats_handle_stat(LONG_LONG, timer_duration, 1, {}) \
     gstats_handle_stat(LONG_LONG, duration_all_ops, 1, { /* note: used by brown_ext_ist_lf */ \
             gstats_output_item(PRINT_RAW, SUM, TOTAL) \
-    }) \
-
-
-#endif /* GSTATS_OUTPUT_DEFS_H */
+    })

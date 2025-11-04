@@ -1,39 +1,40 @@
 //
 // Created by Ravil Galiev on 21.07.2023.
 //
-
-#ifndef SETBENCH_STOP_CONDITION_H
-#define SETBENCH_STOP_CONDITION_H
+#pragma once
 
 #include "json/single_include/nlohmann/json.hpp"
 
+namespace microbench::workload {
+
 struct StopCondition {
-    virtual void start(size_t numThreads) = 0;
+    virtual void start(size_t num_threads) = 0;
 
     /**
-     * The purpose of the clean method is to free the resources that the StopCondition may have acquired after it started.
+     * The purpose of the clean method is to free the resources that the StopCondition may have
+     * acquired after it started.
      */
     virtual void clean() {};
 
-    virtual bool isStopped(int id) = 0;
+    virtual bool is_stopped(int id) = 0;
 
-    virtual std::string toString(size_t indents = 1) = 0;
+    virtual std::string to_string(size_t indents = 1) = 0;
 
-    virtual void toJson(nlohmann::json &j) const = 0;
+    virtual void to_json(nlohmann::json& j) const = 0;
 
-    virtual void fromJson(const nlohmann::json &j) = 0;
+    virtual void from_json(const nlohmann::json& j) = 0;
 
     virtual ~StopCondition() = default;
 };
 
-void to_json(nlohmann::json &j, const StopCondition &s) {
-    s.toJson(j);
+void to_json(nlohmann::json& j, const StopCondition& s) {
+    s.to_json(j);
     assert(j.contains("ClassName"));
-//    assert(j["stopConditionType"] != nullptr);
+    //    assert(j["stopConditionType"] != nullptr);
 }
 
-void from_json(const nlohmann::json &j, StopCondition &s) {
-    s.fromJson(j);
+void from_json(const nlohmann::json& j, StopCondition& s) {
+    s.from_json(j);
 }
 
-#endif //SETBENCH_STOP_CONDITION_H
+}  // namespace microbench::workload

@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 31.07.2023.
 //
-
-#ifndef SETBENCH_STOP_CONDITION_JSON_CONVECTOR_H
-#define SETBENCH_STOP_CONDITION_JSON_CONVECTOR_H
+#pragma once
 
 #include "json/single_include/nlohmann/json.hpp"
 #include "stop_condition.h"
@@ -11,19 +9,21 @@
 #include "workloads/stop_condition/impls/operation_counter.h"
 #include "errors.h"
 
-StopCondition *getStopConditionFromJson(const nlohmann::json &j) {
-    std::string className = j["ClassName"];
-    StopCondition *stopCondition;
-    if (className == "Timer") {
-        stopCondition = new Timer();
-    } else if (className == "OperationCounter") {
-        stopCondition = new OperationCounter();
+namespace microbench::workload {
+
+StopCondition* get_stop_condition_from_json(const nlohmann::json& j) {
+    std::string class_name = j["ClassName"];
+    StopCondition* stop_condition;
+    if (class_name == "Timer") {
+        stop_condition = new Timer();
+    } else if (class_name == "OperationCounter") {
+        stop_condition = new OperationCounter();
     } else {
-        setbench_error("JSON PARSER: Unknown class name StopCondition -- " + className)
+        setbench_error("JSON PARSER: Unknown class name StopCondition -- " + class_name)
     }
 
-    stopCondition->fromJson(j);
-    return stopCondition;
+    stop_condition->from_json(j);
+    return stop_condition;
 }
 
-#endif //SETBENCH_STOP_CONDITION_JSON_CONVECTOR_H
+}  // namespace microbench::workload

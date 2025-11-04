@@ -1,9 +1,7 @@
 //
 // Created by Ravil Galiev on 27.07.2023.
 //
-
-#ifndef SETBENCH_THREAD_LOOP_JSON_CONVECTOR_H
-#define SETBENCH_THREAD_LOOP_JSON_CONVECTOR_H
+#pragma once
 
 #include "thread_loop_builder.h"
 #include "workloads/thread_loops/impls/default_thread_loop.h"
@@ -11,22 +9,24 @@
 #include "workloads/thread_loops/impls/temporary_operations_thread_loop.h"
 #include "errors.h"
 
-ThreadLoopBuilder *getThreadLoopFromJson(const nlohmann::json &j) {
-    std::string className = j["ClassName"];
-    ThreadLoopBuilder *threadLoopBuilder;
+namespace microbench::workload {
 
-    if (className == "DefaultThreadLoopBuilder") {
-        threadLoopBuilder = new DefaultThreadLoopBuilder();
-    } else if (className == "TemporaryOperationsThreadLoopBuilder") {
-        threadLoopBuilder = new TemporaryOperationsThreadLoopBuilder();
-    } else if (className == "PrefillInsertThreadLoopBuilder") {
-        threadLoopBuilder = new PrefillInsertThreadLoopBuilder();
+ThreadLoopBuilder* get_thread_loop_from_json(const nlohmann::json& j) {
+    std::string class_name = j["ClassName"];
+    ThreadLoopBuilder* thread_loop_builder;
+
+    if (class_name == "DefaultThreadLoopBuilder") {
+        thread_loop_builder = new DefaultThreadLoopBuilder();
+    } else if (class_name == "TemporaryOperationsThreadLoopBuilder") {
+        thread_loop_builder = new TemporaryOperationsThreadLoopBuilder();
+    } else if (class_name == "PrefillInsertThreadLoopBuilder") {
+        thread_loop_builder = new PrefillInsertThreadLoopBuilder();
     } else {
-        setbench_error("JSON PARSER: Unknown class name ThreadLoopBuilder -- " + className)
+        setbench_error("JSON PARSER: Unknown class name ThreadLoopBuilder -- " + class_name)
     }
 
-    threadLoopBuilder->fromJson(j);
-    return threadLoopBuilder;
+    thread_loop_builder->from_json(j);
+    return thread_loop_builder;
 }
 
-#endif //SETBENCH_THREAD_LOOP_JSON_CONVECTOR_H
+}  // namespace microbench::workload

@@ -1,44 +1,44 @@
 //
 // Created by Ravil Galiev on 24.07.2023.
 //
-
-#ifndef SETBENCH_ARRAY_DATA_MAP_BUILDER_H
-#define SETBENCH_ARRAY_DATA_MAP_BUILDER_H
+#pragma once
 
 #include <random>
+#include "globals_extern.h"
 #include "workloads/data_maps/data_map_builder.h"
-#include "workloads/data_maps/impls/id_data_map.h"
 #include "workloads/data_maps/impls/array_data_map.h"
 
+namespace microbench::workload {
+
 class ArrayDataMapBuilder : public DataMapBuilder {
-    long long* data = nullptr;
+    int64_t* data_ = nullptr;
 
 public:
     ArrayDataMapBuilder* init(size_t range) override {
-        delete[] data;
+        delete[] data_;
 
-        data = new long long[range];
-        for (long long i = 0; i < range; i++) {
-            data[i] = i + 1;
+        data_ = new int64_t[range];
+        for (int64_t i = 0; i < range; i++) {
+            data_[i] = i + 1;
         }
 
         //        std::random_shuffle(data, data + range - 1);
-        std::shuffle(data, data + range, std::mt19937(std::random_device()()));
+        std::shuffle(data_, data_ + range, std::mt19937(std::random_device()()));
         return this;
     }
 
     ArrayDataMap* build() override {
-        return new ArrayDataMap(data);
+        return new ArrayDataMap(data_);
     }
 
-    void toJson(nlohmann::json& j) const override {
+    void to_json(nlohmann::json& j) const override {
         j["ClassName"] = "ArrayDataMapBuilder";
     }
 
-    void fromJson(const nlohmann::json& j) override {
+    void from_json(const nlohmann::json& j) override {
     }
 
-    std::string toString(size_t indents = 1) override {
+    std::string to_string(size_t indents = 1) override {
         return indented_title_with_str_data("Type", "ArrayDataMap", indents) +
                indented_title_with_data("ID", id, indents);
     }
@@ -46,4 +46,4 @@ public:
     ~ArrayDataMapBuilder() override = default;
 };
 
-#endif  // SETBENCH_ARRAY_DATA_MAP_BUILDER_H
+}  // namespace microbench::workload

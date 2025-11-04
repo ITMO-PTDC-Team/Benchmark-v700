@@ -1,34 +1,38 @@
 //
 // Created by Ravil Galiev on 30.08.2022.
 //
-
-#ifndef SETBENCH_UNIFORM_DISTRIBUTION_H
-#define SETBENCH_UNIFORM_DISTRIBUTION_H
+#pragma once
 
 #include <cassert>
 #include "random_xoshiro256p.h"
 #include "plaf.h"
 #include "workloads/distributions/distribution.h"
 
+namespace microbench::workload {
+
 class UniformDistribution : public MutableDistribution {
 private:
     PAD;
-    Random64 &rng;
-    size_t range;
+    Random64& rng_;
+    size_t range_;
     PAD;
-public:
-    UniformDistribution(Random64 &_rng, const size_t _range = 0) : rng(_rng), range(_range) {}
 
-    void setRange(size_t _maxKey) override {
-        range = _maxKey;
+public:
+    explicit UniformDistribution(Random64& rng, const size_t range = 0)
+        : rng_(rng),
+          range_(range) {
+    }
+
+    void set_range(size_t max_key) override {
+        range_ = max_key;
     }
 
     size_t next() override {
-        size_t result = rng.next(range);
+        size_t result = rng_.next(range_);
         return result;
     }
 
     ~UniformDistribution() override = default;
 };
 
-#endif //SETBENCH_UNIFORM_DISTRIBUTION_H
+}  // namespace microbench::workload

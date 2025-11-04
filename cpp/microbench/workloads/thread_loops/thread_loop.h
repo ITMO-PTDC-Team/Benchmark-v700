@@ -1,50 +1,53 @@
 //
 // Created by Ravil Galiev on 21.07.2023.
 //
-
-#ifndef SETBENCH_THREAD_LOOP_H
-#define SETBENCH_THREAD_LOOP_H
+#pragma once
 
 #include "workloads/stop_condition/stop_condition.h"
 #include "globals_t.h"
 
-//#define VALUE_TYPE void *
+namespace microbench::workload {
 
-typedef long long K;
+using K = int64_t;
 
 class ThreadLoop {
 protected:
     K garbage = 0;
-    K * rqResultKeys;
-    VALUE_TYPE * rqResultValues;
+    K* rqResultKeys;
+    VALUE_TYPE* rqResultValues;
     VALUE_TYPE NO_VALUE;
     int rq_cnt;
     size_t RQ_RANGE;
+
 public:
     size_t threadId;
-    globals_t *g;
-    StopCondition *stopCondition;
+    globals_t* g;
+    StopCondition* stopCondition;
 
-    ThreadLoop(globals_t *_g, size_t _threadId, StopCondition *_stopCondition, size_t _RQ_RANGE)
-            : g(_g), threadId(_threadId), stopCondition(_stopCondition), RQ_RANGE(_RQ_RANGE) {}
+    ThreadLoop(globals_t* g, size_t thread_id, StopCondition* stop_condition, size_t rq_range)
+        : g(g),
+          threadId(thread_id),
+          stopCondition(stop_condition),
+          RQ_RANGE(rq_range) {
+    }
 
-    template<typename K>
-    K * executeInsert(K & key);
+    template <typename K>
+    K* execute_insert(K& key);
 
-    template<typename K>
-    K * executeRemove(const K & key);
+    template <typename K>
+    K* execute_remove(const K& key);
 
-    template<typename K>
-    K * executeGet(const K & key);
+    template <typename K>
+    K* execute_get(const K& key);
 
-    template<typename K>
-    bool executeContains(const K & key);
+    template <typename K>
+    bool execute_contains(const K& key);
 
     /**
      * the result is in the arrays rqResultKeys and rqResultValues
      */
-    template<typename K>
-    void executeRangeQuery(const K & leftKey, const K & rightKey);
+    template <typename K>
+    void execute_range_query(const K& left_key, const K& right_key);
 
     virtual void run();
 
@@ -53,35 +56,33 @@ public:
 
 #ifndef MAIN_BENCH
 
-template<typename K>
-void ThreadLoop::executeRangeQuery(const K &leftKey, const K &rightKey) {
-
+template <typename K>
+void ThreadLoop::execute_range_query(const K& left_key, const K& right_key) {
 }
 
-template<typename K>
-bool ThreadLoop::executeContains(const K &key) {
+template <typename K>
+bool ThreadLoop::execute_contains(const K& key) {
     return false;
 }
 
-template<typename K>
-K *ThreadLoop::executeGet(const K &key) {
+template <typename K>
+K* ThreadLoop::execute_get(const K& key) {
     return nullptr;
 }
 
-template<typename K>
-K *ThreadLoop::executeRemove(const K &key) {
+template <typename K>
+K* ThreadLoop::execute_remove(const K& key) {
     return nullptr;
 }
 
-template<typename K>
-K *ThreadLoop::executeInsert(K &key) {
+template <typename K>
+K* ThreadLoop::execute_insert(K& key) {
     return nullptr;
 }
 
 void ThreadLoop::run() {
-
 }
 
 #endif
 
-#endif //SETBENCH_THREAD_LOOP_H
+}  // namespace microbench::workload

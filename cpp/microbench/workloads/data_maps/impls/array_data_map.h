@@ -1,28 +1,29 @@
 //
 // Created by Ravil Galiev on 24.07.2023.
 //
-
-#ifndef SETBENCH_ARRAY_DATA_MAP_H
-#define SETBENCH_ARRAY_DATA_MAP_H
+#pragma once
 
 #include <algorithm>
 #include "workloads/data_maps/data_map.h"
 
-class ArrayDataMap : public DataMap<long long> {
+namespace microbench::workload {
+
+class ArrayDataMap : public DataMap<int64_t> {
 private:
-    long long *data;
+    int64_t* data_;
+
 public:
+    explicit ArrayDataMap(int64_t* data)
+        : data_(data) {
+    }
 
-    ArrayDataMap(long long int *data) : data(data) {}
-
-    long long get(size_t index) override {
-        return data[index];
+    int64_t get(size_t index) override {
+        return data_[index];
     }
 
     ~ArrayDataMap() {
-        delete[] data;
+        delete[] data_;
     }
-
 };
 
-#endif //SETBENCH_ARRAY_DATA_MAP_H
+}  // namespace microbench::workload
