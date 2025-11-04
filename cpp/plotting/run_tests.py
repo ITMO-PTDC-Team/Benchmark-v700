@@ -105,11 +105,11 @@ def test_no_run_delete_files(test_dirs, capsys):
     def mock_run_extractor(self):
         for ds in ["ds1", "ds2"]:
             for threads in ["1", "2", "4"]:
-                result_file = output_dir / f"{ds}_threads_{threads}_1.json"
+                result_file = output_dir / f"{ds}.threads_{threads}.iter_1.json"
                 with open(result_file, 'w') as f:
                     json.dump({"ops": int(threads) * 1000}, f)
                 
-                agg_file = output_dir / f"{ds}_threads_{threads}_aggregated.json"
+                agg_file = output_dir / f"{ds}.threads_{threads}.aggregated.json"
                 with open(agg_file, 'w') as f:
                     json.dump({"ops": int(threads) * 1000}, f)
 
@@ -131,10 +131,10 @@ def test_no_run_delete_files(test_dirs, capsys):
         
         assert (output_dir / "plot.png").exists()
     
-        assert (output_dir / "ds1_threads_1_1.json").exists()
-        assert (output_dir / "ds1_threads_1_aggregated.json").exists()
-        assert (output_dir / "ds2_threads_4_1.json").exists()
-        assert (output_dir / "ds2_threads_4_aggregated.json").exists()
+        assert (output_dir / "ds1.threads_1.iter_1.json").exists()
+        assert (output_dir / "ds1.threads_1.aggregated.json").exists()
+        assert (output_dir / "ds2.threads_4.iter_1.json").exists()
+        assert (output_dir / "ds2.threads_4.aggregated.json").exists()
 
     for filename in os.listdir(output_dir):
         if 'aggregated' in filename or filename == 'plot.png':
@@ -179,8 +179,8 @@ def test_full_workflow(test_dirs):
     
     # Verify outputs
     assert (output_dir / "full_plot.png").exists()
-    assert (output_dir / "aksenov_splaylist_64.debra_threads_1_aggregated.json").exists()
-    assert (output_dir / "aksenov_splaylist_64.debra_threads_2_aggregated.json").exists()
+    assert (output_dir / "aksenov_splaylist_64.debra.threads_1.aggregated.json").exists()
+    assert (output_dir / "aksenov_splaylist_64.debra.threads_2.aggregated.json").exists()
 
     if (CLEAN_DIRECTORY_AFTER == "True"):
         clean_directory(output_dir)  

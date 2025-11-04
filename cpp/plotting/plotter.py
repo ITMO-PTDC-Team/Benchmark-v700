@@ -39,7 +39,7 @@ def handle_file_error(exc: Exception, filepath: str = ""):
         print(f"Error: Missing key in JSON - {exc}")
     else:
         print(f"Unexpected error: {exc}")
-    
+
     sys.exit(1)
 
 
@@ -55,6 +55,10 @@ class JsonStatExtractor(abc.ABC):
     @abc.abstractmethod
     def run_extractor(self):
         """Run the custom extractor."""
+
+
+def get_ds_suffix(ds_args):
+    return ('.'.join(map(lambda item: f"{item[0]}_{item[1]}", ds_args.items())) + ".") if ds_args else ""
 
 
 class PlotterJsonExtractor(JsonStatExtractor):
@@ -82,7 +86,7 @@ class PlotterJsonExtractor(JsonStatExtractor):
         try:
             with open(self.path, 'r') as file:
                 data = json.load(file)
-            
+
             # necessary
             if "folder" not in data:
                 raise Exception("Please, set up the \"folder\" parameter.")
@@ -127,7 +131,7 @@ class PlotterJsonExtractor(JsonStatExtractor):
                 self.ds.append(ds_name)
                 self.ds_args.append(structs['data-structure-arguments'] if 'data-structure-arguments' in structs else {})
                 self.display_ds.append(structs['display-name'] if 'display-name' in structs else ds_name)
-                    
+
                 for cur_keys in data['keys']:
                     assert(len(cur_keys['values']) == len(self.xvalues))
                     self.settings[cur_keys['name']] = cur_keys['values']
@@ -138,11 +142,11 @@ class PlotterJsonExtractor(JsonStatExtractor):
         if not (self.no_run):
             folder_path = f"../plotting/{self.out_folder}/"
             if os.path.exists(folder_path):
-                files = glob.glob(os.path.join(folder_path, "*")) 
+                files = glob.glob(os.path.join(folder_path, "*"))
                 for f in files:
                     try:
                         if os.path.isfile(f):
-                            os.remove(f)  
+                            os.remove(f)
                     except Exception as e:
                         print(f"Error during file deletion {f}: {e}")
             # create folder
@@ -153,31 +157,31 @@ class PlotterJsonExtractor(JsonStatExtractor):
                 os.makedirs(log_folder)
             # populate folder with temporary configs
             with open(self.input_path, 'r') as file:
-                original_data = json.load(file)     
+                original_data = json.load(file)
             for iter_num in range(len(self.xvalues)):
                 temp_data = copy.copy(original_data)
                 for key_path, values in self.settings.items():
                     set_value(temp_data, key_path, values[iter_num])
                 title = str(self.xtitle) + '_' + self.xvalues[iter_num]
-                temp_file = os.path.join(self.out_folder, f"temp_config_{title}.json")
+                temp_file = os.path.join(self.out_folder, f"temp_config.{title}.json")
                 with open(temp_file, 'w') as temp:
                     json.dump(temp_data, temp, indent=4)
+
         for ds_name, ds_args in zip(self.ds, self.ds_args):
             for iter_num in range(len(self.xvalues)):
                 title = str(self.xtitle) + '_' + self.xvalues[iter_num]
-                suffix = "_" + ds_args["id"] if "id" in ds_args else ""
                 modify_and_run_second_json(
-                    self.out_folder, 
-                    self.input_path, 
+                    self.out_folder,
+                    self.input_path,
                     self.allocator,
-                    self.compiled_path, 
+                    self.compiled_path,
                     self.iterations,
                     self.timeout,
                     self.agg_stat,
                     self.no_run,
                     ds_name,
-                    title,
-                    suffix
+                    ds_args,
+                    title
                 )
 
 
@@ -198,7 +202,7 @@ class ResultJsonExtractor(JsonStatExtractor):
                 print(f"No key")
         except Exception as e:
             handle_file_error(e, self.path)
-    
+
     def run_extractor(self):
         return
 
@@ -216,7 +220,7 @@ class IterationsJsonAggregator(JsonStatExtractor):
             agg_stat = 0
             for iter_num in range(1, self.iters + 1):
                 try:
-                    current_path = f"{self.path}/{self.file_name}_{iter_num}.json"
+                    current_path = f"{self.path}/{self.file_name}.iter_{iter_num}.json"
                     with open(current_path, 'r', encoding='utf-8') as file:
                         data_temp = json.load(file)
                     if stat in data_temp:
@@ -226,9 +230,9 @@ class IterationsJsonAggregator(JsonStatExtractor):
                 except Exception as e:
                     handle_file_error(e, current_path)
             self.aggregated[stat] = agg_stat / self.iters
-    
+
     def run_extractor(self):
-        agg_path = f"{self.path}/{self.file_name}_aggregated.json"
+        agg_path = f"{self.path}/{self.file_name}.aggregated.json"
         try:
             with open(agg_path, 'w') as outfile:
                 json.dump(self.aggregated, outfile)
@@ -248,8 +252,8 @@ def set_value(data, path, new_value):
     current[keys[-1]] = new_value
 
 
-def modify_and_run_second_json(folder, 
-                               params, 
+def modify_and_run_second_json(folder,
+                               params,
                                allocator,
                                compiled_path,
                                iters,
@@ -257,19 +261,23 @@ def modify_and_run_second_json(folder,
                                agg_stat,
                                no_run,
                                ds,
-                               title,
-                               suffix):
+                               ds_args,
+                               title):
     try:
-        log_file = Path.cwd().parent / "plotting" / folder / "logs" / f"log_{ds}_{title}{suffix}.txt"
+        # In the future, these parameters will be passed to the command line.
+        ds_suffix = get_ds_suffix(ds_args)
+
+        log_file = Path.cwd().parent / "plotting" / folder / "logs" / f"log_{ds}.{ds_suffix}{title}.txt"
         task_logger = create_logger("logger_prefix", log_file)
         ld_preload = f"../lib/{allocator}.so" if allocator != "" else ""
-        inp = f"../plotting/{folder}/temp_config_{title}.json"
-        file_name = f"{ds}_{title}{suffix}"
+        inp = f"../plotting/{folder}/temp_config.{title}.json"
+        file_name = f"{ds}.{ds_suffix}{title}"
         if not (no_run):
-            print("Running for " + ds + " with suffix " + title + suffix)
+            print("Running for " + ds + " with suffix " + ds_suffix + title)
 
             for iter_num in range(1, iters + 1):
-                out = f"../plotting/{folder}/{file_name}_{iter_num}.json"
+                out = f"../plotting/{folder}/{file_name}.iter_{iter_num}.json"
+                # In the future, these ds_args will be passed to the command line.
                 run_command = f"{compiled_path}{ds} -json-file {inp} -result-file {out}"
                 # TODO:
                 # for argument, value in additional: 
@@ -298,7 +306,7 @@ def modify_and_run_second_json(folder,
                     task_logger.error(f"TimeoutExpired while running command: {exc}")
                 except Exception as e:
                     handle_file_error(e, out)
-        
+
         # Aggregate
         aggregator = IterationsJsonAggregator(file_name=file_name, iters=iters, stats=[agg_stat], path=folder)
         aggregator.extract()
@@ -311,7 +319,7 @@ def run(args):
     plotter_initial = PlotterJsonExtractor(path=args.file, no_run=args.no_run)
     plotter_initial.extract()
     plotter_initial.run_extractor()
-    
+
     fig, ax = plt.subplots()
     fig.suptitle(args.title if args.title is not None else "Result graph")
     ax.set_xlabel(plotter_initial.xtitle)
@@ -322,8 +330,8 @@ def run(args):
     for ds, ds_args, name in zip(plotter_initial.ds, plotter_initial.ds_args, plotter_initial.display_ds):
         yvalues = []
         for val in plotter_initial.xvalues:
-            suffix = '_' + ds_args["id"] if "id" in ds_args else ""
-            path_to_result = f"{plotter_initial.out_folder}/{ds}_{plotter_initial.xtitle}_{val}{suffix}_aggregated.json"
+            ds_suffix = get_ds_suffix(ds_args)
+            path_to_result = f"{plotter_initial.out_folder}/{ds}.{ds_suffix}{plotter_initial.xtitle}_{val}.aggregated.json"
             plotter_final = ResultJsonExtractor(agg_label=plotter_initial.agg_stat, path=path_to_result)
             plotter_final.extract()
             yvalues.append(plotter_final.agg_stat)
@@ -338,7 +346,7 @@ def run(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="""
-        Script for plotting setbench benchmarks' results.
+        Script for plotting benchmarks' results.
     """)
     parser.add_argument('-f', '--file', type=str, required=True, help='File with benchmark parameters. See README')
     parser.add_argument('-t', '--title', type=str, help='Name for the resulting graph')
