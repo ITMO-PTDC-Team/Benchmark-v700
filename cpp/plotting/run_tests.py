@@ -179,8 +179,8 @@ def test_full_workflow(test_dirs):
     
     # Verify outputs
     assert (output_dir / "full_plot.png").exists()
-    assert (output_dir / "aksenov_splaylist_64_threads_1_aggregated.json").exists()
-    assert (output_dir / "aksenov_splaylist_64_threads_2_aggregated.json").exists()
+    assert (output_dir / "aksenov_splaylist_64.debra_threads_1_aggregated.json").exists()
+    assert (output_dir / "aksenov_splaylist_64.debra_threads_2_aggregated.json").exists()
 
     if (CLEAN_DIRECTORY_AFTER == "True"):
         clean_directory(output_dir)  

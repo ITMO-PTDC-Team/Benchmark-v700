@@ -37,7 +37,7 @@ The `competitors` parameter should be an array of objects, each containing:
 ```json
 "competitors": [
     {
-        "name": "aksenov_splaylist_64",
+        "bin-name": "aksenov_splaylist_64.debra",
         "display-name": "Aksenov Splaylist",
         "data-structure-arguments": {
             // Optional: specific arguments for this data structure

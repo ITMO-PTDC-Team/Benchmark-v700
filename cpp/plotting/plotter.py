@@ -123,7 +123,7 @@ class PlotterJsonExtractor(JsonStatExtractor):
                 self.yscale = data['y_scale']
 
             for structs in data['competitors']:
-                ds_name = structs['name']
+                ds_name = structs['bin-name']
                 self.ds.append(ds_name)
                 self.ds_args.append(structs['data-structure-arguments'] if 'data-structure-arguments' in structs else {})
                 self.display_ds.append(structs['display-name'] if 'display-name' in structs else ds_name)
@@ -270,7 +270,7 @@ def modify_and_run_second_json(folder,
 
             for iter_num in range(1, iters + 1):
                 out = f"../plotting/{folder}/{file_name}_{iter_num}.json"
-                run_command = f"{compiled_path}{ds}.debra -json-file {inp} -result-file {out}"
+                run_command = f"{compiled_path}{ds} -json-file {inp} -result-file {out}"
                 # TODO:
                 # for argument, value in additional: 
                 #    run_command += f"-{argument} {value}"

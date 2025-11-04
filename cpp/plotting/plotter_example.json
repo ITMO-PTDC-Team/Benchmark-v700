@@ -6,14 +6,14 @@
     "compiled-path": "./bin/",
     "competitors": [
         {
-            "name": "aksenov_splaylist_64",
+            "bin-name": "aksenov_splaylist_64.debra",
             "display-name": "Aksenov Splaylist",
             "data-structure-arguments": {
 
             }
         },
         {
-            "name": "srivastava_abtree_mcs",
+            "bin-name": "srivastava_abtree_mcs.debra",
             "display-name": "Srivastava ABTree",
             "data-structure-arguments": {
                 
