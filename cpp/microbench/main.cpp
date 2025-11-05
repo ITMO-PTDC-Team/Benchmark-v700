@@ -352,8 +352,14 @@ void run(globals_t* g) {
         {
             // print prefilling status information
             using namespace std::chrono;
-            const int64_t total_updates = GSTATS_OBJECT_NAME.get_sum<int64_t>(num_inserts) +
-                                           GSTATS_OBJECT_NAME.get_sum<int64_t>(num_removes);
+            const int64_t total_updates =
+                GSTATS_OBJECT_NAME.get_sum<int64_t>(num_inserts) +
+                GSTATS_OBJECT_NAME.get_sum<int64_t>(num_removes)
+                #if defined(USE_STACK_OPERATIONS) || defined(USE_QUEUE_OPERATIONS)
+                + GSTATS_OBJECT_NAME.get_sum<int64_t>(num_pops) 
+                + GSTATS_OBJECT_NAME.get_sum<int64_t>(num_pushes)
+                #endif
+                ;
             g->curKeySum += GSTATS_OBJECT_NAME.get_sum<int64_t>(key_checksum);
             g->curSize += GSTATS_OBJECT_NAME.get_sum<int64_t>(num_successful_inserts) -
                           GSTATS_OBJECT_NAME.get_sum<int64_t>(num_successful_removes);
