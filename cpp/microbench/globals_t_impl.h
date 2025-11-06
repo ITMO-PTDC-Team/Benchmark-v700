@@ -69,11 +69,7 @@ struct globals_t {
     volatile bool debug_print;
     PAD;
 
-<<<<<<< HEAD
     globals_t(workload::BenchParameters* bench_parameters)
-=======
-    globals_t(workload::BenchParameters* _benchParameters)
->>>>>>> 8622b41 (enclose microbench code to namespace to prevent accidental name collisions)
         : NO_VALUE(NULL),
           KEY_MIN(0) /*std::numeric_limits<test_type>::min()+1)*/
           ,
