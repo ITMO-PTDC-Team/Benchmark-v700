@@ -1,58 +1,56 @@
 //
 // Created by Ravil Galiev on 30.08.2022.
 //
-#pragma once
 
+#ifndef SETBENCH_ZIPF_DISTRIBUTION_H
+#define SETBENCH_ZIPF_DISTRIBUTION_H
+
+#include <algorithm>
 #include <cassert>
-#include <cmath>
 #include "random_xoshiro256p.h"
 #include "plaf.h"
 #include "workloads/distributions/distribution.h"
 
-namespace microbench::workload {
-
 class ZipfDistribution : public MutableDistribution {
 private:
     PAD;
-    Random64& rng_;
-    size_t last_range_;
-    double area_;
-    double alpha_;
+    Random64 &rng;
+    size_t last_range;
+    double area;
+    double alpha;
     PAD;
-
 public:
-    explicit ZipfDistribution(Random64& rng, double alpha = 1.0, size_t range = 0)
-        : rng_(rng),
-          alpha_(alpha) {
-        set_range(range);
+
+    ZipfDistribution(Random64 &_rng, double _alpha = 1.0, size_t _range = 0)
+            : rng(_rng), alpha(_alpha) {
+        setRange(_range);
     }
 
-    void set_range(size_t range) override {
-        if (last_range_ == range) {
+    void setRange(size_t range) override {
+        if (last_range == range)
             return;
-        }
 
-        last_range_ = range;
+        last_range = range;
 
         ++range;
-        if (alpha_ == 1.0) {
-            area_ = log(range);
+        if (alpha == 1.0) {
+            area = log(range);
         } else {
-            area_ = (pow((double)range, 1.0 - alpha_) - 1.0) / (1.0 - alpha_);
+            area = (pow((double) range, 1.0 - alpha) - 1.0) / (1.0 - alpha);
         }
     }
 
     size_t next() override {
-        double z;  // Uniform random number (0 < z < 1)
+        double z; // Uniform random number (0 < z < 1)
         do {
-            z = (rng_.next() / (double)rng_.max_value);
+            z = (rng.next() / (double) rng.max_value);
         } while ((z == 0) || (z == 1));
         size_t zipf_value = 0;
-        double s = area_ * z;
-        if (alpha_ == 1.0) {
-            zipf_value = (size_t)exp(s);
+        double s = area * z;
+        if (alpha == 1.0) {
+            zipf_value = (size_t) exp(s);
         } else {
-            zipf_value = (size_t)pow(s * (1.0 - alpha_) + 1.0, 1.0 / (1.0 - alpha_));
+            zipf_value = (size_t) pow(s * (1.0 - alpha) + 1.0, 1.0 / (1.0 - alpha));
         }
         return zipf_value - 1;
     }
@@ -60,4 +58,5 @@ public:
     ~ZipfDistribution() override = default;
 };
 
-}  // namespace microbench::workload
+
+#endif //SETBENCH_ZIPF_DISTRIBUTION_H

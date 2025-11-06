@@ -1,85 +1,74 @@
 //
 // Created by Ravil Galiev on 27.07.2023.
 //
-#pragma once
 
-#include <cstdint>
+#ifndef SETBENCH_GLOBALS_T_IMPL_H
+#define SETBENCH_GLOBALS_T_IMPL_H
 
-typedef int64_t test_type;
+typedef long long test_type;
 
-// #ifdef REDIS
-//     #define VALUE_TYPE test_type
-//     #define KEY_TO_VALUE(key) key
-// #else
-//     #define VALUE_TYPE void *
-//     #define KEY_TO_VALUE(key) &key /* note: hack to turn a key into a pointer */
-// #endif
+//#ifdef REDIS
+//    #define VALUE_TYPE test_type
+//    #define KEY_TO_VALUE(key) key
+//#else
+//    #define VALUE_TYPE void *
+//    #define KEY_TO_VALUE(key) &key /* note: hack to turn a key into a pointer */
+//#endif
 //
-// #define DS_ADAPTER_T ds_adapter<test_type, VALUE_TYPE, RECLAIM<>, ALLOC<>, POOL<> >
+//#define DS_ADAPTER_T ds_adapter<test_type, VALUE_TYPE, RECLAIM<>, ALLOC<>, POOL<> >
 
-// #ifndef INSERT_FUNC
-// #define INSERT_FUNC insertIfAbsent
-// #endif
+//#ifndef INSERT_FUNC
+//#define INSERT_FUNC insertIfAbsent
+//#endif
 
 #include <chrono>
+#include "globals_extern.h"
 #include "workloads/bench_parameters.h"
 #include "adapter.h"
 #include "globals_t.h"
 
-namespace microbench {
-
 struct globals_t {
     PAD;
     // const
-    //    void *const NO_VALUE;
+//    void *const NO_VALUE;
     VALUE_TYPE const NO_VALUE;
-    const test_type KEY_MIN;  // must be smaller than any key that can be inserted/deleted
-    const test_type
-        KEY_MAX;  // must be less than std::max(), because the snap collector needs a reserved key
-                  // larger than this! (and larger than any key that can be inserted/deleted)
-    const int64_t PREFILL_INTERVAL_MILLIS;
+    const test_type KEY_MIN; // must be smaller than any key that can be inserted/deleted
+    const test_type KEY_MAX; // must be less than std::max(), because the snap collector needs a reserved key larger than this! (and larger than any key that can be inserted/deleted)
+    const long long PREFILL_INTERVAL_MILLIS;
     PAD;
     // write once
-    int64_t elapsedMillis;
-    int64_t curKeySum = 0;
-    int64_t curSize = 0;
+    long long elapsedMillis;
+    long long curKeySum = 0;
+    long long curSize = 0;
     std::chrono::time_point<std::chrono::high_resolution_clock> programExecutionStartTime;
     std::chrono::time_point<std::chrono::high_resolution_clock> endTime;
     PAD;
     std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
-    int64_t startClockTicks;
+    long long startClockTicks;
     PAD;
-    int64_t elapsedMillisNapping;
+    long elapsedMillisNapping;
     PAD;
-    volatile test_type garbage;  // used to prevent optimizing out some code
+    volatile test_type garbage; // used to prevent optimizing out some code
     PAD;
-    DS_ADAPTER_T* dsAdapter;  // the data structure
+    DS_ADAPTER_T *dsAdapter; // the data structure
     PAD;
-    workload::BenchParameters* benchParameters;
+    BenchParameters * benchParameters;
     PAD;
-    Random64 rngs[MAX_THREADS_POW2];  // create per-thread random number generators (padded to avoid
-                                      // false sharing)
-                                      //    PAD; // not needed because of padding at the end of rngs
+    Random64 rngs[MAX_THREADS_POW2]; // create per-thread random number generators (padded to avoid false sharing)
+//    PAD; // not needed because of padding at the end of rngs
     volatile bool start;
     PAD;
     volatile bool done;
     PAD;
-    volatile int running;  // number of threads that are running
+    volatile int running; // number of threads that are running
     PAD;
     volatile bool debug_print;
     PAD;
 
-<<<<<<< HEAD
-    globals_t(workload::BenchParameters* bench_parameters)
-=======
-    globals_t(workload::BenchParameters* _benchParameters)
->>>>>>> 8622b41 (enclose microbench code to namespace to prevent accidental name collisions)
-        : NO_VALUE(NULL),
-          KEY_MIN(0) /*std::numeric_limits<test_type>::min()+1)*/
-          ,
-          KEY_MAX(bench_parameters->range + 1),
-          PREFILL_INTERVAL_MILLIS(200),
-          benchParameters(bench_parameters) {
+    globals_t(BenchParameters * _benchParameters)
+            : NO_VALUE(NULL), KEY_MIN(0) /*std::numeric_limits<test_type>::min()+1)*/
+            , KEY_MAX(_benchParameters->range + 1), PREFILL_INTERVAL_MILLIS(200),
+              benchParameters(_benchParameters) {
         debug_print = 0;
         srand(time(0));
         for (int i = 0; i < MAX_THREADS_POW2; ++i) {
@@ -89,18 +78,18 @@ struct globals_t {
         start = false;
         done = false;
         running = 0;
-        dsAdapter = nullptr;
+        dsAdapter = NULL;
         garbage = 0;
         curKeySum = 0;
         curSize = 0;
     }
 
     void enable_debug_print() {
-        debug_print = true;
+        debug_print = 1;
     }
 
     void disable_debug_print() {
-        debug_print = false;
+        debug_print = 0;
     }
 
     ~globals_t() {
@@ -108,4 +97,4 @@ struct globals_t {
     }
 };
 
-}  // namespace microbench
+#endif //SETBENCH_GLOBALS_T_IMPL_H

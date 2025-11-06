@@ -1,15 +1,15 @@
 //
 // Created by Ravil Galiev on 08.08.2023.
 //
-#pragma once
+
+#ifndef SETBENCH_TEMPORARY_SKEWED_ARGS_GENERATOR_H
+#define SETBENCH_TEMPORARY_SKEWED_ARGS_GENERATOR_H
 
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/distributions/distribution.h"
 #include "workloads/data_maps/data_map.h"
 
 #include "globals_extern.h"
-
-namespace microbench::workload {
 
 /**
     n — { xi — yi — ti — rti } // либо   n — rt — { xi — yi — ti }
@@ -18,98 +18,87 @@ namespace microbench::workload {
         yi — вероятность чтения элемента из i-ого множества
           // 100% - yi — чтение остальных элементов
         ti — время / количество итераций работы в режиме горячего вызова i-ого множества
-        rti / rt (relax time) — время / количество итераций работы в обычном режиме (равномерное
-                                распределение на все элементы)
+        rti / rt (relax time) — время / количество итераций работы в обычном режиме (равномерное распределение на все элементы)
           // rt — если relax time всегда одинаковый
           // rti — relax time после горячей работы с i-ым множеством
  */
-template <typename K>
+template<typename K>
 class TemporarySkewedArgsGenerator : public ArgsGenerator<K> {
-    size_t time_;
-    size_t pointer_;
-    bool is_relax_time_;
+    size_t time;
+    size_t pointer;
+    bool isRelaxTime;
 
-    Distribution** hot_dists_;
-    Distribution* relax_dist_;
-    DataMap<K>* data_map_;
-    // PAD;
-    int64_t* hot_times_;
-    // PAD;
-    int64_t* relax_times_;
-    // PAD;
-    size_t* set_begins_;
-    // PAD;
-    size_t set_number_;
-    size_t range_;
+    Distribution **hotDists;
+    Distribution *relaxDist;
+    DataMap<K> *dataMap;
+    PAD;
+    long long *hotTimes;
+    PAD;
+    long long *relaxTimes;
+    PAD;
+    size_t *setBegins;
+    PAD;
+    size_t setNumber;
+    size_t range;
 
     void update_pointer() {
-        if (!is_relax_time_) {
-            if (time_ >= hot_times_[pointer_]) {
-                time_ = 0;
-                is_relax_time_ = true;
+        if (!isRelaxTime) {
+            if (time >= hotTimes[pointer]) {
+                time = 0;
+                isRelaxTime = true;
             }
         } else {
-            if (time_ >= relax_times_[pointer_]) {
-                time_ = 0;
-                is_relax_time_ = false;
-                ++pointer_;
-                if (pointer_ >= set_number_) {
-                    pointer_ = 0;
+            if (time >= relaxTimes[pointer]) {
+                time = 0;
+                isRelaxTime = false;
+                ++pointer;
+                if (pointer >= setNumber) {
+                    pointer = 0;
                 }
             }
         }
-        ++time_;
+        ++time;
     }
 
     K next() {
         update_pointer();
         K value;
 
-        if (is_relax_time_) {
-            value = data_map_->get(relax_dist_->next());
+        if (isRelaxTime) {
+            value = dataMap->get(relaxDist->next());
         } else {
-            size_t index = set_begins_[pointer_] + hot_dists_[pointer_]->next();
-            if (index >= range_) {
-                index -= range_;
+            size_t index = setBegins[pointer] + hotDists[pointer]->next();
+            if (index >= range) {
+                index -= range;
             }
 
-            value = data_map_->get(index);
+            value = dataMap->get(index);
         }
 
         return value;
     }
 
 public:
-    TemporarySkewedArgsGenerator(size_t set_number, size_t range, int64_t* hot_times,
-                                 int64_t* relax_times, size_t* set_begins, Distribution** hot_dists,
-                                 Distribution* relax_dist, DataMap<K>* data_map)
-        : hot_dists_(hot_dists),
-          relax_dist_(relax_dist),
-          data_map_(data_map),
-          hot_times_(hot_times),
-          relax_times_(relax_times),
-          set_begins_(set_begins),
-          set_number_(set_number),
-          range_(range),
-          time_(0),
-          pointer_(0),
-          is_relax_time_(false) {
-    }
+    TemporarySkewedArgsGenerator(size_t setNumber, size_t range,
+                                 long long *hotTimes, long long *relaxTimes, size_t *setBegins,
+                                 Distribution **hotDists, Distribution *relaxDist, DataMap<K> *dataMap)
+            : hotDists(hotDists), relaxDist(relaxDist), dataMap(dataMap), hotTimes(hotTimes), relaxTimes(relaxTimes),
+              setBegins(setBegins), setNumber(setNumber), range(range), time(0), pointer(0), isRelaxTime(false) {}
 
-    K next_get() override {
+    K nextGet() override {
         return next();
     }
 
-    K next_insert() override {
+    K nextInsert() override {
         return next();
     }
 
-    K next_remove() override {
+    K nextRemove() override {
         return next();
     }
 
-    std::pair<K, K> next_range() override {
-        --time_;
+    std::pair<K, K> nextRange() override {
+        --time;
         K left = next();
         K right = next();
 
@@ -120,13 +109,12 @@ public:
     }
 
     ~TemporarySkewedArgsGenerator() override {
-        delete[] hot_dists_;
-        delete relax_dist_;
-        //        delete dataMap; //TODO may deleted twice
+        delete[] hotDists;
+        delete relaxDist;
+//        delete dataMap; //TODO may deleted twice
     };
-};
 
-}  // namespace microbench::workload
+};
 
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/distributions/builders/uniform_distribution_builder.h"
@@ -135,305 +123,307 @@ public:
 #include "workloads/distributions/distribution_json_convector.h"
 #include "workloads/data_maps/data_map_json_convector.h"
 
-namespace microbench::workload {
-
 class TemporarySkewedArgsGeneratorBuilder : public ArgsGeneratorBuilder {
-    size_t range_;
-    size_t set_number_ = 0;
-    SkewedUniformDistributionBuilder** hot_dist_builders_;
-    DistributionBuilder* relax_dist_builder_ = new UniformDistributionBuilder();
+    size_t range;
+    size_t setNumber = 0;
+    SkewedUniformDistributionBuilder **hotDistBuilders;
+    DistributionBuilder *relaxDistBuilder = new UniformDistributionBuilder();
     PAD;
-    int64_t* hot_times_;
+    long long *hotTimes;
     PAD;
-    int64_t* relax_times_;
+    long long *relaxTimes;
     PAD;
-    int64_t default_hot_time_ = -1;
-    int64_t default_relax_time_ = -1;
+    long long defaultHotTime = -1;
+    long long defaultRelaxTime = -1;
 
     /**
      * manual setting of the begins of sets
      */
-    bool manual_setting_set_begins_ = false;
-    double* set_begins_;
+    bool manualSettingSetBegins = false;
+    double *setBegins;
     PAD;
-    size_t* set_begin_indexes_;
+    size_t *setBeginIndexes;
     PAD;
 
-    DataMapBuilder* data_map_builder_ = new ArrayDataMapBuilder();
+    DataMapBuilder *dataMapBuilder = new ArrayDataMapBuilder();
 
 public:
-    TemporarySkewedArgsGeneratorBuilder* enable_manual_setting_set_begins() {
-        manual_setting_set_begins_ = true;
-        set_begins_ = new double[set_number_];
-        std::fill(set_begins_, set_begins_ + set_number_, 0);
+    TemporarySkewedArgsGeneratorBuilder *enableManualSettingSetBegins() {
+        manualSettingSetBegins = true;
+        setBegins = new double[setNumber];
+        std::fill(setBegins, setBegins + setNumber, 0);
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* disable_manual_setting_set_begins() {
-        manual_setting_set_begins_ = false;
+    TemporarySkewedArgsGeneratorBuilder *disableManualSettingSetBegins() {
+        manualSettingSetBegins = false;
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_set_number(const size_t set_number) {
-        set_number_ = set_number;
-        hot_dist_builders_ = new SkewedUniformDistributionBuilder*[set_number];
-        hot_times_ = new int64_t[set_number_];
-        relax_times_ = new int64_t[set_number_];
+    TemporarySkewedArgsGeneratorBuilder *setSetNumber(const size_t _setNumber) {
+        setNumber = _setNumber;
+        hotDistBuilders = new SkewedUniformDistributionBuilder *[_setNumber];
+        hotTimes = new long long[setNumber];
+        relaxTimes = new long long[setNumber];
 
-        if (manual_setting_set_begins_) {
-            set_begins_ = new double[set_number_];
-            std::fill(set_begins_, set_begins_ + set_number_, 0);
+        if (manualSettingSetBegins) {
+            setBegins = new double[setNumber];
+            std::fill(setBegins, setBegins + setNumber, 0);
         }
 
         /**
          * if hotTimes[point] == -1, we will use hotTime
          * relaxTime analogically
          */
-        std::fill(hot_times_, hot_times_ + set_number_, default_hot_time_);
-        std::fill(relax_times_, relax_times_ + set_number_, default_relax_time_);
+        std::fill(hotTimes, hotTimes + setNumber, defaultHotTime);
+        std::fill(relaxTimes, relaxTimes + setNumber, defaultRelaxTime);
 
-        for (size_t i = 0; i < set_number_; ++i) {
-            hot_dist_builders_[i] = new SkewedUniformDistributionBuilder();
+        for (size_t i = 0; i < setNumber; ++i) {
+            hotDistBuilders[i] = new SkewedUniformDistributionBuilder();
         }
 
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_sets_dist_builder(
-        SkewedUniformDistributionBuilder** sets_dist_builder) {
-        hot_dist_builders_ = sets_dist_builder;
+    TemporarySkewedArgsGeneratorBuilder *setSetsDistBuilder(SkewedUniformDistributionBuilder **_setsDistBuilder) {
+        hotDistBuilders = _setsDistBuilder;
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_set_dist_builder(
-        const size_t index, SkewedUniformDistributionBuilder* set_dist_builder) {
+    TemporarySkewedArgsGeneratorBuilder *setSetDistBuilder(const size_t index,
+                                                           SkewedUniformDistributionBuilder *_setDistBuilder) {
         assert(index < setNumber);
-        hot_dist_builders_[index] = set_dist_builder;
+        hotDistBuilders[index] = _setDistBuilder;
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_relax_dist_builder(
-        DistributionBuilder* relax_dist_builder) {
-        relax_dist_builder_ = relax_dist_builder;
+    TemporarySkewedArgsGeneratorBuilder *setRelaxDistBuilder(DistributionBuilder *_relaxDistBuilder) {
+        relaxDistBuilder = _relaxDistBuilder;
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_hot_size_and_ratio(const size_t index,
-                                                                const double hot_size,
-                                                                const double hot_ratio) {
+
+    TemporarySkewedArgsGeneratorBuilder *
+    setHotSizeAndRatio(const size_t index, const double _hotSize, const double _hotRatio) {
         assert(index < setNumber);
-        hot_dist_builders_[index]->set_hot_size(hot_size);
-        hot_dist_builders_[index]->set_hot_ratio(hot_ratio);
+        hotDistBuilders[index]->setHotSize(_hotSize);
+        hotDistBuilders[index]->setHotRatio(_hotRatio);
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_hot_size(const size_t index, const double hot_size) {
+    TemporarySkewedArgsGeneratorBuilder *setHotSize(const size_t index, const double _hotSize) {
         assert(index < setNumber);
-        hot_dist_builders_[index]->set_hot_size(hot_size);
+        hotDistBuilders[index]->setHotSize(_hotSize);
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_hot_ratio(const size_t index, const double hot_ratio) {
+    TemporarySkewedArgsGeneratorBuilder *setHotRatio(const size_t index, const double _hotRatio) {
         assert(index < setNumber);
-        hot_dist_builders_[index]->set_hot_ratio(hot_ratio);
+        hotDistBuilders[index]->setHotRatio(_hotRatio);
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_hot_times(int64_t* hot_times) {
-        hot_times_ = hot_times;
+
+    TemporarySkewedArgsGeneratorBuilder *setHotTimes(long long *_hotTimes) {
+        hotTimes = _hotTimes;
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_relax_times(int64_t* relax_times) {
-        relax_times_ = relax_times;
+    TemporarySkewedArgsGeneratorBuilder *setRelaxTimes(long long *_relaxTimes) {
+        relaxTimes = _relaxTimes;
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_hot_time(const size_t index, const int64_t hot_time) {
-        assert(index < setNumber);
-
-        hot_times_[index] = hot_time;
-        return this;
-    }
-
-    TemporarySkewedArgsGeneratorBuilder* set_relax_time(const size_t index,
-                                                        const int64_t relax_time) {
+    TemporarySkewedArgsGeneratorBuilder *setHotTime(const size_t index, const long long _hotTime) {
         assert(index < setNumber);
 
-        relax_times_[index] = relax_time;
+        hotTimes[index] = _hotTime;
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_default_hot_time(const int64_t hot_time) {
-        default_hot_time_ = hot_time;
-        return this;
-    }
-
-    TemporarySkewedArgsGeneratorBuilder* set_default_relax_time(const int64_t relax_time) {
-        default_relax_time_ = relax_time;
-        return this;
-    }
-
-    TemporarySkewedArgsGeneratorBuilder* set_set_begins(double* set_begins) {
-        set_begins_ = set_begins;
-        return this;
-    }
-
-    TemporarySkewedArgsGeneratorBuilder* set_set_begin(const size_t index, const double set_begin) {
+    TemporarySkewedArgsGeneratorBuilder *setRelaxTime(const size_t index, const long long _relaxTime) {
         assert(index < setNumber);
-        set_begins_[index] = set_begin;
+
+        relaxTimes[index] = _relaxTime;
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_data_map_builder(DataMapBuilder* data_map_builder) {
-        data_map_builder_ = data_map_builder;
+    TemporarySkewedArgsGeneratorBuilder *setDefaultHotTime(const long long _hotTime) {
+        defaultHotTime = _hotTime;
         return this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* init(size_t range) override {
-        range_ = range;
+    TemporarySkewedArgsGeneratorBuilder *setDefaultRelaxTime(const long long _relaxTime) {
+        defaultRelaxTime = _relaxTime;
+        return this;
+    }
 
-        for (int i = 0; i < set_number_; ++i) {
-            if (relax_times_[i] == -1) {
-                relax_times_[i] = default_relax_time_;
+    TemporarySkewedArgsGeneratorBuilder *setSetBegins(double *_setBegins) {
+        setBegins = _setBegins;
+        return this;
+    }
+
+    TemporarySkewedArgsGeneratorBuilder *setSetBegin(const size_t index, const double _setBegin) {
+        assert(index < setNumber);
+        setBegins[index] = _setBegin;
+        return this;
+    }
+
+    TemporarySkewedArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
+        dataMapBuilder = _dataMapBuilder;
+        return this;
+    }
+
+    TemporarySkewedArgsGeneratorBuilder *init(size_t _range) override {
+        range = _range;
+
+        for (int i = 0; i < setNumber; ++i) {
+            if (relaxTimes[i] == -1) {
+                relaxTimes[i] = defaultRelaxTime;
             }
         }
 
-        for (int i = 0; i < set_number_; ++i) {
-            if (hot_times_[i] == -1) {
-                hot_times_[i] = default_hot_time_;
+        for (int i = 0; i < setNumber; ++i) {
+            if (hotTimes[i] == -1) {
+                hotTimes[i] = defaultHotTime;
             }
         }
 
-        set_begin_indexes_ = new size_t[set_number_];
+        setBeginIndexes = new size_t[setNumber];
 
-        if (manual_setting_set_begins_) {
-            for (size_t i = 0; i < set_number_; ++i) {
-                set_begin_indexes_[i] = (size_t)(range_ * set_begins_[i]);
+
+        if (manualSettingSetBegins) {
+            for (size_t i = 0; i < setNumber; ++i) {
+                setBeginIndexes[i] = (size_t) (range * setBegins[i]);
             }
         } else {
-            size_t cur_index = 0;
-            for (size_t i = 0; i < set_number_; ++i) {
-                set_begin_indexes_[i] = cur_index;
-                cur_index += hot_dist_builders_[i]->get_hot_length(range_);
+            size_t curIndex = 0;
+            for (size_t i = 0; i < setNumber; ++i) {
+                setBeginIndexes[i] = curIndex;
+                curIndex += hotDistBuilders[i]->getHotLength(range);
             }
         }
 
-        //        dataMapBuilder->init(range);
+//        dataMapBuilder->init(range);
         return this;
     }
 
-    TemporarySkewedArgsGenerator<K>* build(Random64& rng) override {
-        Distribution** hot_dists = new Distribution*[set_number_];
+    TemporarySkewedArgsGenerator<K> *build(Random64 &_rng) override {
+        Distribution **hotDists = new Distribution *[setNumber];
 
-        for (size_t i = 0; i < set_number_; ++i) {
-            hot_dists[i] = hot_dist_builders_[i]->build(rng, range_);
+        for (size_t i = 0; i < setNumber; ++i) {
+            hotDists[i] = hotDistBuilders[i]->build(_rng, range);
         }
 
-        return new TemporarySkewedArgsGenerator<K>(
-            set_number_, range_, hot_times_, relax_times_, set_begin_indexes_, hot_dists,
-            relax_dist_builder_->build(rng, range_), data_map_builder_->build());
+        return new TemporarySkewedArgsGenerator<K>(setNumber, range,
+                                                   hotTimes, relaxTimes, setBeginIndexes,
+                                                   hotDists, relaxDistBuilder->build(_rng, range),
+                                                   dataMapBuilder->build());
     }
 
-    void to_json(nlohmann::json& j) const override {
+    void toJson(nlohmann::json &j) const override {
         j["ClassName"] = "TemporarySkewedArgsGeneratorBuilder";
-        j["setNumber"] = set_number_;
-        j["defaultHotTime"] = default_hot_time_;
-        j["defaultRelaxTime"] = default_relax_time_;
-        for (size_t i = 0; i < set_number_; ++i) {
-            j["hotDistBuilders"].push_back(*hot_dist_builders_[i]);
-            j["hotTimes"].push_back(hot_times_[i]);
-            j["relaxTimes"].push_back(relax_times_[i]);
-            if (manual_setting_set_begins_) {
-                j["setBegins"].push_back(set_begins_[i]);
+        j["setNumber"] = setNumber;
+        j["defaultHotTime"] = defaultHotTime;
+        j["defaultRelaxTime"] = defaultRelaxTime;
+        for (size_t i = 0; i < setNumber; ++i) {
+            j["hotDistBuilders"].push_back(*hotDistBuilders[i]);
+            j["hotTimes"].push_back(hotTimes[i]);
+            j["relaxTimes"].push_back(relaxTimes[i]);
+            if (manualSettingSetBegins) {
+                j["setBegins"].push_back(setBegins[i]);
             }
         }
-        j["relaxDistBuilder"] = *relax_dist_builder_;
-        j["dataMapBuilder"] = *data_map_builder_;
-        j["manualSettingSetBegins"] = manual_setting_set_begins_;
+        j["relaxDistBuilder"] = *relaxDistBuilder;
+        j["dataMapBuilder"] = *dataMapBuilder;
+        j["manualSettingSetBegins"] = manualSettingSetBegins;
     }
 
-    void from_json(const nlohmann::json& j) override {
-        manual_setting_set_begins_ = j["manualSettingSetBegins"];
-        this->set_default_hot_time(j["defaultHotTime"]);
-        this->set_default_relax_time(j["defaultRelaxTime"]);
+    void fromJson(const nlohmann::json &j) override {
+        manualSettingSetBegins = j["manualSettingSetBegins"];
+        this->setDefaultHotTime(j["defaultHotTime"]);
+        this->setDefaultRelaxTime(j["defaultRelaxTime"]);
 
-        this->set_set_number(j["setNumber"]);
+        this->setSetNumber(j["setNumber"]);
 
-        std::copy(std::begin(j["hotTimes"]), std::end(j["hotTimes"]), hot_times_);
-        std::copy(std::begin(j["relaxTimes"]), std::end(j["relaxTimes"]), relax_times_);
+        std::copy(std::begin(j["hotTimes"]), std::end(j["hotTimes"]), hotTimes);
+        std::copy(std::begin(j["relaxTimes"]), std::end(j["relaxTimes"]), relaxTimes);
 
-        if (manual_setting_set_begins_) {
-            std::copy(std::begin(j["setBegins"]), std::end(j["setBegins"]), set_begins_);
+        if (manualSettingSetBegins) {
+            std::copy(std::begin(j["setBegins"]), std::end(j["setBegins"]), setBegins);
         }
 
-        relax_dist_builder_ = get_distribution_from_json(j["relaxDistBuilder"]);
-        data_map_builder_ = get_data_map_from_json(j["dataMapBuilder"]);
+        relaxDistBuilder = getDistributionFromJson(j["relaxDistBuilder"]);
+        dataMapBuilder = getDataMapFromJson(j["dataMapBuilder"]);
 
         size_t i = 0;
-        for (const auto& j_i : j["hotDistBuilders"]) {
-            hot_dist_builders_[i] =
-                dynamic_cast<SkewedUniformDistributionBuilder*>(get_distribution_from_json(j_i));
+        for (const auto &j_i: j["hotDistBuilders"]) {
+            hotDistBuilders[i] = dynamic_cast<SkewedUniformDistributionBuilder *>(
+                    getDistributionFromJson(j_i)
+            );
             ++i;
         }
     }
 
-    std::string to_string(size_t indents) override {
+    std::string toString(size_t indents) override {
         std::string result =
-            indented_title_with_str_data("Type", "TEMPORARY_SKEWED", indents) +
-            indented_title_with_data("Set number", set_number_, indents) +
-            indented_title_with_data("Default Hot Time", default_hot_time_, indents) +
-            indented_title_with_data("Default Relax Time", default_relax_time_, indents) +
-            indented_title_with_data("Manual Setting SetBegins", manual_setting_set_begins_,
-                                     indents) +
-            indented_title("Hot Times", indents);
+                indented_title_with_str_data("Type", "TEMPORARY_SKEWED", indents)
+                + indented_title_with_data("Set number", setNumber, indents)
+                + indented_title_with_data("Default Hot Time", defaultHotTime, indents)
+                + indented_title_with_data("Default Relax Time", defaultRelaxTime, indents)
+                + indented_title_with_data("Manual Setting SetBegins", manualSettingSetBegins, indents)
+                + indented_title("Hot Times", indents);
 
-        for (size_t i = 0; i < set_number_; ++i) {
-            result += indented_title_with_data("Hot Time " + std::to_string(i), hot_times_[i],
-                                               indents + 1);
+        for (size_t i = 0; i < setNumber; ++i) {
+            result += indented_title_with_data("Hot Time " + std::to_string(i),
+                                               hotTimes[i], indents + 1);
         }
 
         result += indented_title("Relax Times", indents);
 
-        for (size_t i = 0; i < set_number_; ++i) {
-            result += indented_title_with_data("Relax Time " + std::to_string(i), relax_times_[i],
-                                               indents + 1);
+        for (size_t i = 0; i < setNumber; ++i) {
+            result += indented_title_with_data("Relax Time " + std::to_string(i),
+                                               relaxTimes[i], indents + 1);
         }
 
-        if (manual_setting_set_begins_) {
+        if (manualSettingSetBegins) {
             result += indented_title("Set Begins", indents);
 
-            for (size_t i = 0; i < set_number_; ++i) {
-                result += indented_title_with_data("Set Begin " + std::to_string(i), set_begins_[i],
-                                                   indents + 1);
+            for (size_t i = 0; i < setNumber; ++i) {
+                result += indented_title_with_data("Set Begin " + std::to_string(i),
+                                                   setBegins[i], indents + 1);
             }
         }
 
         result += indented_title("Hot Distributions", indents);
 
-        for (size_t i = 0; i < set_number_; ++i) {
-            result += indented_title("Hot Distribution " + std::to_string(i), indents + 1) +
-                      hot_dist_builders_[i]->to_string(indents + 2);
+        for (size_t i = 0; i < setNumber; ++i) {
+            result += indented_title("Hot Distribution " + std::to_string(i), indents + 1)
+                      + hotDistBuilders[i]->toString(indents + 2);
         }
 
-        result += indented_title("Relax Distribution", indents) +
-                  relax_dist_builder_->to_string(indents + 1) +
-                  indented_title("Data Map", indents) + data_map_builder_->to_string(indents + 1);
+        result +=
+                indented_title("Relax Distribution", indents)
+                + relaxDistBuilder->toString(indents + 1)
+                + indented_title("Data Map", indents)
+                + dataMapBuilder->toString(indents + 1);
 
         return result;
     }
 
     ~TemporarySkewedArgsGeneratorBuilder() override {
-        delete[] hot_times_;
-        delete[] relax_times_;
-        if (manual_setting_set_begins_) {
-            delete[] set_begins_;
-            delete[] set_begin_indexes_;
+        delete[] hotTimes;
+        delete[] relaxTimes;
+        if (manualSettingSetBegins) {
+            delete[] setBegins;
+            delete[] setBeginIndexes;
         }
-        delete[] hot_dist_builders_;
-        delete relax_dist_builder_;
-        //        delete dataMapBuilder;
+        delete[] hotDistBuilders;
+        delete relaxDistBuilder;
+//        delete dataMapBuilder;
     }
+
+
 };
 
-}  // namespace microbench::workload
+#endif //SETBENCH_TEMPORARY_SKEWED_ARGS_GENERATOR_H

@@ -1,135 +1,137 @@
 //
 // Created by Ravil Galiev on 08.08.2023.
 //
-#pragma once
+
+#ifndef SETBENCH_SKEWED_INSERT_ARGS_GENERATOR_H
+#define SETBENCH_SKEWED_INSERT_ARGS_GENERATOR_H
 
 #include "workloads/args_generators/args_generator.h"
 
 #include "globals_extern.h"
 #include "errors.h"
-#include "workloads/data_maps/data_map.h"
-#include "workloads/data_maps/data_map_json_convector.h"
-#include "workloads/distributions/builders/skewed_uniform_distribution_builder.h"
-#include "workloads/distributions/distribution.h"
 
-namespace microbench::workload {
-
-template <typename K>
+template<typename K>
 class SkewedInsertArgsGenerator : public ArgsGenerator<K> {
-    //    PAD;
-    size_t skewed_length_;
-    size_t inserted_number_;
-    Distribution* distribution_;
-    // PAD;
-    DataMap<K>* data_map_;
-    // PAD;
+//    PAD;
+    size_t skewedLength;
+    size_t insertedNumber;
+    Distribution *distribution;
+    PAD;
+    DataMap <K> *dataMap;
+    PAD;
 
 public:
-    SkewedInsertArgsGenerator(size_t skewed_length, Distribution* distribution,
-                              DataMap<K>* data_map)
-        : inserted_number_(0),
-          skewed_length_(skewed_length),
-          distribution_(distribution),
-          data_map_(data_map) {
+
+    SkewedInsertArgsGenerator(size_t skewedLength, Distribution *distribution, DataMap <K> *dataMap)
+            : insertedNumber(0), skewedLength(skewedLength),
+              distribution(distribution), dataMap(dataMap) {}
+
+    K nextGet() override {
+        setbench_error("Unsupported operation -- nextGet")
     }
 
-    K next_get() override{setbench_error("Unsupported operation -- nextGet")}
-
-    K next_insert() override {
+    K nextInsert() override {
         K value;
-        if (inserted_number_ < skewed_length_) {
-            value = data_map_->get(inserted_number_++);
+        if (insertedNumber < skewedLength) {
+            value = dataMap->get(insertedNumber++);
         } else {
-            value = data_map_->get(skewed_length_ + distribution_->next());
+            value = dataMap->get(skewedLength + distribution->next());
         }
         return value;
     }
 
-    K next_remove() override{setbench_error("Unsupported operation -- nextGet")}
+    K nextRemove() override {
+        setbench_error("Unsupported operation -- nextGet")
+    }
 
-    std::pair<K, K> next_range() override {
+    std::pair <K, K> nextRange() override {
         setbench_error("Unsupported operation -- nextGet")
     }
 
     ~SkewedInsertArgsGenerator() override {
-        delete distribution_;
-        delete data_map_;
+        delete distribution;
+        delete dataMap;
     };
-};
 
-}  // namespace microbench::workload
+
+};
 
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/distributions/builders/uniform_distribution_builder.h"
 #include "workloads/data_maps/data_map_builder.h"
 #include "workloads/data_maps/builders/array_data_map_builder.h"
 
-namespace microbench::workload {
-
+//template<typename K>
 class SkewedInsertArgsGeneratorBuilder : public ArgsGeneratorBuilder {
-    size_t range_;
+    size_t range;
 
-    DistributionBuilder* dist_builder_ = new UniformDistributionBuilder();
+    DistributionBuilder *distBuilder = new UniformDistributionBuilder();
 
-    DataMapBuilder* data_map_builder_ = new ArrayDataMapBuilder();
+    DataMapBuilder *dataMapBuilder = new ArrayDataMapBuilder();
 
-    double skewed_size_ = 0;
+    double skewedSize = 0;
 
-    size_t skewed_length_;
+    size_t skewedLength;
 
 public:
-    SkewedInsertArgsGeneratorBuilder* set_skewed_size(double skewed_size) {
-        skewed_size_ = skewed_size;
+    SkewedInsertArgsGeneratorBuilder *setSkewedSize(double _skewedSize) {
+        skewedSize = _skewedSize;
         return this;
     }
 
-    SkewedInsertArgsGeneratorBuilder* set_distribution_builder(DistributionBuilder* dist_builder) {
-        dist_builder_ = dist_builder;
+    SkewedInsertArgsGeneratorBuilder *setDistributionBuilder(DistributionBuilder *_distBuilder) {
+        distBuilder = _distBuilder;
         return this;
     }
 
-    SkewedInsertArgsGeneratorBuilder* set_data_map_builder(DataMapBuilder* data_map_builder) {
-        data_map_builder_ = data_map_builder;
+    SkewedInsertArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
+        dataMapBuilder = _dataMapBuilder;
         return this;
     }
 
-    SkewedInsertArgsGeneratorBuilder* init(size_t range) override {
-        range_ = range;
-        //        dataMapBuilder->init(range);
-        skewed_length_ = (size_t)(range * skewed_size_);
+    SkewedInsertArgsGeneratorBuilder *init(size_t _range) override {
+        range = _range;
+//        dataMapBuilder->init(range);
+        skewedLength = (size_t) (_range * skewedSize);
         return this;
     }
 
-    SkewedInsertArgsGenerator<K>* build(Random64& rng) override {
-        return new SkewedInsertArgsGenerator<K>(skewed_length_,
-                                                dist_builder_->build(rng, range_ - skewed_length_),
-                                                data_map_builder_->build());
+    SkewedInsertArgsGenerator<K> *build(Random64 &_rng) override {
+        return new SkewedInsertArgsGenerator<K>(
+                skewedLength,
+                distBuilder->build(_rng, range - skewedLength),
+                dataMapBuilder->build()
+        );
     }
 
-    void to_json(nlohmann::json& j) const override {
+    void toJson(nlohmann::json &j) const override {
         j["ClassName"] = "SkewedInsertArgsGeneratorBuilder";
-        j["distributionBuilder"] = *dist_builder_;
-        j["skewedSize"] = skewed_size_;
-        j["dataMapBuilder"] = *data_map_builder_;
+        j["distributionBuilder"] = *distBuilder;
+        j["skewedSize"] = skewedSize;
+        j["dataMapBuilder"] = *dataMapBuilder;
     }
 
-    void from_json(const nlohmann::json& j) override {
-        dist_builder_ = get_distribution_from_json(j["distributionBuilder"]);
-        skewed_size_ = j["skewedSize"];
-        data_map_builder_ = get_data_map_from_json(j["dataMapBuilder"]);
+    void fromJson(const nlohmann::json &j) override {
+        distBuilder = getDistributionFromJson(j["distributionBuilder"]);
+        skewedSize = j["skewedSize"];
+        dataMapBuilder = getDataMapFromJson(j["dataMapBuilder"]);
     }
 
-    std::string to_string(size_t indents) override {
-        return indented_title_with_str_data("Type", "SKEWED_INSERT", indents) +
-               indented_title_with_data("Skewed size", skewed_size_, indents) +
-               indented_title("Distribution", indents) + dist_builder_->to_string(indents + 1) +
-               indented_title("Data Map", indents) + data_map_builder_->to_string(indents + 1);
+    std::string toString(size_t indents) override {
+        return indented_title_with_str_data("Type", "SKEWED_INSERT", indents)
+               + indented_title_with_data("Skewed size", skewedSize, indents)
+               + indented_title("Distribution", indents)
+               + distBuilder->toString(indents + 1)
+               + indented_title("Data Map", indents)
+               + dataMapBuilder->toString(indents + 1);
     }
 
     ~SkewedInsertArgsGeneratorBuilder() override {
-        delete dist_builder_;
-        //        delete dataMapBuilder; //TODO may delete twice
+        delete distBuilder;
+//        delete dataMapBuilder; //TODO may delete twice
     };
+
 };
 
-}  // namespace microbench::workload
+
+#endif //SETBENCH_SKEWED_INSERT_ARGS_GENERATOR_H

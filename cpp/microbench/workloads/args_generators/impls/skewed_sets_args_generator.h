@@ -1,59 +1,55 @@
 //
 // Created by Ravil Galiev on 08.08.2023.
 //
-#pragma once
+
+#ifndef SETBENCH_SKEWED_SETS_ARGS_GENERATOR_H
+#define SETBENCH_SKEWED_SETS_ARGS_GENERATOR_H
 
 #include "workloads/args_generators/args_generator.h"
 
 #include "globals_extern.h"
-#include "workloads/data_maps/data_map.h"
-#include "workloads/data_maps/data_map_json_convector.h"
-#include "workloads/distributions/distribution.h"
 
-namespace microbench::workload {
-
-template <typename K>
+template<typename K>
 class SkewedSetsArgsGenerator : public ArgsGenerator<K> {
-    //    PAD;
-    size_t range_;
-    size_t write_set_begins_;
-    Distribution* read_dist_;
-    Distribution* write_dist_;
-    DataMap<K>* data_map_;
+//    PAD;
+    size_t range;
+    size_t writeSetBegins;
+    Distribution *readDist;
+    Distribution *writeDist;
+    DataMap<K> *dataMap;
 
-    K next_write() {
-        size_t index = write_set_begins_ + write_dist_->next();
-        if (index >= range_) {
-            index -= range_;
+    K nextWrite() {
+        size_t index = writeSetBegins + writeDist->next();
+        if (index >= range) {
+            index -= range;
         }
-        return data_map_->get(index);
+        return dataMap->get(index);
     }
 
 public:
-    SkewedSetsArgsGenerator(size_t range, size_t write_set_begins, Distribution* read_dist,
-                            Distribution* write_dist, DataMap<K>* data_map)
-        : range_(range),
-          write_set_begins_(write_set_begins),
-          read_dist_(read_dist),
-          write_dist_(write_dist),
-          data_map_(data_map) {
+
+    SkewedSetsArgsGenerator(size_t range, size_t writeSetBegins,
+                            Distribution *readDist, Distribution *writeDist,
+                            DataMap<K> *dataMap)
+            : range(range), writeSetBegins(writeSetBegins),
+              readDist(readDist), writeDist(writeDist),
+              dataMap(dataMap) {}
+
+    K nextGet() override {
+        return dataMap->get(readDist->next());
     }
 
-    K next_get() override {
-        return data_map_->get(read_dist_->next());
+    K nextInsert() override {
+        return nextWrite();
     }
 
-    K next_insert() override {
-        return next_write();
+    K nextRemove() override {
+        return nextWrite();
     }
 
-    K next_remove() override {
-        return next_write();
-    }
-
-    std::pair<K, K> next_range() override {
-        K left = next_get();
-        K right = next_get();
+    std::pair<K, K> nextRange() override {
+        K left = nextGet();
+        K right = nextGet();
         if (left > right) {
             std::swap(left, right);
         }
@@ -61,108 +57,115 @@ public:
     }
 
     ~SkewedSetsArgsGenerator() override {
-        delete read_dist_;
-        delete write_dist_;
-        delete data_map_;
+        delete readDist;
+        delete writeDist;
+        delete dataMap;
     };
-};
 
-}  // namespace microbench::workload
+
+};
 
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/distributions/builders/skewed_uniform_distribution_builder.h"
 #include "workloads/data_maps/data_map_builder.h"
 #include "workloads/data_maps/builders/array_data_map_builder.h"
 
-namespace microbench::workload {
-
+//template<typename K>
 class SkewedSetsArgsGeneratorBuilder : public ArgsGeneratorBuilder {
-    size_t range_;
+    size_t range;
 
-    SkewedUniformDistributionBuilder* read_dist_builder_ = new SkewedUniformDistributionBuilder();
-    SkewedUniformDistributionBuilder* write_dist_builder_ = new SkewedUniformDistributionBuilder();
+    SkewedUniformDistributionBuilder *readDistBuilder = new SkewedUniformDistributionBuilder();
+    SkewedUniformDistributionBuilder *writeDistBuilder = new SkewedUniformDistributionBuilder();
 
-    DataMapBuilder* data_map_builder_ = new ArrayDataMapBuilder();
+    DataMapBuilder *dataMapBuilder = new ArrayDataMapBuilder();
 
-    double intersection_ = 0;
-    size_t write_set_begins_;
+    double intersection = 0;
+    size_t writeSetBegins;
 
 public:
-    SkewedSetsArgsGeneratorBuilder* set_read_hot_size(double hot_size) {
-        read_dist_builder_->set_hot_size(hot_size);
+    SkewedSetsArgsGeneratorBuilder *setReadHotSize(double _hotSize) {
+        readDistBuilder->setHotSize(_hotSize);
         return this;
     }
 
-    SkewedSetsArgsGeneratorBuilder* set_read_hot_prob(double hot_prob) {
-        read_dist_builder_->set_hot_ratio(hot_prob);
+    SkewedSetsArgsGeneratorBuilder *setReadHotProb(double _hotProb) {
+        readDistBuilder->setHotRatio(_hotProb);
         return this;
     }
 
-    SkewedSetsArgsGeneratorBuilder* set_write_hot_size(double hot_size) {
-        write_dist_builder_->set_hot_size(hot_size);
+    SkewedSetsArgsGeneratorBuilder *setWriteHotSize(double _hotSize) {
+        writeDistBuilder->setHotSize(_hotSize);
         return this;
     }
 
-    SkewedSetsArgsGeneratorBuilder* set_write_hot_prob(double hot_prob) {
-        write_dist_builder_->set_hot_ratio(hot_prob);
+    SkewedSetsArgsGeneratorBuilder *setWriteHotProb(double _hotProb) {
+        writeDistBuilder->setHotRatio(_hotProb);
         return this;
     }
 
-    SkewedSetsArgsGeneratorBuilder* set_data_map_builder(DataMapBuilder* data_map_builder) {
-        data_map_builder_ = data_map_builder;
+    SkewedSetsArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
+        dataMapBuilder = _dataMapBuilder;
         return this;
     }
 
-    SkewedSetsArgsGeneratorBuilder* set_intersection(double intersection) {
-        intersection_ = intersection;
+    SkewedSetsArgsGeneratorBuilder *setIntersection(double _intersection) {
+        intersection = _intersection;
         return this;
     }
 
-    SkewedSetsArgsGeneratorBuilder* init(size_t range) override {
-        range_ = range;
-        //        dataMapBuilder->init(range);
-        write_set_begins_ = read_dist_builder_->get_hot_length(range_) - range_ * intersection_;
+    SkewedSetsArgsGeneratorBuilder *init(size_t _range) override {
+        range = _range;
+//        dataMapBuilder->init(range);
+        writeSetBegins = readDistBuilder->getHotLength(range) - range * intersection;
         return this;
     }
 
-    SkewedSetsArgsGenerator<K>* build(Random64& rng) override {
+    SkewedSetsArgsGenerator<K> *build(Random64 &_rng) override {
         return new SkewedSetsArgsGenerator<K>(
-            range_, write_set_begins_, read_dist_builder_->build(rng, range_),
-            write_dist_builder_->build(rng, range_), data_map_builder_->build());
+                range, writeSetBegins,
+                readDistBuilder->build(_rng, range),
+                writeDistBuilder->build(_rng, range),
+                dataMapBuilder->build()
+        );
     }
 
-    void to_json(nlohmann::json& j) const override {
+    void toJson(nlohmann::json &j) const override {
         j["ClassName"] = "SkewedSetsArgsGeneratorBuilder";
-        j["readDistBuilder"] = *read_dist_builder_;
-        j["writeDistBuilder"] = *write_dist_builder_;
-        j["intersection"] = intersection_;
-        j["dataMapBuilder"] = *data_map_builder_;
+        j["readDistBuilder"] = *readDistBuilder;
+        j["writeDistBuilder"] = *writeDistBuilder;
+        j["intersection"] = intersection;
+        j["dataMapBuilder"] = *dataMapBuilder;
     }
 
-    void from_json(const nlohmann::json& j) override {
-        read_dist_builder_ = dynamic_cast<SkewedUniformDistributionBuilder*>(
-            get_distribution_from_json(j["readDistBuilder"]));
-        write_dist_builder_ = dynamic_cast<SkewedUniformDistributionBuilder*>(
-            get_distribution_from_json(j["writeDistBuilder"]));
-        intersection_ = j["intersection"];
-        data_map_builder_ = get_data_map_from_json(j["dataMapBuilder"]);
+    void fromJson(const nlohmann::json &j) override {
+        readDistBuilder = dynamic_cast<SkewedUniformDistributionBuilder *>(
+                getDistributionFromJson(j["readDistBuilder"])
+        );
+        writeDistBuilder = dynamic_cast<SkewedUniformDistributionBuilder *>(
+                getDistributionFromJson(j["writeDistBuilder"])
+        );
+        intersection = j["intersection"];
+        dataMapBuilder = getDataMapFromJson(j["dataMapBuilder"]);
     }
 
-    std::string to_string(size_t indents) override {
-        return indented_title_with_str_data("Type", "SKEWED_SETS", indents) +
-               indented_title_with_data("Intersection", intersection_, indents) +
-               indented_title("Read Distribution", indents) +
-               read_dist_builder_->to_string(indents + 1) +
-               indented_title("Write Distribution", indents) +
-               write_dist_builder_->to_string(indents + 1) + indented_title("Data Map", indents) +
-               data_map_builder_->to_string(indents + 1);
+    std::string toString(size_t indents) override {
+        return indented_title_with_str_data("Type", "SKEWED_SETS", indents)
+               + indented_title_with_data("Intersection", intersection, indents)
+               + indented_title("Read Distribution", indents)
+               + readDistBuilder->toString(indents + 1)
+               + indented_title("Write Distribution", indents)
+               + writeDistBuilder->toString(indents + 1)
+               + indented_title("Data Map", indents)
+               + dataMapBuilder->toString(indents + 1);
     }
 
     ~SkewedSetsArgsGeneratorBuilder() override {
-        delete read_dist_builder_;
-        delete write_dist_builder_;
-        //        delete dataMapBuilder; //TODO may delete twice
+        delete readDistBuilder;
+        delete writeDistBuilder;
+//        delete dataMapBuilder; //TODO may delete twice
     };
+
 };
 
-}  // namespace microbench::workload
+
+#endif //SETBENCH_SKEWED_SETS_ARGS_GENERATOR_H

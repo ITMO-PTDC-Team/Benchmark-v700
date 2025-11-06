@@ -1,18 +1,17 @@
 //
 // Created by Ravil Galiev on 08.08.2023.
 //
-#pragma once
+
+#ifndef SETBENCH_CREAKERS_AND_WAVE_ARGS_GENERATOR_H
+#define SETBENCH_CREAKERS_AND_WAVE_ARGS_GENERATOR_H
 
 #include <atomic>
 
-#include "random_xoshiro256p.h"
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/distributions/distribution.h"
 #include "workloads/data_maps/data_map.h"
 
 #include "globals_extern.h"
-
-namespace microbench::workload {
 
 /**
     старички + волна
@@ -32,20 +31,20 @@ namespace microbench::workload {
             // при желании можно переработать на "100% - ca — чтение, ca — запись"
                 (то есть брать ca не от общей вероятности, а только при чтении"
  */
-template <typename K>
+template<typename K>
 class CreakersAndWaveArgsGenerator : public ArgsGenerator<K> {
     PAD;
-    Random64& rng_;
+    Random64 &rng;
     PAD;
-    double creakers_ratio_;
-    size_t creakers_begin_;
-    Distribution* creakers_dist_;
-    MutableDistribution* wave_dist_;
-    DataMap<K>* data_map_;
+    double creakersRatio;
+    size_t creakersBegin;
+    Distribution *creakersDist;
+    MutableDistribution *waveDist;
+    DataMap<K> *dataMap;
     PAD;
-    std::atomic<size_t>* wave_begin_;
+    std::atomic<size_t> *waveBegin;
     PAD;
-    std::atomic<size_t>* wave_end_;
+    std::atomic<size_t> *waveEnd;
     PAD;
 
     /**
@@ -53,16 +52,17 @@ class CreakersAndWaveArgsGenerator : public ArgsGenerator<K> {
      * @return true - creakers, false - wave
      */
     bool next_coin() {
-        double z;  // Uniform random number (0 < z < 1)
+        double z; // Uniform random number (0 < z < 1)
 
         do {
-            z = (rng_.next() / (double)rng_.max_value);
+            z = (rng.next() / (double) rng.max_value);
         } while ((z == 0) || (z == 1));
 
-        return z < creakers_ratio_;
+        return z < creakersRatio;
     }
 
-    K get_creaker() {
+    K getCreaker() {
+
         /**
          *                             creakersBegin
          * |________________________________|,,,,,,,,,,,,,,,,,,,,|
@@ -71,20 +71,19 @@ class CreakersAndWaveArgsGenerator : public ArgsGenerator<K> {
          * |____| --- wave or unused data
          */
 
-        return data_map_->get(creakers_begin_ + creakers_dist_->next());
+        return dataMap->get(creakersBegin + creakersDist->next());
     }
 
-    K get_wave() {
+    K getWave() {
         /**
          * In waveDist the first indexes have a higher probability
          */
-        size_t local_wave_begin = *wave_begin_;
-        size_t local_wave_end = *wave_end_;
-        //            size_t localWaveLength = (localWaveEnd - localWaveBegin + creakersBegin) %
-        //            creakersBegin;
-        size_t local_wave_length;
+        size_t localWaveBegin = *waveBegin;
+        size_t localWaveEnd = *waveEnd;
+//            size_t localWaveLength = (localWaveEnd - localWaveBegin + creakersBegin) % creakersBegin;
+        size_t localWaveLength;
         size_t index;
-        if (local_wave_end < local_wave_begin) {
+        if (localWaveEnd < localWaveBegin) {
             /**
              *       waveEnd                waveBegin      creakersBegin
              * |.......|________________________|.............|,,,,,,,,,,,,,,,,,,,,|
@@ -93,74 +92,75 @@ class CreakersAndWaveArgsGenerator : public ArgsGenerator<K> {
              * |,,,,| --- creakers
              * |____| --- unused data
              */
-            local_wave_length = (local_wave_end + creakers_begin_) - local_wave_begin;
-            index = local_wave_begin + wave_dist_->next(local_wave_length);
+            localWaveLength = (localWaveEnd + creakersBegin) - localWaveBegin;
+            index = localWaveBegin + waveDist->next(localWaveLength);
 
-            if (index >= creakers_begin_) {
-                index -= creakers_begin_;
+            if (index >= creakersBegin) {
+                index -= creakersBegin;
             }
         } else {
-            local_wave_length = local_wave_end - local_wave_begin;
-            index = local_wave_begin + wave_dist_->next(local_wave_length);
+            localWaveLength = localWaveEnd - localWaveBegin;
+            index = localWaveBegin + waveDist->next(localWaveLength);
         }
 
-        return data_map_->get(index);
+        return dataMap->get(index);
     };
 
-    K wave_shift(std::atomic<size_t>* wave_edge) {
-        size_t local_wave_edge = *wave_edge;
-        size_t new_wave_edge;
-        if (local_wave_edge == 0) {
-            new_wave_edge = creakers_begin_ - 1;
+    K waveShift(std::atomic<size_t> *waveEdge) {
+        size_t localWaveEdge = *waveEdge;
+        size_t newWaveEdge;
+        if (localWaveEdge == 0) {
+            newWaveEdge = creakersBegin - 1;
         } else {
-            new_wave_edge = local_wave_edge - 1;
+            newWaveEdge = localWaveEdge - 1;
         }
-        wave_edge->compare_exchange_weak(local_wave_edge, new_wave_edge);
-        return data_map_->get(new_wave_edge);
+        waveEdge->compare_exchange_weak(localWaveEdge, newWaveEdge);
+        return dataMap->get(newWaveEdge);
     }
-
 public:
-    CreakersAndWaveArgsGenerator(Random64& rng, double creakers_ratio, size_t creakers_begin,
-                                 std::atomic<size_t>* wave_begin, std::atomic<size_t>* wave_end,
-                                 Distribution* creakers_dist, MutableDistribution* wave_dist,
-                                 DataMap<K>* data_map)
-        : rng_(rng),
-          creakers_ratio_(creakers_ratio),
-          creakers_begin_(creakers_begin),
-          wave_begin_(wave_begin),
-          wave_end_(wave_end),
-          creakers_dist_(creakers_dist),
-          wave_dist_(wave_dist),
-          data_map_(data_map) {
-    }
+    CreakersAndWaveArgsGenerator(Random64 &rng, double creakersRatio, size_t creakersBegin,
+                                 std::atomic<size_t> *waveBegin,
+                                 std::atomic<size_t> *waveEnd,
+                                 Distribution *creakersDist,
+                                 MutableDistribution *waveDist,
+                                 DataMap<K> *dataMap) :
+            rng(rng),
+            creakersRatio(creakersRatio),
+            creakersBegin(creakersBegin),
+            waveBegin(waveBegin),
+            waveEnd(waveEnd),
+            creakersDist(creakersDist),
+            waveDist(waveDist),
+            dataMap(dataMap) {}
 
-    K next_get() override {
+    K nextGet() override {
         K value;
         if (next_coin()) {
-            value = get_creaker();
+            value = getCreaker();
         } else {
-            value = get_wave();
+            value = getWave();
         }
         return value;
     }
 
-    K next_insert() override {
-        return wave_shift(wave_begin_);
+
+    K nextInsert() override {
+        return waveShift(waveBegin);
     }
 
-    K next_remove() override {
-        return wave_shift(wave_end_);
+    K nextRemove() override {
+        return waveShift(waveEnd);
     }
 
-    std::pair<K, K> next_range() override {
+    std::pair<K, K> nextRange() override {
         K left;
         K right;
         if (next_coin()) {
-            left = get_creaker();
-            right = get_creaker();
+            left = getCreaker();
+            right = getCreaker();
         } else {
-            left = get_wave();
-            right = get_wave();
+            left = getWave();
+            right = getWave();
         }
         if (left > right) {
             std::swap(left, right);
@@ -169,62 +169,56 @@ public:
     }
 
     ~CreakersAndWaveArgsGenerator() override {
-        delete creakers_dist_;
-        delete wave_dist_;
-        delete data_map_;
+        delete creakersDist;
+        delete waveDist;
+        delete dataMap;
     };
 };
 
-}  // namespace microbench::workload
-
 #include "errors.h"
 
-namespace microbench::workload {
-template <typename K>
+template<typename K>
 class CreakersAndWavePrefillArgsGenerator : public ArgsGenerator<K> {
     PAD;
-    Random64& rng_;
+    Random64 &rng;
     PAD;
-    DataMap<K>* data_map_;
-    size_t wave_begin_;
-    size_t prefill_length_;
+    DataMap<K> *dataMap;
+    size_t waveBegin;
+    size_t prefillLength;
     PAD;
 
 public:
-    CreakersAndWavePrefillArgsGenerator(Random64& rng, size_t wave_begin, size_t prefill_length,
-                                        DataMap<K>* data_map)
-        : rng_(rng),
-          wave_begin_(wave_begin),
-          prefill_length_(prefill_length),
-          data_map_(data_map) {
+    CreakersAndWavePrefillArgsGenerator(Random64 &rng, size_t waveBegin, size_t prefillLength, DataMap<K> *dataMap) :
+            rng(rng), waveBegin(waveBegin), prefillLength(prefillLength), dataMap(dataMap) {}
+
+    K nextGet() override {
+        setbench_error("Unsupported operation -- nextGet")
     }
 
-    K next_get() override{setbench_error("Unsupported operation -- nextGet")}
-
-    K next_insert() override {
+    K nextInsert() override {
         /**
-         *                       waveBegin           creakersBegin
-         * |_________________________|....................|,,,,,,,,,,,,,,,,,,,,|
-         *                           |<--          prefillLength            -->|
-         * |....| --- wave
-         * |,,,,| --- creakers
-         * |____| --- unused data
+             *                       waveBegin           creakersBegin
+             * |_________________________|....................|,,,,,,,,,,,,,,,,,,,,|
+             *                           |<--          prefillLength            -->|
+             * |....| --- wave
+             * |,,,,| --- creakers
+             * |____| --- unused data
          */
-        return data_map_->get(wave_begin_ + rng_.next(prefill_length_));
+        return dataMap->get(waveBegin + rng.next(prefillLength));
     }
 
-    K next_remove() override{setbench_error("Unsupported operation -- nextRemove")}
+    K nextRemove() override {
+        setbench_error("Unsupported operation -- nextRemove")
+    }
 
-    std::pair<K, K> next_range() override {
+    std::pair<K, K> nextRange() override {
         setbench_error("Unsupported operation -- nextRange")
     }
 
     ~CreakersAndWavePrefillArgsGenerator() override {
-        delete data_map_;
+        delete dataMap;
     };
 };
-
-}  // namespace microbench::workload
 
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/distributions/builders/uniform_distribution_builder.h"
@@ -234,215 +228,217 @@ public:
 #include "workloads/distributions/distribution_json_convector.h"
 #include "workloads/data_maps/data_map_json_convector.h"
 
-namespace microbench::workload {
+//typedef long long K;
 
 class CreakersAndWaveArgsGeneratorBuilder : public ArgsGeneratorBuilder {
-    size_t creakers_length_;
-    size_t creakers_begin_;
-    size_t start_wave_length_;
+    size_t creakersLength;
+    size_t creakersBegin;
+    size_t startWaveLength;
     PAD;
-    std::atomic<size_t>* wave_begin_;
+    std::atomic<size_t> *waveBegin;
     PAD;
-    std::atomic<size_t>* wave_end_;
+    std::atomic<size_t> *waveEnd;
     PAD;
 
-    double creakers_size_ = 0;
-    double creakers_ratio_ = 0;
-    double wave_size_ = 0;
 
-    DistributionBuilder* creakers_dist_builder_ = new UniformDistributionBuilder();
-    MutableDistributionBuilder* wave_dist_builder_ = new ZipfianDistributionBuilder();
+    double creakersSize = 0;
+    double creakersRatio = 0;
+    double waveSize = 0;
 
-    DataMapBuilder* data_map_builder_ = new ArrayDataMapBuilder();
+    DistributionBuilder *creakersDistBuilder = new UniformDistributionBuilder();
+    MutableDistributionBuilder *waveDistBuilder = new ZipfianDistributionBuilder();
+
+    DataMapBuilder *dataMapBuilder = new ArrayDataMapBuilder();
 
 public:
-    double get_creakers_size() const {
-        return creakers_size_;
+    double getCreakersSize() const {
+        return creakersSize;
     }
 
-    double get_wave_size() const {
-        return wave_size_;
+    double getWaveSize() const {
+        return waveSize;
     }
 
-    DataMapBuilder* get_data_map_builder() const {
-        return data_map_builder_;
+    DataMapBuilder *getDataMapBuilder() const {
+        return dataMapBuilder;
     }
 
-    CreakersAndWaveArgsGeneratorBuilder* set_creakers_size(double creakers_size) {
-        creakers_size_ = creakers_size;
+
+    CreakersAndWaveArgsGeneratorBuilder *setCreakersSize(double _creakersSize) {
+        creakersSize = _creakersSize;
         return this;
     }
 
-    CreakersAndWaveArgsGeneratorBuilder* set_creakers_ratio(double creakers_ratio) {
-        creakers_ratio_ = creakers_ratio;
+    CreakersAndWaveArgsGeneratorBuilder *setCreakersRatio(double _creakersRatio) {
+        creakersRatio = _creakersRatio;
         return this;
     }
 
-    CreakersAndWaveArgsGeneratorBuilder* set_wave_size(double wave_size) {
-        wave_size_ = wave_size;
+    CreakersAndWaveArgsGeneratorBuilder *setWaveSize(double _waveSize) {
+        waveSize = _waveSize;
         return this;
     }
 
-    CreakersAndWaveArgsGeneratorBuilder* set_creakers_dist_builder(
-        DistributionBuilder* creakers_dist_builder) {
-        creakers_dist_builder_ = creakers_dist_builder;
+    CreakersAndWaveArgsGeneratorBuilder *setCreakersDistBuilder(DistributionBuilder *_creakersDistBuilder) {
+        creakersDistBuilder = _creakersDistBuilder;
         return this;
     }
 
-    CreakersAndWaveArgsGeneratorBuilder* set_wave_dist_builder(
-        MutableDistributionBuilder* wave_dist_builder) {
-        wave_dist_builder_ = wave_dist_builder;
+    CreakersAndWaveArgsGeneratorBuilder *setWaveDistBuilder(MutableDistributionBuilder *_waveDistBuilder) {
+        waveDistBuilder = _waveDistBuilder;
         return this;
     }
 
-    CreakersAndWaveArgsGeneratorBuilder* set_data_map_builder(DataMapBuilder* data_map_builder) {
-        data_map_builder_ = data_map_builder;
+    CreakersAndWaveArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
+        dataMapBuilder = _dataMapBuilder;
         return this;
     }
 
-    CreakersAndWaveArgsGeneratorBuilder* init(size_t range) override {
-        //        dataMapBuilder->init(range);
-        creakers_length_ = range * creakers_size_;
-        creakers_begin_ = range - creakers_length_;
-        start_wave_length_ = range * wave_size_;
-        wave_end_ = new std::atomic<size_t>(creakers_begin_);
-        wave_begin_ = new std::atomic<size_t>(*wave_end_ - start_wave_length_);
+    CreakersAndWaveArgsGeneratorBuilder *init(size_t range) override {
+//        dataMapBuilder->init(range);
+        creakersLength = range * creakersSize;
+        creakersBegin = range - creakersLength;
+        startWaveLength = range * waveSize;
+        waveEnd = new std::atomic<size_t>(creakersBegin);
+        waveBegin = new std::atomic<size_t>(*waveEnd - startWaveLength);
         return this;
     }
 
-    CreakersAndWaveArgsGenerator<K>* build(Random64& rng) override {
-        return new CreakersAndWaveArgsGenerator<K>(
-            rng, creakers_ratio_, creakers_begin_, wave_begin_, wave_end_,
-            creakers_dist_builder_->build(rng, creakers_length_), wave_dist_builder_->build(rng),
-            data_map_builder_->build());
+    CreakersAndWaveArgsGenerator<K> *build(Random64 &_rng) override {
+        return new CreakersAndWaveArgsGenerator<K>(_rng, creakersRatio, creakersBegin,
+                                                   waveBegin,
+                                                   waveEnd,
+                                                   creakersDistBuilder->build(_rng, creakersLength),
+                                                   waveDistBuilder->build(_rng),
+                                                   dataMapBuilder->build());
     }
 
-    void to_json(nlohmann::json& j) const override {
+    void toJson(nlohmann::json &j) const override {
         j["ClassName"] = "CreakersAndWaveArgsGeneratorBuilder";
-        j["creakersRatio"] = creakers_ratio_;
-        j["creakersSize"] = creakers_size_;
-        j["waveSize"] = wave_size_;
-        j["creakersDistBuilder"] = *creakers_dist_builder_;
-        j["waveDistBuilder"] = *wave_dist_builder_;
-        j["dataMapBuilder"] = *data_map_builder_;
+        j["creakersRatio"] = creakersRatio;
+        j["creakersSize"] = creakersSize;
+        j["waveSize"] = waveSize;
+        j["creakersDistBuilder"] = *creakersDistBuilder;
+        j["waveDistBuilder"] = *waveDistBuilder;
+        j["dataMapBuilder"] = *dataMapBuilder;
     }
 
-    void from_json(const nlohmann::json& j) override {
-        creakers_ratio_ = j["creakersRatio"];
-        creakers_size_ = j["creakersSize"];
-        wave_size_ = j["waveSize"];
-        creakers_dist_builder_ = get_distribution_from_json(j["creakersDistBuilder"]);
-        wave_dist_builder_ = get_mutable_distribution_from_json(j["waveDistBuilder"]);
-        data_map_builder_ = get_data_map_from_json(j["dataMapBuilder"]);
+    void fromJson(const nlohmann::json &j) override {
+        creakersRatio = j["creakersRatio"];
+        creakersSize = j["creakersSize"];
+        waveSize = j["waveSize"];
+        creakersDistBuilder = getDistributionFromJson(j["creakersDistBuilder"]);
+        waveDistBuilder = getMutableDistributionFromJson(j["waveDistBuilder"]);
+        dataMapBuilder = getDataMapFromJson(j["dataMapBuilder"]);
     }
 
-    std::string to_string(size_t indents) override {
-        return indented_title_with_str_data("Type", "CREAKERS_AND_WAVE", indents) +
-               indented_title_with_data("Creakers Ratio", creakers_ratio_, indents) +
-               indented_title_with_data("Creakers Size", creakers_size_, indents) +
-               indented_title_with_data("Wave Size", wave_size_, indents) +
-               indented_title("Creakers Distribution", indents) +
-               creakers_dist_builder_->to_string(indents + 1) +
-               indented_title("Wave Distribution", indents) +
-               wave_dist_builder_->to_string(indents + 1) + indented_title("Data Map", indents) +
-               data_map_builder_->to_string(indents + 1);
+    std::string toString(size_t indents) override {
+        return indented_title_with_str_data("Type", "CREAKERS_AND_WAVE", indents)
+               + indented_title_with_data("Creakers Ratio", creakersRatio, indents)
+               + indented_title_with_data("Creakers Size", creakersSize, indents)
+               + indented_title_with_data("Wave Size", waveSize, indents)
+               + indented_title("Creakers Distribution", indents)
+               + creakersDistBuilder->toString(indents + 1)
+               + indented_title("Wave Distribution", indents)
+               + waveDistBuilder->toString(indents + 1)
+               + indented_title("Data Map", indents)
+               + dataMapBuilder->toString(indents + 1);
     }
 
     ~CreakersAndWaveArgsGeneratorBuilder() override {
-        delete wave_begin_;
-        delete wave_end_;
-        delete creakers_dist_builder_;
-        delete wave_dist_builder_;
-        //        delete dataMapBuilder;
+        delete waveBegin;
+        delete waveEnd;
+        delete creakersDistBuilder;
+        delete waveDistBuilder;
+//        delete dataMapBuilder;
     };
 };
 
 class CreakersAndWavePrefillArgsGeneratorBuilder : public ArgsGeneratorBuilder {
-    size_t wave_begin_;
-    size_t prefill_length_;
+    size_t waveBegin;
+    size_t prefillLength;
     PAD;
 
-    double creakers_size_ = 0;
-    double wave_size_ = 0;
+    double creakersSize = 0;
+    double waveSize = 0;
 
-    DataMapBuilder* data_map_builder_ = new ArrayDataMapBuilder();
+    DataMapBuilder *dataMapBuilder = new ArrayDataMapBuilder();
 
 public:
-    size_t get_prefill_length() const {
-        return prefill_length_;
+    size_t getPrefillLength() const {
+        return prefillLength;
     }
 
-    size_t get_prefill_length(size_t range) const {
-        return range * creakers_size_ + range * wave_size_;
+    size_t getPrefillLength(size_t range) const {
+        return range * creakersSize + range * waveSize;
     }
 
-    CreakersAndWavePrefillArgsGeneratorBuilder() {
+    CreakersAndWavePrefillArgsGeneratorBuilder() {}
+
+    CreakersAndWavePrefillArgsGeneratorBuilder(CreakersAndWaveArgsGeneratorBuilder *builder) {
+        setParametersByBuilder(builder);
     }
 
-    explicit CreakersAndWavePrefillArgsGeneratorBuilder(
-        CreakersAndWaveArgsGeneratorBuilder* builder) {
-        set_parameters_by_builder(builder);
-    }
-
-    CreakersAndWavePrefillArgsGeneratorBuilder* set_parameters_by_builder(
-        CreakersAndWaveArgsGeneratorBuilder* builder) {
-        creakers_size_ = builder->get_creakers_size();
-        wave_size_ = builder->get_wave_size();
-        data_map_builder_ = builder->get_data_map_builder();
+    CreakersAndWavePrefillArgsGeneratorBuilder *setParametersByBuilder(
+                CreakersAndWaveArgsGeneratorBuilder *builder) {
+        creakersSize = builder->getCreakersSize();
+        waveSize = builder->getWaveSize();
+        dataMapBuilder = builder->getDataMapBuilder();
         return this;
     }
 
-    CreakersAndWavePrefillArgsGeneratorBuilder* set_creakers_size(double creakers_size) {
-        creakers_size_ = creakers_size;
+    CreakersAndWavePrefillArgsGeneratorBuilder *setCreakersSize(double _creakersSize) {
+        creakersSize = _creakersSize;
         return this;
     }
 
-    CreakersAndWavePrefillArgsGeneratorBuilder* set_wave_size(double wave_size) {
-        wave_size_ = wave_size;
+    CreakersAndWavePrefillArgsGeneratorBuilder *setWaveSize(double _waveSize) {
+        waveSize = _waveSize;
         return this;
     }
 
-    CreakersAndWavePrefillArgsGeneratorBuilder* set_data_map_builder(
-        DataMapBuilder* data_map_builder) {
-        data_map_builder_ = data_map_builder;
+    CreakersAndWavePrefillArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
+        dataMapBuilder = _dataMapBuilder;
         return this;
     }
 
-    CreakersAndWavePrefillArgsGeneratorBuilder* init(size_t range) override {
-        //        dataMapBuilder->init(range);
-        prefill_length_ = range * creakers_size_ + range * wave_size_;
-        wave_begin_ = range - prefill_length_;
+    CreakersAndWavePrefillArgsGeneratorBuilder *init(size_t range) override {
+//        dataMapBuilder->init(range);
+        prefillLength = range * creakersSize + range * waveSize;
+        waveBegin = range - prefillLength;
         return this;
     }
 
-    CreakersAndWavePrefillArgsGenerator<K>* build(Random64& rng) override {
-        return new CreakersAndWavePrefillArgsGenerator<K>(rng, wave_begin_, prefill_length_,
-                                                          data_map_builder_->build());
+    CreakersAndWavePrefillArgsGenerator<K> *build(Random64 &_rng) override {
+        return new CreakersAndWavePrefillArgsGenerator<K>(_rng, waveBegin, prefillLength,
+                                                          dataMapBuilder->build());
     }
 
-    void to_json(nlohmann::json& j) const override {
+    void toJson(nlohmann::json &j) const override {
         j["ClassName"] = "CreakersAndWavePrefillArgsGeneratorBuilder";
-        j["creakersSize"] = creakers_size_;
-        j["waveSize"] = wave_size_;
-        j["dataMapBuilder"] = *data_map_builder_;
+        j["creakersSize"] = creakersSize;
+        j["waveSize"] = waveSize;
+        j["dataMapBuilder"] = *dataMapBuilder;
     }
 
-    void from_json(const nlohmann::json& j) override {
-        creakers_size_ = j["creakersSize"];
-        wave_size_ = j["waveSize"];
-        data_map_builder_ = get_data_map_from_json(j["dataMapBuilder"]);
+    void fromJson(const nlohmann::json &j) override {
+        creakersSize = j["creakersSize"];
+        waveSize = j["waveSize"];
+        dataMapBuilder = getDataMapFromJson(j["dataMapBuilder"]);
     }
 
-    std::string to_string(size_t indents) override {
-        return indented_title_with_str_data("Type", "CREAKERS_AND_WAVE_PREFILL", indents) +
-               indented_title_with_data("Creakers Size", creakers_size_, indents) +
-               indented_title_with_data("Wave Size", wave_size_, indents) +
-               indented_title("Data Map", indents) + data_map_builder_->to_string(indents + 1);
+    std::string toString(size_t indents) override {
+        return indented_title_with_str_data("Type", "CREAKERS_AND_WAVE_PREFILL", indents)
+               + indented_title_with_data("Creakers Size", creakersSize, indents)
+               + indented_title_with_data("Wave Size", waveSize, indents)
+               + indented_title("Data Map", indents)
+               + dataMapBuilder->toString(indents + 1);
     }
 
     ~CreakersAndWavePrefillArgsGeneratorBuilder() override {
-        //        delete dataMapBuilder;
+//        delete dataMapBuilder;
     };
 };
 
-}  // namespace microbench::workload
+
+#endif //SETBENCH_CREAKERS_AND_WAVE_ARGS_GENERATOR_H

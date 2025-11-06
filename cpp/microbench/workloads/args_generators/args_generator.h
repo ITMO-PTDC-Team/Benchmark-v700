@@ -1,23 +1,23 @@
 //
 // Created by Ravil Galiev on 21.07.2023.
 //
-#pragma once
+
+#ifndef SETBENCH_ARGS_GENERATOR_H
+#define SETBENCH_ARGS_GENERATOR_H
 
 #include <utility>
 
-namespace microbench::workload {
-
-template <typename K>
+template<typename K>
 struct ArgsGenerator {
-    virtual K next_get() = 0;
+    virtual K nextGet() = 0;
 
-    virtual K next_insert() = 0;
+    virtual K nextInsert() = 0;
 
-    virtual K next_remove() = 0;
+    virtual K nextRemove() = 0;
 
-    virtual std::pair<K, K> next_range() = 0;
+    virtual std::pair<K, K> nextRange() = 0;
 
     virtual ~ArgsGenerator() = default;
 };
 
-}  // namespace microbench::workload
+#endif //SETBENCH_ARGS_GENERATOR_H

@@ -1,13 +1,13 @@
 //
 // Created by Ravil Galiev on 24.07.2023.
 //
-#pragma once
+
+#ifndef SETBENCH_ID_DATA_MAP_BUILDER_H
+#define SETBENCH_ID_DATA_MAP_BUILDER_H
 
 #include "workloads/data_maps/data_map_builder.h"
 #include "workloads/data_maps/impls/id_data_map.h"
 #include "globals_extern.h"
-
-namespace microbench::workload {
 
 struct IdDataMapBuilder : public DataMapBuilder {
     IdDataMapBuilder* init(size_t range) override {
@@ -18,14 +18,14 @@ struct IdDataMapBuilder : public DataMapBuilder {
         return new IdDataMap();
     };
 
-    void to_json(nlohmann::json& j) const override {
+    void toJson(nlohmann::json& j) const override {
         j["ClassName"] = "IdDataMapBuilder";
     }
 
-    void from_json(const nlohmann::json& j) override {
+    void fromJson(const nlohmann::json& j) override {
     }
 
-    std::string to_string(size_t indents = 1) override {
+    std::string toString(size_t indents = 1) override {
         return indented_title_with_str_data("Type", "IdDataMap", indents) +
                indented_title_with_data("ID", id, indents);
     }
@@ -33,4 +33,4 @@ struct IdDataMapBuilder : public DataMapBuilder {
     ~IdDataMapBuilder() override = default;
 };
 
-}  // namespace microbench::workload
+#endif  // SETBENCH_ID_DATA_MAP_BUILDER_H

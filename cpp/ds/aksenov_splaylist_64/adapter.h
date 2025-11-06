@@ -7,7 +7,6 @@
 
 #include <iostream>
 #include <csignal>
-#include "random_xoshiro256p.h"
 #include <bits/stdc++.h>
 using namespace std;
 

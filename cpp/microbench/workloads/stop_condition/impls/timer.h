@@ -1,78 +1,73 @@
 //
 // Created by Ravil Galiev on 25.07.2023.
 //
-#pragma once
+
+#ifndef SETBENCH_TIMER_H
+#define SETBENCH_TIMER_H
 
 #include <thread>
 #include <string>
-#include "globals_extern.h"
 #include "plaf.h"
 #include "workloads/stop_condition/stop_condition.h"
 #include "json/single_include/nlohmann/json.hpp"
 
-namespace microbench::workload {
-
 class Timer : public StopCondition {
     PAD;
-    volatile bool stop_;
+    volatile bool stop;
     PAD;
-    std::thread* stop_thread_;
+    std::thread *stopThread;
     PAD;
-    volatile bool is_started_;
+    volatile bool isStarted;
     PAD;
 
 public:
     void wait() {
-        is_started_ = true;
+        isStarted = true;
         std::this_thread::sleep_for(std::chrono::milliseconds(workTime));
-        stop_ = true;
+        stop = true;
     }
 
 public:
     size_t workTime;
 
-    explicit Timer(size_t work_time = 10000)
-        : workTime(work_time),
-          stop_(true) {
-    }
+    Timer(size_t _workTime = 10000) : workTime(_workTime), stop(true) {}
 
-    Timer& set_work_time(size_t work_time) {
-        Timer::workTime = work_time;
+    Timer &setWorkTime(size_t _workTime) {
+        Timer::workTime = _workTime;
         return *this;
     }
 
-    void start(size_t num_threads) override {
-        stop_ = false;
-        is_started_ = false;
-        stop_thread_ = new std::thread(&Timer::wait, this);
-        while (!is_started_) {
-        };
+    void start(size_t numThreads) override {
+        stop = false;
+        isStarted = false;
+        stopThread = new std::thread(&Timer::wait, this);
+        while (!isStarted);
     }
 
     void clean() override {
-        stop_thread_->join();
-        delete stop_thread_;
+        stopThread->join();
+        delete stopThread;
     }
 
-    bool is_stopped(int id) override {
-        return stop_;
+    bool isStopped(int id) override {
+        return stop;
     }
 
-    void to_json(nlohmann::json& j) const override {
+    void toJson(nlohmann::json &j) const override {
         j["ClassName"] = "Timer";
         j["workTime"] = workTime;
     }
 
-    void from_json(const nlohmann::json& j) override {
+    void fromJson(const nlohmann::json &j) override {
         workTime = j["workTime"];
     }
 
     ~Timer() override = default;
 
-    std::string to_string(size_t indents = 1) override {
-        return indented_title_with_str_data("Type", "Timer", indents) +
-               indented_title_with_data("work time", workTime, indents);
+    std::string toString(size_t indents = 1) override {
+        return indented_title_with_str_data("Type", "Timer", indents)
+               + indented_title_with_data("work time", workTime, indents);
     }
 };
 
-}  // namespace microbench::workload
+#endif //SETBENCH_TIMER_H

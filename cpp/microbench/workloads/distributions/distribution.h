@@ -1,11 +1,9 @@
 //
 // Created by Ravil Galiev on 24.07.2023.
 //
-#pragma once
 
-#include <cstddef>
-
-namespace microbench::workload {
+#ifndef SETBENCH_DISTRIBUTION_H
+#define SETBENCH_DISTRIBUTION_H
 
 struct Distribution {
     virtual size_t next() = 0;
@@ -14,14 +12,15 @@ struct Distribution {
 };
 
 struct MutableDistribution : public Distribution {
-    virtual void set_range(size_t range) = 0;
+    virtual void setRange(size_t range) = 0;
 
     virtual size_t next() = 0;
 
     size_t next(size_t range) {
-        set_range(range);
+        setRange(range);
         return this->next();
     }
 };
 
-}  // namespace microbench::workload
+
+#endif //SETBENCH_DISTRIBUTION_H

@@ -1,26 +1,23 @@
 //
 // Created by Ravil Galiev on 25.07.2023.
 //
-#pragma once
 
-#include "globals_extern.h"
+#ifndef SETBENCH_OPERATION_COUNTER_H
+#define SETBENCH_OPERATION_COUNTER_H
+
 #include "plaf.h"
 #include "workloads/stop_condition/stop_condition.h"
-
-namespace microbench::workload {
 
 class OperationCounter : public StopCondition {
     struct Counter {
         PAD;
-        int64_t operCount;
+        long long operCount;
         PAD;
 
-        Counter()
-            : operCount(0) {
-        }
+        Counter() : operCount(0) {}
 
-        explicit Counter(int64_t oper_count) {
-            operCount = oper_count;
+        Counter(long long _operCount) {
+            operCount = _operCount;
         }
 
         bool stop() {
@@ -29,58 +26,57 @@ class OperationCounter : public StopCondition {
     };
 
     PAD;
-    Counter* counters_;
+    Counter *counters;
     PAD;
-    size_t common_operation_limit_;
+    size_t commonOperationLimit;
     PAD;
 
 public:
-    OperationCounter() {
-    }
 
-    explicit OperationCounter(size_t common_operation_limit)
-        : common_operation_limit_(common_operation_limit) {
-    }
+    OperationCounter() {}
 
-    OperationCounter& set_common_operation_limit(size_t common_operation_limit) {
-        OperationCounter::common_operation_limit_ = common_operation_limit;
+    OperationCounter(size_t _commonOperationLimit) : commonOperationLimit(_commonOperationLimit) {}
+
+    OperationCounter &setCommonOperationLimit(size_t _commonOperationLimit) {
+        OperationCounter::commonOperationLimit = _commonOperationLimit;
         return *this;
     }
 
-    void start(size_t num_threads) override {
-        int64_t operation_limit = common_operation_limit_ / num_threads;
-        int64_t remainder = common_operation_limit_ % num_threads;
+    void start(size_t numThreads) override {
+        long long operationLimit = commonOperationLimit / numThreads;
+        long long remainder = commonOperationLimit % numThreads;
 
-        counters_ = new Counter[num_threads];
+        counters = new Counter[numThreads];
 
-        for (int i = 0; i < num_threads; i++) {
-            counters_[i].operCount = operation_limit + (--remainder >= 0 ? 1 : 0);
+        for (int i = 0; i < numThreads; i++) {
+            counters[i].operCount = operationLimit + (--remainder >= 0 ? 1 : 0);
         }
     }
 
     void clean() override {
-        delete[] counters_;
+        delete[] counters;
     }
 
-    bool is_stopped(int id) override {
-        return counters_[id].stop();
+    bool isStopped(int id) override {
+        return counters[id].stop();
     }
 
-    void to_json(nlohmann::json& j) const override {
+    void toJson(nlohmann::json &j) const override {
         j["ClassName"] = "OperationCounter";
-        j["commonOperationLimit"] = common_operation_limit_;
+        j["commonOperationLimit"] = commonOperationLimit;
     }
 
-    void from_json(const nlohmann::json& j) override {
-        common_operation_limit_ = j["commonOperationLimit"];
+    void fromJson(const nlohmann::json &j) override {
+        commonOperationLimit = j["commonOperationLimit"];
     }
 
-    std::string to_string(size_t indents = 1) override {
-        return indented_title_with_str_data("Type", "OperationCounter", indents) +
-               indented_title_with_data("commonOperationLimit", common_operation_limit_, indents);
+    std::string toString(size_t indents = 1) override {
+        return indented_title_with_str_data("Type", "OperationCounter", indents)
+               + indented_title_with_data("commonOperationLimit", commonOperationLimit, indents);
     }
 
     ~OperationCounter() = default;
+
 };
 
-}  // namespace microbench::workload
+#endif //SETBENCH_OPERATION_COUNTER_H

@@ -1,59 +1,54 @@
-#pragma once
+#ifndef SETBENCH_NULL_ARGS_GENERATOR_H
+#define SETBENCH_NULL_ARGS_GENERATOR_H
 
 #include "workloads/args_generators/args_generator.h"
 
-namespace microbench::workload {
-
-template <typename K>
+template<typename K>
 class NullArgsGenerator : public ArgsGenerator<K> {
 public:
     NullArgsGenerator() = default;
 
-    K next_get() {
+    K nextGet() {
         setbench_error("Operation not supported");
     }
 
-    K next_insert() {
+    K nextInsert() {
         setbench_error("Operation not supported");
     }
 
-    K next_remove() {
+    K nextRemove() {
         setbench_error("Operation not supported");
     }
 
-    std::pair<K, K> next_range() {
+    std::pair<K, K> nextRange() {
         setbench_error("Operation not supported");
     }
 
     ~NullArgsGenerator() = default;
 };
 
-}  // namespace microbench::workload
-
 #include "workloads/args_generators/args_generator_builder.h"
 #include "globals_extern.h"
 
-namespace microbench::workload {
-
+//template<typename K>
 class NullArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 public:
-    NullArgsGeneratorBuilder* init(size_t range) override {
-        //        dataMapBuilder->init(_range);
+    NullArgsGeneratorBuilder *init(size_t _range) override {
+//        dataMapBuilder->init(_range);
         return this;
     }
 
-    NullArgsGenerator<K>* build(Random64& rng) override {
+    NullArgsGenerator<K> *build(Random64 &_rng) override {
         return new NullArgsGenerator<K>();
     }
 
-    void to_json(nlohmann::json& j) const override {
+    void toJson(nlohmann::json &j) const override {
         j["ClassName"] = "NullArgsGeneratorBuilder";
     }
 
-    void from_json(const nlohmann::json& j) override {
-    }
+    void fromJson(const nlohmann::json &j) override { }
 
-    std::string to_string(size_t indents = 1) override {
+    std::string toString(size_t indents = 1) override {
         std::string res;
         res += indented_title_with_str_data("Type", "NULL", indents);
         return res;
@@ -62,4 +57,5 @@ public:
     ~NullArgsGeneratorBuilder() override = default;
 };
 
-}  // namespace microbench::workload
+
+#endif //SETBENCH_NULL_ARGS_GENERATOR_H

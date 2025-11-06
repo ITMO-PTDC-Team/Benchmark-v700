@@ -1,7 +1,6 @@
 ---
 
-Checks: '
--*,cppcoreguidelines-avoid-goto,cppcoreguidelines-pro-type-const-cast, google-runtime-int, modernize-use-nullptr, readability-braces-around-statements, readability-container-size-empty, readability-redundant-control-flow, readability-identifier-naming, readability-simplify-boolean-expr, google-build-using-namespace, readability-implicit-bool-conversion, google-explicit-constructor'
+Checks: '-*,cppcoreguidelines-avoid-goto,cppcoreguidelines-pro-type-const-cast, google-runtime-int, modernize-use-nullptr, readability-braces-around-statements, readability-container-size-empty, readability-redundant-control-flow, readability-identifier-naming, readability-simplify-boolean-expr, google-build-using-namespace, readability-implicit-bool-conversion, google-explicit-constructor'
 
 HeaderFilterRegex: '\.hpp$'
 
@@ -19,7 +18,7 @@ CheckOptions:
   - key: readability-identifier-naming.TypeAliasCase
     value: CamelCase
   - key: readability-identifier-naming.FunctionCase
-    value: lower_case
+    value: CamelCase
   - key: readability-identifier-naming.ParameterCase
     value: lower_case
   - key: readability-identifier-naming.VariableCase
@@ -29,11 +28,17 @@ CheckOptions:
   - key: readability-identifier-naming.PrivateMemberSuffix
     value: '_'
   - key: readability-identifier-naming.GlobalConstantCase
-    value: UPPER_CASE
+    value: CamelCase
+  - key: readability-identifier-naming.GlobalConstantPrefix
+    value: k
   - key: readability-identifier-naming.StaticConstantCase
-    value: UPPER_CASE
+    value: CamelCase
+  - key: readability-identifier-naming.StaticConstantPrefix
+    value: k
   - key: readability-identifier-naming.ConstexprVariableCase
-    value: UPPER_CASE
+    value: CamelCase
+  - key: readability-identifier-naming.ConstexprVariablePrefix
+    value: k
   - key: readability-identifier-naming.TypeTemplateParameterCase
     value: CamelCase
   - key: readability-simplify-boolean-expr.ChainedConditionalReturn

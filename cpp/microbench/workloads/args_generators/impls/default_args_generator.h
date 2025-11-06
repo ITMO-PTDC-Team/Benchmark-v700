@@ -1,48 +1,47 @@
 //
 // Created by Ravil Galiev on 30.08.2022.
 //
-#pragma once
+
+#ifndef SETBENCH_DEFAULT_ARGS_GENERATOR_H
+#define SETBENCH_DEFAULT_ARGS_GENERATOR_H
 
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/distributions/distribution.h"
 #include "workloads/data_maps/data_map.h"
 
-namespace microbench::workload {
-
-template <typename K>
+template<typename K>
 class DefaultArgsGenerator : public ArgsGenerator<K> {
 private:
-    //    PAD;
-    Distribution* distribution_;
-    DataMap<K>* data_;
-    //    PAD;
+//    PAD;
+    Distribution *distribution;
+    DataMap<K> *data;
+//    PAD;
 
     K next() {
-        size_t index = distribution_->next();
-        return data_->get(index);
+        size_t index = distribution->next();
+        return data->get(index);
     }
 
 public:
-    DefaultArgsGenerator(DataMap<K>* data, Distribution* distribution)
-        : data_(data),
-          distribution_(distribution) {
-    }
+    DefaultArgsGenerator(DataMap<K> *_data, Distribution *_distribution)
+            : data(_data), distribution(_distribution) {}
 
-    K next_get() {
+
+    K nextGet() {
         return next();
     }
 
-    K next_insert() {
+    K nextInsert() {
         return next();
     }
 
-    K next_remove() {
+    K nextRemove() {
         return next();
     }
 
-    std::pair<K, K> next_range() {
-        K left = next_get();
-        K right = next_get();
+    std::pair<K, K> nextRange() {
+        K left = nextGet();
+        K right = nextGet();
         if (left > right) {
             std::swap(left, right);
         }
@@ -50,12 +49,11 @@ public:
     }
 
     ~DefaultArgsGenerator() {
-        delete distribution_;
-        delete data_;
+        delete distribution;
+        delete data;
     }
 };
 
-}  // namespace microbench::workload
 
 #include "workloads/distributions/distribution_builder.h"
 #include "workloads/data_maps/data_map_builder.h"
@@ -66,69 +64,68 @@ public:
 #include "workloads/data_maps/data_map_json_convector.h"
 #include "globals_extern.h"
 
-namespace microbench::workload {
-
+//template<typename K>
 class DefaultArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 private:
-    size_t range_;
-
+    size_t range;
 public:
-    DistributionBuilder* distributionBuilder = new UniformDistributionBuilder();
-    DataMapBuilder* dataMapBuilder = new IdDataMapBuilder();
+    DistributionBuilder *distributionBuilder = new UniformDistributionBuilder();
+    DataMapBuilder *dataMapBuilder = new IdDataMapBuilder();
 
-    DefaultArgsGeneratorBuilder* set_distribution_builder(
-        DistributionBuilder* distribution_builder) {
-        distributionBuilder = distribution_builder;
+    DefaultArgsGeneratorBuilder *setDistributionBuilder(DistributionBuilder *_distributionBuilder) {
+        distributionBuilder = _distributionBuilder;
         return this;
     }
 
-    DefaultArgsGeneratorBuilder* set_data_map_builder(DataMapBuilder* data_map_builder) {
-        dataMapBuilder = data_map_builder;
+    DefaultArgsGeneratorBuilder *setDataMapBuilder(DataMapBuilder *_dataMapBuilder) {
+        dataMapBuilder = _dataMapBuilder;
         return this;
     }
 
-    DefaultArgsGeneratorBuilder* init(size_t range) override {
-        range_ = range;
-        //        dataMapBuilder->init(_range);
+    DefaultArgsGeneratorBuilder *init(size_t _range) override {
+        range = _range;
+//        dataMapBuilder->init(_range);
         return this;
     }
 
-    DefaultArgsGenerator<K>* build(Random64& rng) override {
+    DefaultArgsGenerator<K> *build(Random64 &_rng) override {
         return new DefaultArgsGenerator<K>(dataMapBuilder->build(),
-                                           distributionBuilder->build(rng, range_));
+                                           distributionBuilder->build(_rng, range));
     }
 
-    void to_json(nlohmann::json& j) const override {
+    void toJson(nlohmann::json &j) const override {
         j["ClassName"] = "DefaultArgsGeneratorBuilder";
         j["distributionBuilder"] = *distributionBuilder;
         j["dataMapBuilder"] = *dataMapBuilder;
     }
 
-    void from_json(const nlohmann::json& j) override {
-        distributionBuilder = get_distribution_from_json(j["distributionBuilder"]);
-        dataMapBuilder = get_data_map_from_json(j["dataMapBuilder"]);
+    void fromJson(const nlohmann::json &j) override {
+        distributionBuilder = getDistributionFromJson(j["distributionBuilder"]);
+        dataMapBuilder = getDataMapFromJson(j["dataMapBuilder"]);
     }
 
-    std::string to_string(size_t indents = 1) override {
+    std::string toString(size_t indents = 1) override {
         std::string res;
         res += indented_title_with_str_data("Type", "DEFAULT", indents);
         res += indented_title("Distribution", indents);
-        res += distributionBuilder->to_string(indents + 1);
+        res += distributionBuilder->toString(indents + 1);
         res += indented_title("Data Map", indents);
-        res += dataMapBuilder->to_string(indents + 1);
-        return res;
+        res += dataMapBuilder->toString(indents + 1);
+return res;
 
-        //        return indented_title_with_str_data("Type", "DEFAULT", indents)
-        //               + indented_title("Distribution", indents)
-        //               + distributionBuilder->toString(indents + 1)
-        //               + indented_title("Data Map", indents)
-        //               + dataMapBuilder->toString(indents + 1);
+//        return indented_title_with_str_data("Type", "DEFAULT", indents)
+//               + indented_title("Distribution", indents)
+//               + distributionBuilder->toString(indents + 1)
+//               + indented_title("Data Map", indents)
+//               + dataMapBuilder->toString(indents + 1);
     }
 
     ~DefaultArgsGeneratorBuilder() override {
         delete distributionBuilder;
-        //        delete dataMapBuilder; //TODO may delete twice
+//        delete dataMapBuilder; //TODO may delete twice
     };
+
 };
 
-}  // namespace microbench::workload
+
+#endif //SETBENCH_DEFAULT_ARGS_GENERATOR_H

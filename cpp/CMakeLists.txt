@@ -12,12 +12,6 @@ set(RECLAIM ".debra")
 list(APPEND CMAKE_CXX_FLAGS_LIST "-lpthread -ldl -mrtm ")
 list(APPEND CXX_LIBS_LIST "pthread" "dl")
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
-if(CMAKE_EXPORT_COMPILE_COMMANDS)
-    set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES
-      ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
-endif()
-
 ### if libpapi is installed but you do not want to use it, invoke make with extra argument "has_libpapi=0"
 execute_process(COMMAND "./${BENCH_DIR}/_check_lib.sh papi" OUTPUT_VARIABLE has_libpapi)
 if (NOT ${has_libpapi} MATCHES "0")
@@ -62,7 +56,7 @@ endif ()
 
 option(SKIP_VALIDATION "SKIP_VALIDATION" OFF)
 if (SKIP_VALIDATION)
-    add_definitions("-DSKIP_VALIDATION")
+        add_definitions("-DSKIP_VALIDATION")
 endif ()
 
 add_definitions("-DMAX_THREADS_POW2=512"
@@ -73,8 +67,7 @@ add_definitions("-DMAX_THREADS_POW2=512"
         "-fno-omit-frame-pointer"
         "-DDEBRA_ORIGINAL_FREE"
         "-DKEY_DEPTH_TOTAL_STAT"
-        "-DKEY_SEARCH_TOTAL_STAT"
-        "-Wno-volatile")
+        "-DKEY_SEARCH_TOTAL_STAT")
 
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS_LIST})
 message(CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS})
@@ -93,11 +86,15 @@ include_directories(common/rq)
 include_directories(common/rq/snapcollector)
 include_directories(common/urcu)
 
+
 include_directories(${BENCH_DIR})
 
 find_package(Threads REQUIRED)
 
 set(SOURCE_EXE ${BENCH_DIR}/main.cpp)
+
+#include_directories(dragonfly_table)
+#add_subdirectory(dragonfly_table)
 
 file(GLOB ADAPTERS ${DS_DIR}/*/adapter.h)
 string(REGEX MATCHALL "\/[^\/]+\/adapter.h" RAW_DATA_STRUCTURES ${ADAPTERS})
@@ -112,19 +109,41 @@ endforeach ()
 include_directories(ds/verlib_structs/include)
 
 foreach (DS ${DATA_STRUCTURES})
+
     message(DS_DIR= "${DS_DIR}/${DS}")
+
+#    include_directories(${DS_DIR}/${DS})
+
+#    set(DS_RUN ${BUILD_DIR}${DS}${RECLAIM})
     set(DS_RUN ${DS}${RECLAIM})
+
     add_executable(${DS_RUN} ${SOURCE_EXE})
+
     target_include_directories(${DS_RUN} PUBLIC ${DS_DIR}/${DS})
+
     target_link_libraries(${DS_RUN} PUBLIC ${CXX_LIBS_LIST})
+
     if (${DS} MATCHES "dragfly.*")
         add_subdirectory(dragonfly_table)
+
         message(DS="${DS} || dragfly type")
+
         target_include_directories(${DS_RUN} PUBLIC dragonfly_table)
+
+#        include_directories(dragonfly_table)
+#        include_directories(dragonfly_table/src)
+
         target_link_libraries(${DS_RUN} PUBLIC dragonfly_static)
     endif ()
+
     if (${DS} MATCHES "verlib.*")
+
         message(DS="${DS} || verlib type")
+
         target_include_directories(${DS_RUN} PUBLIC parlay)
     endif ()
 endforeach ()
+
+#message(ADAPTERS="${ADAPTERS}")
+#message(DATA_STRUCTURES="${DATA_STRUCTURES}")
+#message(DATA_STRUCTURES_NEW="${DATA_STRUCTURES}")

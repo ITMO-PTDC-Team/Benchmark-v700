@@ -1,35 +1,34 @@
 //
 // Created by Ravil Galiev on 06.04.2023.
 //
-#pragma once
 
-#include <cstddef>
+#ifndef SETBENCH_PARSE_ARGUMENT_H
+#define SETBENCH_PARSE_ARGUMENT_H
 
 struct ParseArgument {
     size_t pointer;
     size_t length;
-    char** args;
+    char **args;
 
-    ParseArgument(size_t length, char** args)
-        : length(length),
-          args(args),
-          pointer(0) {
-    }
+    ParseArgument(size_t _length, char **_args)
+            : length(_length), args(_args), pointer(0) {}
 
-    char* get_current() {
+    char *getCurrent() {
         return args[pointer];
     }
 
-    char* get_next() {
+    char *getNext() {
         return args[++pointer];
     }
 
-    ParseArgument& next() {
+    ParseArgument &next() {
         ++pointer;
         return *this;
     }
 
-    bool has_next() {
+    bool hasNext() {
         return pointer < length;
     }
 };
+
+#endif //SETBENCH_PARSE_ARGUMENT_H
