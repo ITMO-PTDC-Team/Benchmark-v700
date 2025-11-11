@@ -28,6 +28,11 @@ public class SortedSetDataStructure<K> implements DataStructure<K> {
     }
 
     @Override
+    public int rangeQuery(K lo, K hi) {
+        throw new UnsupportedOperationException("SortedSet DS does not currently support rangeQuery operation");
+    }
+
+    @Override
     public boolean removeAll(Collection<K> c) {
         return dataStructure.removeAll(c);
     }

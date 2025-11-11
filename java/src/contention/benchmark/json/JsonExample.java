@@ -17,6 +17,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 public class JsonExample {
     public static ArgsGeneratorBuilder getDefaultArgsGeneratorBuilder() {
@@ -33,8 +35,8 @@ public class JsonExample {
     public static void makeSyntheticBinaryData() {
         try {
             FileOutputStream out = new FileOutputStream("test-binary-file");
-            byte []arr = {0, 0, 0, 1};
-            for (int i = 0; i<2048; ++i) {
+            byte[] arr = {0, 0, 0, 1};
+            for (int i = 0; i < 2048; ++i) {
                 out.write(arr);
             }
             out.close();
@@ -96,6 +98,28 @@ public class JsonExample {
                 .setArgsGeneratorBuilder(argsGeneratorBuilder);
     }
 
+    public static ArgsGeneratorBuilder getNullArgsGeneratorBuilder() {
+        return (new NullArgsGeneratorBuilder());
+    }
+
+    public static ArgsGeneratorBuilder getRangeQueryArgsGeneratorBuilder() {
+        return new RangeQueryArgsGeneratorBuilder()
+                .setDistributionBuilder((new ZipfianDistributionBuilder()).setAlpha(1.0))
+                .setDataMapBuilder(new ArrayDataMapBuilder())
+                .setInterval(100);
+    }
+
+    public static ArgsGeneratorBuilder getGeneralizedArgsGeneratorBuilder(ArgsGeneratorBuilder inside) {
+        List<String> list = List.of("get", "insert", "remove");
+        return new GeneralizedArgsGeneratorBuilder()
+                .addArgsGeneratorBuilder(List.of("get"), inside)
+                .addArgsGeneratorBuilder(List.of("insert"), getCreakersAndWaveArgsGeneratorBuilder())
+                .addArgsGeneratorBuilder(List.of("remove"), getDefaultArgsGeneratorBuilder());
+//                .addArgsGeneratorBuilder(List.of("rangeQuery"), getRangeQueryArgsGeneratorBuilder());
+//         .setDistributionBuilder((new ZipfianDistributionBuilder()).setAlpha(1.0))
+//         .setDataMapBuilder(new ArrayDataMapBuilder()));
+    }
+
     public static void main(String[] args) {
         /**
          * The first step is the creation the BenchParameters class.
@@ -132,14 +156,15 @@ public class JsonExample {
          * TemporarySkewedArgsGeneratorBuilder and CreakersAndWaveArgsGeneratorBuilder are also presented
          * in the corresponding functions
          */
-        ArgsGeneratorBuilder argsGeneratorBuilder = getFileBasedArgsGeneratorBuilder();
-        //ArgsGeneratorBuilder argsGeneratorBuilder = getDefaultArgsGeneratorBuilder();
+//        ArgsGeneratorBuilder argsGeneratorBuilder = getFileBasedArgsGeneratorBuilder();
+        ArgsGeneratorBuilder argsGeneratorBuilder = getDefaultArgsGeneratorBuilder();
+        ArgsGeneratorBuilder argsGeneratorBuilderActual = getGeneralizedArgsGeneratorBuilder(argsGeneratorBuilder);
 
         /**
          * in addition to the DefaultThreadLoopBuilder,
          * TemporaryOperationThreadLoopBuilder is also presented in the corresponding function
          */
-        ThreadLoopBuilder threadLoopBuilder = getDefaultThreadLoopBuilder(argsGeneratorBuilder);
+        ThreadLoopBuilder threadLoopBuilder = getDefaultThreadLoopBuilder(argsGeneratorBuilderActual);
 
         /**
          * now add the ThreadLoopBuilders (you can add several different)
