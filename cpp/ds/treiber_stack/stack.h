@@ -18,93 +18,71 @@ struct mstack_node
   skey_t key;
   sval_t val; 
   struct mstack_node* next;
-  uint8_t padding[CACHE_LINE_SIZE - sizeof(skey_t) - sizeof(sval_t) - sizeof(struct mstack_node*)];
 };
 
 struct alignas(CACHE_LINE_SIZE) mstack
 {
     atomic<mstack_node*> top;
-    /* ptlock_t head_lock; */
-    /* uint8_t padding1[CACHE_LINE_SIZE - sizeof(mstack_node*) - sizeof(ptlock_t)]; */
-    /* mstack_node* tail; */
-    /* ptlock_t tail_lock; */
-    uint8_t padding2[CACHE_LINE_SIZE - sizeof(mstack_node*)];
 
-    sval_t mstackreiber_find(skey_t key);
-    int mstackreiber_push(skey_t key, sval_t val);
-    sval_t mstackreiber_pop();
+    mstack() : top(nullptr) {}
+    
+    ~mstack() {
+        mstack_node* curr = top.load();
+        while (curr != nullptr) {
+            mstack_node* temp = curr;
+            curr = curr->next.load();
+            delete temp;
+        }
+    }
+
+    sval_t find(skey_t key) {
+        mstack_node* curr = top.load(memory_order_acquire);
+        while (curr != nullptr) {
+            if (curr->key == key) {
+                return curr->val;
+            }
+            curr = curr->next.load(memory_order_acquire);
+        }
+        return 0;
+    }
+
+    bool push(skey_t key, sval_t val) {
+        mstack_node* new_node = new mstack_node(key, val);
+        mstack_node* expected = top.load(memory_order_relaxed);
+        
+        do {
+            new_node->next.store(expected, memory_order_relaxed);
+        } while (!top.compare_exchange_weak(
+            expected, 
+            new_node,
+            memory_order_release,
+            memory_order_relaxed
+        ));
+        
+        return true;
+    }
+
+    sval_t pop() {
+        mstack_node* expected = top.load(memory_order_acquire);
+        mstack_node* new_top;
+        
+        do {
+            if (expected == nullptr) {
+                return 0;
+            }
+            new_top = expected->next.load(memory_order_relaxed);
+        } while (!top.compare_exchange_weak(
+            expected,
+            new_top,
+            memory_order_release,
+            memory_order_acquire));
+        
+        sval_t result = expected->val;
+        delete expected;
+        return result;
+    }
+
+    // Удаление конструкторов копирования и присваивания
+    mstack(const mstack&) = delete;
+    mstack& operator=(const mstack&) = delete;
 };
-
-int floor_log_2(unsigned int n);
-
-/* 
- * Create a new node without setting its next fields. 
- */
-mstack_node* mstack_new_simple_node(skey_t key, sval_t val, int toplevel, int transactional);
-/* 
- * Create a new node with its next field. 
- * If next=NULL, then this create a tail node. 
- */
-mstack_node *mstack_new_node(skey_t key, sval_t val, mstack_node *next);
-void mstack_delete_node(mstack_node* n);
-mstack* mstack_new();
-void mstack_delete(mstack* qu);
-int mstack_size(mstack* cqu);
-
-// RETRY_STATS_VARS;
-// #if LATENCY_PARSING == 1
-// __thread size_t lat_parsing_get = 0;
-// __thread size_t lat_parsing_put = 0;
-// __thread size_t lat_parsing_rem = 0;
-// #endif	/* LATENCY_PARSING == 1 */
-
-// extern __thread unsigned long* seeds;
-
-sval_t mstack::mstackreiber_find(skey_t key)
-{ 
-  return 1;
-}
-
-int mstack::mstackreiber_push(skey_t key, sval_t val)
-{
-//   NUM_RETRIES();
-  mstack_node* node = mstack_new_node(key, val, NULL);
-  while(1)
-    {
-      mstack_node* top = qu->top;
-      node->next = top;
-      if (CAS_PTR(&qu->top, top, node) == top)
-	{
-	  break;
-	}
-      DO_PAUSE();
-    }
-  return 1;
-}
-
-
-sval_t mstack::mstackreiber_pop()
-{
-  mstack_node* mem_top;
-//   NUM_RETRIES();
-  while (1)
-    {
-      mem_top = this->top;
-      if (unlikely(top == NULL))
-	{
-	  return 0;
-	}
-
-      if (compares(&qu->top, top, top->next) == top)
-	{
-	  break;
-	}
-
-      DO_PAUSE();
-    }
-
-#if GC == 1
-  ssmem_free(alloc, (void*) top);
-#endif
-  return top->val;
-}
