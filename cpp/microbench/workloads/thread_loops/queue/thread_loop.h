@@ -10,6 +10,8 @@ namespace microbench::workload {
 
 using K = int64_t;
 
+#if defined(USE_STACK_OPERATIONS) || defined(USE_QUEUE_OPERATIONS)
+
 class ThreadLoop {
 protected:
     K garbage = 0;
@@ -31,11 +33,11 @@ public:
           RQ_RANGE(rq_range) {
     }
 
-    template <typename K>
-    K* execute_insert(K& key);
+    template<typename K>
+    K* execute_push(const K& key);
 
-    template <typename K>
-    K* execute_remove(const K& key);
+    template<typename K>
+    K* execute_pop();
 
     template <typename K>
     K* execute_get(const K& key);
@@ -43,45 +45,16 @@ public:
     template <typename K>
     bool execute_contains(const K& key);
 
-    /**
-     * the result is in the arrays rqResultKeys and rqResultValues
-     */
-    template <typename K>
-    void execute_range_query(const K& left_key, const K& right_key);
+    template<typename K>
+    K* execute_push(const K& key);
+
+    template<typename K>
+    K* execute_pop();
 
     virtual void run();
 
     virtual void step() = 0;
 };
-
-#ifndef MAIN_BENCH
-
-template <typename K>
-void ThreadLoop::execute_range_query(const K& left_key, const K& right_key) {
-}
-
-template <typename K>
-bool ThreadLoop::execute_contains(const K& key) {
-    return false;
-}
-
-template <typename K>
-K* ThreadLoop::execute_get(const K& key) {
-    return nullptr;
-}
-
-template <typename K>
-K* ThreadLoop::execute_remove(const K& key) {
-    return nullptr;
-}
-
-template <typename K>
-K* ThreadLoop::execute_insert(K& key) {
-    return nullptr;
-}
-
-void ThreadLoop::run() {
-}
 
 #endif
 

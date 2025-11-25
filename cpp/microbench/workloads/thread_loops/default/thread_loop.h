@@ -43,6 +43,16 @@ public:
     template <typename K>
     bool execute_contains(const K& key);
 
+    #if defined(USE_STACK_OPERATIONS) || defined(USE_QUEUE_OPERATIONS)
+
+    template<typename K>
+    K* execute_push(const K& key);
+
+    template<typename K>
+    K* execute_pop();
+
+    #endif
+
     /**
      * the result is in the arrays rqResultKeys and rqResultValues
      */
