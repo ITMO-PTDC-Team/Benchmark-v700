@@ -169,7 +169,12 @@ GSTATS_DECLARE_STATS_OBJECT(MAX_THREADS_POW2);
 #endif
 
 #include "workloads/bench_parameters.h"
-#include "workloads/thread_loops/thread_loop_impl.h"
+
+#if defined(USE_STACK_OPERATIONS) || defined(USE_QUEUE_OPERATIONS)
+#include "workloads/thread_loops/queue/thread_loop_impl.h"
+#else
+#include "workloads/thread_loops/default/thread_loop_impl.h"
+#endif
 
 #include "globals_t_impl.h"
 #include "statistics.h"

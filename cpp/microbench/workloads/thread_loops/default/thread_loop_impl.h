@@ -114,41 +114,6 @@ K* ThreadLoop::execute_get(const K& key) {
     return (K*)value;
 }
 
-#if defined(USE_STACK_OPERATIONS) || defined(USE_QUEUE_OPERATIONS)
-
-template <typename K>
-K* ThreadLoop::execute_push(const K& key) {
-    TRACE COUTATOMICTID("### calling PUSH " << key << std::endl);
-
-    VALUE_TYPE value = g->dsAdapter->push(threadId, KEY_TO_VALUE(key));
-    //    K *value = (K *) g->dsAdapter->insertIfAbsent(threadId, key, KEY_TO_VALUE(key));
-    garbage += key;  // prevent optimizing out
-    GSTATS_ADD(threadId, num_pushes, 1);
-    GSTATS_ADD(threadId, num_operations, 1);
-    return (K*)value;
-}
-
-template <typename K>
-K* ThreadLoop::execute_pop() {
-    TRACE COUTATOMICTID("### calling POP " << std::endl);
-    //    K *value = (K *) this->g->dsAdapter->find(this->threadId, key);
-    VALUE_TYPE value = this->g->dsAdapter->pop(this->threadId);
-
-    if (value != this->g->dsAdapter->getNoValue()) {
-        TRACE COUTATOMICTID("### completed POP modification for " << value << std::endl);
-        GSTATS_ADD(threadId, num_successful_pops, 1);
-    } else {
-        TRACE COUTATOMICTID("### completed READ-ONLY" << std::endl);
-        GSTATS_ADD(threadId, num_fail_pops, 1);
-    }
-    GSTATS_ADD(threadId, num_pops, 1);
-    GSTATS_ADD(threadId, num_operations, 1);
-
-    return (K*)value;
-}
-
-#endif
-
 template <typename K>
 bool ThreadLoop::execute_contains(const K& key) {
     bool value = this->g->dsAdapter->contains(this->threadId, key);

@@ -10,7 +10,7 @@
 #include "workloads/stop_condition/stop_condition.h"
 #include "workloads/stop_condition/impls/timer.h"
 #include "workloads/thread_loops/thread_loop_builder.h"
-#include "workloads/thread_loops/impls/default_thread_loop.h"
+#include "workloads/thread_loops/default/impls/default_thread_loop.h"
 #include "globals_t.h"
 #include "workloads/thread_loops/thread_loop.h"
 #include "workloads/stop_condition/stop_condition_json_convector.h"
@@ -163,7 +163,7 @@ public:
         } else {
             pin_.resize(num_threads_, -1);
         }
-        assert(numThreads == pin.size());
+        // assert(numThreads == pin.size());
         return this;
     }
 

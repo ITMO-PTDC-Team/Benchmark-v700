@@ -4,9 +4,10 @@
 #pragma once
 
 #include "thread_loop_builder.h"
-#include "workloads/thread_loops/impls/default_thread_loop.h"
-#include "workloads/thread_loops/impls/prefill_insert_thread_loop.h"
-#include "workloads/thread_loops/impls/temporary_operations_thread_loop.h"
+#include "workloads/thread_loops/default/impls/default_thread_loop.h"
+#include "workloads/thread_loops/default/impls/prefill_insert_thread_loop.h"
+#include "workloads/thread_loops/default/impls/temporary_operations_thread_loop.h"
+#include "workloads/thread_loops/queue/impls/stack_thread_loop.h"
 #include "errors.h"
 
 namespace microbench::workload {
