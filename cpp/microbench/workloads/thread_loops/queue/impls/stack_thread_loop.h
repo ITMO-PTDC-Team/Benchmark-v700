@@ -5,13 +5,13 @@
 
 #include "plaf.h"
 #include "random_xoshiro256p.h"
-#include "workloads/thread_loops/thread_loop.h"
+#include "workloads/thread_loops/queue/queue_thread_loop.h"
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/thread_loops/ratio_thread_loop_parameters.h"
 
 namespace microbench::workload {
 
-class StackThreadLoop : public ThreadLoop {
+class StackThreadLoop : public QueueThreadLoop {
     PAD;
     double* cdf_;
     Random64& rng_;
@@ -23,7 +23,7 @@ public:
     StackThreadLoop(globals_t* g, Random64& rng, size_t thread_id, StopCondition* stop_condition,
                       size_t rq_range, ArgsGenerator<K>* args_generator,
                       RatioThreadLoopParameters& thread_loop_parameters)
-        : ThreadLoop(g, thread_id, stop_condition, rq_range),
+        : QueueThreadLoop(g, thread_id, stop_condition),
           rng_(rng),
           args_generator_(args_generator) {
         cdf_ = new double[3];

@@ -55,7 +55,7 @@ namespace microbench::workload {
 
 
 template <typename K>
-K* ThreadLoop::execute_get(const K& key) {
+K* QueueThreadLoop::execute_get(const K& key) {
     //    K *value = (K *) this->g->dsAdapter->find(this->threadId, key);
     VALUE_TYPE value = this->g->dsAdapter->find(this->threadId, key);
 
@@ -72,10 +72,13 @@ K* ThreadLoop::execute_get(const K& key) {
 }
 
 template <typename K>
-K* ThreadLoop::execute_push(const K& key) {
+K* QueueThreadLoop::execute_push(const K& key) {
     TRACE COUTATOMICTID("### calling PUSH " << key << std::endl);
 
     VALUE_TYPE value = g->dsAdapter->push(threadId, KEY_TO_VALUE(key));
+    for (int i = 0; i < this->nopCount; i++) {
+        __asm__ __volatile__("nop");
+    }
     //    K *value = (K *) g->dsAdapter->insertIfAbsent(threadId, key, KEY_TO_VALUE(key));
     garbage += key;  // prevent optimizing out
     GSTATS_ADD(threadId, num_pushes, 1);
@@ -84,7 +87,7 @@ K* ThreadLoop::execute_push(const K& key) {
 }
 
 template <typename K>
-K* ThreadLoop::execute_pop() {
+K* QueueThreadLoop::execute_pop() {
     TRACE COUTATOMICTID("### calling POP " << std::endl);
     //    K *value = (K *) this->g->dsAdapter->find(this->threadId, key);
     VALUE_TYPE value = this->g->dsAdapter->pop(this->threadId);
@@ -103,7 +106,7 @@ K* ThreadLoop::execute_pop() {
 }
 
 template <typename K>
-bool ThreadLoop::execute_contains(const K& key) {
+bool QueueThreadLoop::execute_contains(const K& key) {
     bool value = this->g->dsAdapter->contains(this->threadId, key);
 
     if (value) {
@@ -118,7 +121,7 @@ bool ThreadLoop::execute_contains(const K& key) {
     return value;
 }
 
-void ThreadLoop::run() {
+void QueueThreadLoop::run() {
     THREAD_MEASURED_PRE
     while (!stopCondition->is_stopped(threadId)) {
         ++cnt;

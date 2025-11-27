@@ -7,12 +7,12 @@
 #include <string>
 
 #include "random_xoshiro256p.h"
-#include "workloads/thread_loops/thread_loop.h"
+#include "workloads/thread_loops/default/normal_thread_loop.h"
 #include "workloads/args_generators/args_generator.h"
 
 namespace microbench::workload {
 
-class PrefillInsertThreadLoop : public ThreadLoop {
+class PrefillInsertThreadLoop : public NormalThreadLoop {
 private:
     PAD;
     Random64& rng_;

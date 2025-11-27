@@ -55,7 +55,7 @@ namespace microbench::workload {
     this->g->garbage += garbage;
 
 template <typename K>
-K* ThreadLoop::execute_insert(K& key) {
+K* NormalThreadLoop::execute_insert(K& key) {
     TRACE COUTATOMICTID("### calling INSERT " << key << std::endl);
 
     VALUE_TYPE value = g->dsAdapter->insertIfAbsent(threadId, key, KEY_TO_VALUE(key));
@@ -77,7 +77,7 @@ K* ThreadLoop::execute_insert(K& key) {
 }
 
 template <typename K>
-K* ThreadLoop::execute_remove(const K& key) {
+K* NormalThreadLoop::execute_remove(const K& key) {
     TRACE COUTATOMICTID("### calling ERASE " << key << std::endl);
     //    K *value = (K *) g->dsAdapter->erase(this->threadId, key);
     VALUE_TYPE value = g->dsAdapter->erase(this->threadId, key);
@@ -98,7 +98,7 @@ K* ThreadLoop::execute_remove(const K& key) {
 }
 
 template <typename K>
-K* ThreadLoop::execute_get(const K& key) {
+K* NormalThreadLoop::execute_get(const K& key) {
     //    K *value = (K *) this->g->dsAdapter->find(this->threadId, key);
     VALUE_TYPE value = this->g->dsAdapter->find(this->threadId, key);
 
@@ -115,7 +115,7 @@ K* ThreadLoop::execute_get(const K& key) {
 }
 
 template <typename K>
-bool ThreadLoop::execute_contains(const K& key) {
+bool NormalThreadLoop::execute_contains(const K& key) {
     bool value = this->g->dsAdapter->contains(this->threadId, key);
 
     if (value) {
@@ -134,7 +134,7 @@ bool ThreadLoop::execute_contains(const K& key) {
  * the result is in the arrays rqResultKeys and rqResultValues
  */
 template <typename K>
-void ThreadLoop::execute_range_query(const K& leftKey, const K& rightKey) {
+void NormalThreadLoop::execute_range_query(const K& leftKey, const K& rightKey) {
     ++rq_cnt;
     size_t rqcnt;
     if ((rqcnt = this->g->dsAdapter->rangeQuery(this->threadId, leftKey, rightKey, rqResultKeys,
@@ -147,7 +147,7 @@ void ThreadLoop::execute_range_query(const K& leftKey, const K& rightKey) {
     GSTATS_ADD(threadId, num_operations, 1);
 }
 
-void ThreadLoop::run() {
+void NormalThreadLoop::run() {
     THREAD_MEASURED_PRE
     while (!stopCondition->is_stopped(threadId)) {
         ++cnt;
