@@ -22,9 +22,11 @@ public:
 
     ThreadLoop() = default;
 
-    virtual void run();
+    virtual void run() = 0;
 
     virtual void step() = 0;
+
+    virtual ~ThreadLoop() = default;
 };
 
 }  // namespace microbench::workload

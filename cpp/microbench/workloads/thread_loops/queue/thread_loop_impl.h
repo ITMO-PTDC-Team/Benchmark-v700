@@ -5,14 +5,10 @@
 
 namespace microbench::workload {
 
-#if defined(USE_STACK_OPERATIONS) || defined(USE_QUEUE_OPERATIONS)
-
 #define THREAD_MEASURED_PRE                                                        \
     tid = this->threadId;                                                          \
     binding_bindThread(tid);                                                       \
     garbage = 0;                                                                   \
-    rqResultKeys = new K[this->RQ_RANGE + MAX_KEYS_PER_NODE];                      \
-    rqResultValues = new VALUE_TYPE[this->RQ_RANGE + MAX_KEYS_PER_NODE];           \
     NO_VALUE = this->g->dsAdapter->getNoValue();                                   \
     __RLU_INIT_THREAD;                                                             \
     __RCU_INIT_THREAD;                                                             \
@@ -30,7 +26,6 @@ namespace microbench::workload {
                    .count());                                                      \
     papi_start_counters(tid);                                                      \
     int cnt = 0;                                                                   \
-    rq_cnt = 0;                                                                    \
     DURATION_START(tid);
 
 #define THREAD_MEASURED_POST                                                       \
@@ -49,8 +44,6 @@ namespace microbench::workload {
     this->g->dsAdapter->deinitThread(tid);                                         \
     __RCU_DEINIT_THREAD;                                                           \
     __RLU_DEINIT_THREAD;                                                           \
-    delete[] rqResultKeys;                                                         \
-    delete[] rqResultValues;                                                       \
     this->g->garbage += garbage;
 
 
@@ -75,7 +68,7 @@ template <typename K>
 K* QueueThreadLoop::execute_push(const K& key) {
     TRACE COUTATOMICTID("### calling PUSH " << key << std::endl);
 
-    VALUE_TYPE value = g->dsAdapter->push(threadId, KEY_TO_VALUE(key));
+    VALUE_TYPE value = g->dsAdapter->push(threadId, key);
     for (int i = 0; i < this->nopCount; i++) {
         __asm__ __volatile__("nop");
     }
@@ -130,8 +123,6 @@ void QueueThreadLoop::run() {
     }
     THREAD_MEASURED_POST
 }
-
-#endif
 
 }
 

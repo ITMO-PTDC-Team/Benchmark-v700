@@ -9,9 +9,7 @@
 
 namespace microbench::workload {
 
-using K = int64_t;
-
-class QueueThreadLoop : ThreadLoop {
+class QueueThreadLoop : public ThreadLoop {
 protected:
     K garbage = 0;
     VALUE_TYPE NO_VALUE;
@@ -47,9 +45,9 @@ public:
     template <typename K>
     void execute_range_query(const K& left_key, const K& right_key);
 
-    virtual void run();
+    virtual void run() override;
 
-    virtual void step() = 0;
+    virtual void step() override = 0;
 };
 
 }  // namespace microbench::workload

@@ -14,18 +14,16 @@ typedef intptr_t sval_t;
 struct queue_node
 {
     skey_t key;
-    sval_t val;
     atomic<queue_node*> next;
     
-    queue_node(skey_t k, sval_t v) : key(k), val(v), next(nullptr) {}
-    queue_node() : key(0), val(0), next(nullptr) {}
+    queue_node(skey_t k, sval_t v) : key(k), next(nullptr) {}
+    queue_node() : key(0), next(nullptr) {}
 };
 
 struct alignas(CACHE_LINE_SIZE) michael_scott_queue
 {
     atomic<queue_node*> head;
     atomic<queue_node*> tail;
-    uint8_t padding[CACHE_LINE_SIZE - 2 * sizeof(atomic<queue_node*>)];
 
     michael_scott_queue() {
         queue_node* dummy = new queue_node();
@@ -42,8 +40,8 @@ struct alignas(CACHE_LINE_SIZE) michael_scott_queue
         }
     }
 
-    bool enqueue(skey_t key, sval_t val) {
-        queue_node* new_node = new queue_node(key, val);
+    bool enqueue(skey_t key) {
+        queue_node* new_node = new queue_node(key);
         
         while (true) {
             queue_node* last = tail.load(memory_order_acquire);
@@ -65,7 +63,7 @@ struct alignas(CACHE_LINE_SIZE) michael_scott_queue
         }
     }
 
-    bool dequeue(skey_t& key, sval_t& val) {
+    bool dequeue(skey_t& key) {
         while (true) {
             queue_node* first = head.load(memory_order_acquire);
             queue_node* last = tail.load(memory_order_acquire);
@@ -80,7 +78,6 @@ struct alignas(CACHE_LINE_SIZE) michael_scott_queue
                         last, next, memory_order_release, memory_order_relaxed);
                 } else {
                     key = next->key;
-                    val = next->val;
                     
                     if (head.compare_exchange_weak(
                         first, next, memory_order_release, memory_order_relaxed)) {

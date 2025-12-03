@@ -8,12 +8,12 @@
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/args_generators/args_generator_json_convector.h"
 #include "workloads/args_generators/impls/default_args_generator.h"
-#include "workloads/thread_loops/default/normal_thread_loop.h"
+#include "workloads/thread_loops/default/map_thread_loop.h"
 #include "workloads/thread_loops/ratio_thread_loop_parameters.h"
 
 namespace microbench::workload {
 
-class TemporaryOperationThreadLoop : public NormalThreadLoop {
+class TemporaryOperationThreadLoop : public MapThreadLoop {
     PAD;
     double** cdf_;
     Random64& rng_;
@@ -43,7 +43,7 @@ public:
                                  size_t stages_number, size_t* stages_durations,
                                  RatioThreadLoopParameters** ratios,
                                  ArgsGenerator<K>* args_generator)
-        : NormalThreadLoop(g, thread_id, stop_condition, rq_range),
+        : MapThreadLoop(g, thread_id, stop_condition, rq_range),
           rng_(rng),
           args_generator_(args_generator),
           stages_number_(stages_number),

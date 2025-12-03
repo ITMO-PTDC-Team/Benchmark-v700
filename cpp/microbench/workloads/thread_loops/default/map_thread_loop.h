@@ -9,9 +9,7 @@
 
 namespace microbench::workload {
 
-using K = int64_t;
-
-class NormalThreadLoop : ThreadLoop {
+class MapThreadLoop : public ThreadLoop {
 protected:
     K garbage = 0;
     K* rqResultKeys;
@@ -25,9 +23,9 @@ public:
     globals_t* g;
     StopCondition* stopCondition;
 
-    NormalThreadLoop() = default;
+    MapThreadLoop() = default;
     
-    NormalThreadLoop(globals_t* g, size_t thread_id, StopCondition* stop_condition, size_t rq_range)
+    MapThreadLoop(globals_t* g, size_t thread_id, StopCondition* stop_condition, size_t rq_range)
         : g(g),
           threadId(thread_id),
           stopCondition(stop_condition),
@@ -52,38 +50,38 @@ public:
     template <typename K>
     void execute_range_query(const K& left_key, const K& right_key);
 
-    virtual void run();
+    virtual void run() override;
 
-    virtual void step() = 0;
+    virtual void step() override = 0;
 };
 
 #ifndef MAIN_BENCH
 
 template <typename K>
-void NormalThreadLoop::execute_range_query(const K& left_key, const K& right_key) {
+void MapThreadLoop::execute_range_query(const K& left_key, const K& right_key) {
 }
 
 template <typename K>
-bool NormalThreadLoop::execute_contains(const K& key) {
+bool MapThreadLoop::execute_contains(const K& key) {
     return false;
 }
 
 template <typename K>
-K* NormalThreadLoop::execute_get(const K& key) {
+K* MapThreadLoop::execute_get(const K& key) {
     return nullptr;
 }
 
 template <typename K>
-K* NormalThreadLoop::execute_remove(const K& key) {
+K* MapThreadLoop::execute_remove(const K& key) {
     return nullptr;
 }
 
 template <typename K>
-K* NormalThreadLoop::execute_insert(K& key) {
+K* MapThreadLoop::execute_insert(K& key) {
     return nullptr;
 }
 
-void NormalThreadLoop::run() {
+void MapThreadLoop::run() {
 }
 
 #endif

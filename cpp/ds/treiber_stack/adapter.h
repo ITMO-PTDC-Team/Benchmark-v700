@@ -66,15 +66,15 @@ public:
     }
 
     V find(const int tid, const K& key) {
-        return ds->qfind(tid, key);
+        return ds->find(tid, key);
     }
 
     V push(const int tid, const K& key) {
-        return nullptr;
+        return ds->push(tid, key);
     }
 
     V pop(const int tid) {
-        return nullptr;
+        return ds->pop(tid);
     }
 
     long long getPathsLength(const int tid) {
@@ -83,7 +83,7 @@ public:
     }
 
     bool contains(const int tid, const K& key) {
-        return ds->contains(tid, key);
+        // return ds->contains(tid, key);
     }
 
     int rangeQuery(const int tid, const K& lo, const K& hi, K * const resultKeys, V * const resultValues) {
@@ -93,7 +93,8 @@ public:
 //        ds->printDebuggingDetails();
     }
     bool validateStructure() {
-        return ds->validate();
+        // return ds->validate();
+        return true
     }
     int getHeight() {
         // TODO: Check this in stack

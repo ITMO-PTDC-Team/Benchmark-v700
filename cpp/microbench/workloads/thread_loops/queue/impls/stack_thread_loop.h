@@ -33,20 +33,20 @@ public:
     }
 
     void step() override {
-        // double op = (double)rng_.next() / (double)rng_.max_value;
-        // if (op < cdf_[0]) {  // insert
-        //     K key = this->args_generator_->next_insert();
-        //     this->execute_push(key);
-        // } else if (op < cdf_[1]) {  // remove
-        //     K key = this->args_generator_->next_remove();
-        //     this->execute_pop(key);
-        // } else if (op < cdf_[2]) {  // range query
-        //     std::pair<K, K> keys = this->args_generator_->next_range();
-        //     this->execute_range_query(keys.first, keys.second);
-        // } else {  // read
-        //     K key = this->args_generator_->next_get();
-        //     this->GET_FUNC(key);
-        // }
+        double op = (double)rng_.next() / (double)rng_.max_value;
+        if (op < cdf_[0]) {  // push
+            K key = this->args_generator_->next_insert();
+            this->execute_push(key);
+        } else if (op < cdf_[1]) {  // pop
+            K key = this->args_generator_->next_remove();
+            key = this->execute_pop();
+        } else if (op < cdf_[2]) {  // range query
+            std::pair<K, K> keys = this->args_generator_->next_range();
+            this->execute_range_query(keys.first, keys.second);
+        } else {  // read
+            K key = this->args_generator_->next_get();
+            this->GET_FUNC(key);
+        }
     }
 };
 
