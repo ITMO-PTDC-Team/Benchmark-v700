@@ -38,12 +38,6 @@ public:
 
     template<typename K>
     K* execute_pop();
-    
-    /**
-     * the result is in the arrays rqResultKeys and rqResultValues
-     */
-    template <typename K>
-    void execute_range_query(const K& left_key, const K& right_key);
 
     virtual void run() override;
 

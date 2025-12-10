@@ -65,6 +65,15 @@ if (SKIP_VALIDATION)
     add_definitions("-DSKIP_VALIDATION")
 endif ()
 
+option(USE_STACK_OPERATIONS "USE_STACK_OPERATIONS")
+option(USE_QUEUE_OPERATIONS "USE_QUEUE_OPERATIONS")
+if (USE_STACK_OPERATIONS)
+    add_definitions("-DUSE_STACK_OPERATIONS")
+endif ()
+if (USE_QUEUE_OPERATIONS)
+    add_definitions("-DUSE_QUEUE_OPERATIONS")
+endif ()
+
 add_definitions("-DMAX_THREADS_POW2=512"
         "-DCPU_FREQ_GHZ=2.1"
         "-DMEMORY_STATS=if\(1\)"

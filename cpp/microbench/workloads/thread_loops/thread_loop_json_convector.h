@@ -16,6 +16,8 @@ ThreadLoopBuilder* get_thread_loop_from_json(const nlohmann::json& j) {
     std::string class_name = j["ClassName"];
     ThreadLoopBuilder* thread_loop_builder;
 
+
+    #if !defined(USE_STACK_OPERATIONS) && !defined(USE_QUEUE_OPERATIONS)
     if (class_name == "DefaultThreadLoopBuilder") {
         thread_loop_builder = new DefaultThreadLoopBuilder();
     } else if (class_name == "TemporaryOperationsThreadLoopBuilder") {
@@ -25,7 +27,11 @@ ThreadLoopBuilder* get_thread_loop_from_json(const nlohmann::json& j) {
     } else {
         setbench_error("JSON PARSER: Unknown class name ThreadLoopBuilder -- " + class_name)
     }
-
+    #else
+    if (class_name == "StackThreadLoopBuilder") {
+        thread_loop_builder = new StackThreadLoopBuilder();
+    }
+    #endif
     thread_loop_builder->from_json(j);
     return thread_loop_builder;
 }

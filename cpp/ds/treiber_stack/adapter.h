@@ -13,7 +13,7 @@ using namespace std;
 #endif
 #include "stack.h"
 
-#define DATA_STRUCTURE_T mstack
+#define DATA_STRUCTURE_T mstack<K>
 
 template <typename K, typename V, class Reclaim = reclaimer_debra<K>, class Alloc = allocator_new<K>, class Pool = pool_none<K>>
 class ds_adapter {
@@ -66,15 +66,16 @@ public:
     }
 
     V find(const int tid, const K& key) {
-        return ds->find(tid, key);
+        // return ds->find(tid, key);
+        return nullptr;
     }
 
     V push(const int tid, const K& key) {
-        return ds->push(tid, key);
+        return ds->push(tid, key).get();
     }
 
     V pop(const int tid) {
-        return ds->pop(tid);
+        return ds->pop(tid).get();
     }
 
     long long getPathsLength(const int tid) {
@@ -84,6 +85,7 @@ public:
 
     bool contains(const int tid, const K& key) {
         // return ds->contains(tid, key);
+        return false;
     }
 
     int rangeQuery(const int tid, const K& lo, const K& hi, K * const resultKeys, V * const resultValues) {
@@ -94,7 +96,7 @@ public:
     }
     bool validateStructure() {
         // return ds->validate();
-        return true
+        return true;
     }
     int getHeight() {
         // TODO: Check this in stack
@@ -103,15 +105,7 @@ public:
 
     void printObjectSizes() {
         std::cout<<"sizes: node="
-                 <<(sizeof(mstack_node))
+                 <<(sizeof(mstack_node<K>))
                  <<std::endl;
-    }
-
-    std::vector<pair<int, int> > getPairsKeyHeight() {
-        
-    }
-
-    std::vector<pair<int, int> > getPairsKeyContains() {
-
     }
 };

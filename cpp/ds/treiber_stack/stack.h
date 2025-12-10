@@ -5,36 +5,38 @@
 
 #include <cstdint>
 #include <atomic>
+#include <memory>
 
 using namespace std;
 
 typedef intptr_t skey_t;
-typedef intptr_t sval_t;
 
 #define CACHE_LINE_SIZE 64
 
+template <typename K>
 struct mstack_node
 {
-  skey_t key;
+  K key;
   struct mstack_node* next;
 };
 
+template <typename K>
 struct alignas(CACHE_LINE_SIZE) mstack
 {
-    atomic<mstack_node*> top;
+    atomic<mstack_node<K>*> top;
 
     mstack() : top(nullptr) {}
     
     ~mstack() {
-        mstack_node* curr = top.load();
+        mstack_node<K>* curr = top.load();
         while (curr != nullptr) {
-            mstack_node* temp = curr;
+            mstack_node<K>* temp = curr;
             curr = curr->next;
             delete temp;
         }
     }
 
-    sval_t find(const int tid, skey_t key) {
+    K find(const int tid, skey_t key) {
         // mstack_node* curr = top.load(memory_order_acquire);
         // while (curr != nullptr) {
         //     if (curr->key == key) {
@@ -45,9 +47,9 @@ struct alignas(CACHE_LINE_SIZE) mstack
         return nullptr;
     }
 
-    sval_t push(const int tid, skey_t key) {
-        mstack_node* new_node = new mstack_node(key);
-        mstack_node* expected = top.load(memory_order_relaxed);
+    unique_ptr<K> push(const int tid, skey_t key) {
+        mstack_node<K>* new_node = new mstack_node<K>(key);
+        mstack_node<K>* expected = top.load(memory_order_relaxed);
         
         do {
             new_node->next = expected;
@@ -59,12 +61,12 @@ struct alignas(CACHE_LINE_SIZE) mstack
             memory_order_relaxed
         ));
         
-        return key;
+        return std::make_unique<K>(key);
     }
 
-    sval_t pop(const int tid) {
-        mstack_node* expected = top.load(memory_order_acquire);
-        mstack_node* new_top;
+    unique_ptr<K> pop(const int tid) {
+        mstack_node<K>* expected = top.load(memory_order_acquire);
+        mstack_node<K>* new_top;
         
         do {
             if (expected == nullptr) {
@@ -78,9 +80,9 @@ struct alignas(CACHE_LINE_SIZE) mstack
             memory_order_release,
             memory_order_acquire));
         
-        sval_t result = expected->key;
+        auto result = expected->key;
         delete expected;
-        return result;
+        return std::make_unique<K>(result);
     }
 
     mstack(const mstack&) = delete;

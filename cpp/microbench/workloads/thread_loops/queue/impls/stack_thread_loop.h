@@ -11,6 +11,7 @@
 
 namespace microbench::workload {
 
+#if defined(USE_STACK_OPERATIONS) || defined(USE_QUEUE_OPERATIONS)
 class StackThreadLoop : public QueueThreadLoop {
     PAD;
     double* cdf_;
@@ -38,11 +39,7 @@ public:
             K key = this->args_generator_->next_insert();
             this->execute_push(key);
         } else if (op < cdf_[1]) {  // pop
-            K key = this->args_generator_->next_remove();
-            key = this->execute_pop();
-        } else if (op < cdf_[2]) {  // range query
-            std::pair<K, K> keys = this->args_generator_->next_range();
-            this->execute_range_query(keys.first, keys.second);
+            this->execute_pop<K>();
         } else {  // read
             K key = this->args_generator_->next_get();
             this->GET_FUNC(key);
@@ -123,5 +120,6 @@ struct StackThreadLoopBuilder : public ThreadLoopBuilder {
         delete argsGeneratorBuilder;
     };
 };
+#endif
 
 }  // namespace microbench::workload

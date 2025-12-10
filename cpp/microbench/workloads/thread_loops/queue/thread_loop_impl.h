@@ -50,7 +50,7 @@ namespace microbench::workload {
 template <typename K>
 K* QueueThreadLoop::execute_get(const K& key) {
     //    K *value = (K *) this->g->dsAdapter->find(this->threadId, key);
-    VALUE_TYPE value = this->g->dsAdapter->find(this->threadId, key);
+    K* value = (K*) this->g->dsAdapter->find(this->threadId, key);
 
     if (value != this->g->dsAdapter->getNoValue()) {
         garbage += key;  // prevent optimizing out
@@ -68,7 +68,7 @@ template <typename K>
 K* QueueThreadLoop::execute_push(const K& key) {
     TRACE COUTATOMICTID("### calling PUSH " << key << std::endl);
 
-    VALUE_TYPE value = g->dsAdapter->push(threadId, key);
+    auto value = g->dsAdapter->push(threadId, key);
     for (int i = 0; i < this->nopCount; i++) {
         __asm__ __volatile__("nop");
     }
