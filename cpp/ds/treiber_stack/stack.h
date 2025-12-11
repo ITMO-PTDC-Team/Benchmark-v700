@@ -6,12 +6,15 @@
 #include <cstdint>
 #include <atomic>
 #include <memory>
+#include <boost/coroutine2/all.hpp>
 
 using namespace std;
 
 typedef intptr_t skey_t;
 
 #define CACHE_LINE_SIZE 64
+
+thread_local static boost::coroutines2::coroutine<void>::push_type* thread_yield = nullptr;
 
 template <typename K>
 struct mstack_node
@@ -24,6 +27,7 @@ template <typename K>
 struct alignas(CACHE_LINE_SIZE) mstack
 {
     atomic<mstack_node<K>*> top;
+    coro_yield* yield_ptr = nullptr;
 
     mstack() : top(nullptr) {}
     
@@ -34,6 +38,14 @@ struct alignas(CACHE_LINE_SIZE) mstack
             curr = curr->next;
             delete temp;
         }
+    }
+
+    static void set_thread_yield(boost::coroutines2::coroutine<void>::push_type& yield) {
+        thread_yield = &yield;
+    }
+
+    static void clear_thread_yield() {
+        thread_yield = nullptr;
     }
 
     K find(const int tid, skey_t key) {
@@ -53,7 +65,9 @@ struct alignas(CACHE_LINE_SIZE) mstack
         
         do {
             new_node->next = expected;
-            // co_yield
+            if (thread_yield != nullptr) {
+                (*thread_yield)();
+            }
         } while (!top.compare_exchange_weak(
             expected, 
             new_node,

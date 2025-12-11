@@ -6,7 +6,7 @@
 #include "globals_extern.h"
 #include "parameters.h"
 #include "workloads/stop_condition/impls/operation_counter.h"
-// #include "workloads/thread_loops/queue/impls/prefill_insert_thread_loop.h"
+#include "workloads/thread_loops/queue/impls/prefill_insert_thread_loop.h"
 
 namespace microbench::workload {
 

@@ -89,7 +89,8 @@ __thread int tid = 0;
 #define __RCU_INIT_ALL
 #define __RCU_DEINIT_ALL
 #endif
-
+#include "coroutine_adapter.h"
+#include "coroutine_manager.h"
 #ifdef USE_RLU
 #include "rlu.h"
 PAD;
@@ -170,11 +171,11 @@ GSTATS_DECLARE_STATS_OBJECT(MAX_THREADS_POW2);
 
 #include "workloads/bench_parameters.h"
 
-#if defined(USE_STACK_OPERATIONS) || defined(USE_QUEUE_OPERATIONS)
-// #include "workloads/thread_loops/queue/thread_loop_impl.h"
-#else
-#include "workloads/thread_loops/default/thread_loop_impl.h"
-#endif
+// #if defined(USE_STACK_OPERATIONS) || defined(USE_QUEUE_OPERATIONS)
+#include "workloads/thread_loops/queue/thread_loop_impl.h"
+// #else
+// #include "workloads/thread_loops/default/thread_loop_impl.h"
+// #endif
 
 #include "globals_t_impl.h"
 #include "statistics.h"
@@ -216,9 +217,14 @@ void execute(globals_t* g, Parameters* parameters) {
     bind_threads(parameters->get_num_threads());
 
     std::cout << "creating threads...\n";
+    int num_coroutine_threads = parameters->get_num_threads();
+    auto thread_adapter = std::make_unique<CoroutineThreadAdapter<K, ThreadLoop>>(
+        parameters->get_num_threads(), 
+        num_coroutine_threads
+    );
 
     for (int i = 0; i < parameters->get_num_threads(); ++i) {
-        threads[i] = new std::thread(&ThreadLoop::run, thread_loops[i]);
+        threads[i] = thread_adapter->create_coroutine_thread(i, thread_loops[i]);
     }
 
     while (g->running < parameters->get_num_threads()) {

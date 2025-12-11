@@ -11,7 +11,6 @@
 
 namespace microbench::workload {
 
-#if defined(USE_STACK_OPERATIONS) || defined(USE_QUEUE_OPERATIONS)
 class StackThreadLoop : public QueueThreadLoop {
     PAD;
     double* cdf_;
@@ -120,6 +119,5 @@ struct StackThreadLoopBuilder : public ThreadLoopBuilder {
         delete argsGeneratorBuilder;
     };
 };
-#endif
 
 }  // namespace microbench::workload

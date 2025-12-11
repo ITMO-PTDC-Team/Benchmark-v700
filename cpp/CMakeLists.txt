@@ -120,10 +120,14 @@ endforeach ()
 
 include_directories(ds/verlib_structs/include)
 
+find_package(Boost 1.66 REQUIRED COMPONENTS coroutine context fiber)
+
 foreach (DS ${DATA_STRUCTURES})
     message(DS_DIR= "${DS_DIR}/${DS}")
     set(DS_RUN ${DS}${RECLAIM})
     add_executable(${DS_RUN} ${SOURCE_EXE})
+    target_include_directories(${DS_RUN} PRIVATE ${Boost_INCLUDE_DIRS})
+    target_link_libraries(${DS_RUN} PRIVATE ${Boost_LIBRARIES})
     target_include_directories(${DS_RUN} PUBLIC ${DS_DIR}/${DS})
     target_link_libraries(${DS_RUN} PUBLIC ${CXX_LIBS_LIST})
     if (${DS} MATCHES "dragfly.*")
