@@ -4,9 +4,9 @@
 #pragma once
 
 #include "thread_loop_builder.h"
-#include "workloads/thread_loops/default/impls/default_thread_loop.h"
-#include "workloads/thread_loops/default/impls/prefill_insert_thread_loop.h"
-#include "workloads/thread_loops/default/impls/temporary_operations_thread_loop.h"
+#include "workloads/thread_loops/map/impls/default_thread_loop.h"
+#include "workloads/thread_loops/map/impls/prefill_insert_thread_loop.h"
+#include "workloads/thread_loops/map/impls/temporary_operations_thread_loop.h"
 #include "workloads/thread_loops/queue/impls/stack_thread_loop.h"
 #include "errors.h"
 
@@ -19,17 +19,17 @@ ThreadLoopBuilder* get_thread_loop_from_json(const nlohmann::json& j) {
 
     #if !defined(USE_STACK_OPERATIONS) && !defined(USE_QUEUE_OPERATIONS)
     if (class_name == "DefaultThreadLoopBuilder") {
-        thread_loop_builder = new DefaultThreadLoopBuilder();
+        thread_loop_builder = new map::DefaultThreadLoopBuilder();
     } else if (class_name == "TemporaryOperationsThreadLoopBuilder") {
-        thread_loop_builder = new TemporaryOperationsThreadLoopBuilder();
+        thread_loop_builder = new map::TemporaryOperationsThreadLoopBuilder();
     } else if (class_name == "PrefillInsertThreadLoopBuilder") {
-        thread_loop_builder = new PrefillInsertThreadLoopBuilder();
+        thread_loop_builder = new map::PrefillInsertThreadLoopBuilder();
     } else {
         setbench_error("JSON PARSER: Unknown class name ThreadLoopBuilder -- " + class_name)
     }
     #else
     if (class_name == "StackThreadLoopBuilder") {
-        thread_loop_builder = new StackThreadLoopBuilder();
+        thread_loop_builder = new queue::StackThreadLoopBuilder();
     }
     #endif
     thread_loop_builder->from_json(j);

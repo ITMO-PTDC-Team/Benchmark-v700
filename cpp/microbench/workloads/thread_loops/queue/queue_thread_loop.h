@@ -7,7 +7,7 @@
 #include "workloads/thread_loops/thread_loop.h"
 #include "globals_t.h"
 
-namespace microbench::workload {
+namespace microbench::workload::queue {
 
 class QueueThreadLoop : public ThreadLoop {
 protected:
@@ -44,4 +44,4 @@ public:
     virtual void step() override = 0;
 };
 
-}  // namespace microbench::workload
+}  // namespace microbench::workload::queue

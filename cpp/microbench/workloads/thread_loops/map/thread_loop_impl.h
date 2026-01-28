@@ -6,7 +6,7 @@
 #include "adapter.h"
 #include "globals_t_impl.h"
 
-namespace microbench::workload {
+namespace microbench::workload::map {
 
 #define THREAD_MEASURED_PRE                                                        \
     tid = this->threadId;                                                          \
@@ -157,4 +157,4 @@ void MapThreadLoop::run() {
     THREAD_MEASURED_POST
 }
 
-}  // namespace microbench::workload
+}  // namespace microbench::workload::map

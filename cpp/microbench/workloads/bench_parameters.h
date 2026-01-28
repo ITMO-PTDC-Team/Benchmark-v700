@@ -8,6 +8,12 @@
 #include "workloads/stop_condition/impls/operation_counter.h"
 #include "workloads/thread_loops/queue/impls/prefill_insert_thread_loop.h"
 
+#if defined(USE_STACK_OPERATIONS) || defined(USE_QUEUE_OPERATIONS)
+#define WORKSPACE_NAME queue
+#else
+#define WORKSPACE_NAME map
+#endif
+
 namespace microbench::workload {
 
 struct BenchParameters {
@@ -32,14 +38,14 @@ struct BenchParameters {
     BenchParameters& create_default_prefill(size_t thread_num) {
         prefill = (new Parameters())
                       ->set_stop_condition(new OperationCounter(range / 2))
-                      ->add_thread_loop_builder(new PrefillInsertThreadLoopBuilder(), thread_num);
+                      ->add_thread_loop_builder(new WORKSPACE_NAME::PrefillInsertThreadLoopBuilder(), thread_num);
         return *this;
     }
 
     BenchParameters& create_default_prefill() {
         prefill = new Parameters();
         prefill->stopCondition = new OperationCounter(range / 2);
-        prefill->add_thread_loop_builder(new PrefillInsertThreadLoopBuilder(), 1);
+        prefill->add_thread_loop_builder(new WORKSPACE_NAME::PrefillInsertThreadLoopBuilder(), 1);
         return create_default_prefill(1);
     }
 

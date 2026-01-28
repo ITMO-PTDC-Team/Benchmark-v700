@@ -7,7 +7,7 @@
 #include "workloads/thread_loops/thread_loop.h"
 #include "globals_t.h"
 
-namespace microbench::workload {
+namespace microbench::workload::map {
 
 class MapThreadLoop : public ThreadLoop {
 protected:
@@ -86,4 +86,4 @@ void MapThreadLoop::run() {
 
 #endif
 
-}  // namespace microbench::workload
+}  // namespace microbench::workload::map

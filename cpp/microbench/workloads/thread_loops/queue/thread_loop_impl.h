@@ -3,7 +3,7 @@
 #include "adapter.h"
 #include "globals_t_impl.h"
 
-namespace microbench::workload {
+namespace microbench::workload::queue {
 
 #define THREAD_MEASURED_PRE                                                        \
     tid = this->threadId;                                                          \

@@ -5,11 +5,11 @@
 
 #include "plaf.h"
 #include "random_xoshiro256p.h"
-#include "workloads/thread_loops/default/map_thread_loop.h"
+#include "workloads/thread_loops/map/map_thread_loop.h"
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/thread_loops/ratio_thread_loop_parameters.h"
 
-namespace microbench::workload {
+namespace microbench::workload::map {
 
 class DefaultThreadLoop : public MapThreadLoop {
     PAD;
@@ -50,7 +50,7 @@ public:
     }
 };
 
-}  // namespace microbench::workload
+}  // namespace microbench::workload::map
 
 #include "workloads/thread_loops/thread_loop_builder.h"
 #include "workloads/args_generators/args_generator_builder.h"
@@ -58,7 +58,7 @@ public:
 #include "workloads/args_generators/args_generator_json_convector.h"
 #include "globals_extern.h"
 
-namespace microbench::workload {
+namespace microbench::workload::map {
 
 struct DefaultThreadLoopBuilder : public ThreadLoopBuilder {
     RatioThreadLoopParameters parameters;
@@ -124,4 +124,4 @@ struct DefaultThreadLoopBuilder : public ThreadLoopBuilder {
     };
 };
 
-}  // namespace microbench::workload
+}  // namespace microbench::workload::map

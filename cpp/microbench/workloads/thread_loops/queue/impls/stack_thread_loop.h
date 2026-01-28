@@ -9,7 +9,7 @@
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/thread_loops/ratio_thread_loop_parameters.h"
 
-namespace microbench::workload {
+namespace microbench::workload::queue {
 
 class StackThreadLoop : public QueueThreadLoop {
     PAD;
@@ -46,7 +46,7 @@ public:
     }
 };
 
-}  // namespace microbench::workload
+}  // namespace microbench::workload::queue
 
 #include "workloads/thread_loops/thread_loop_builder.h"
 #include "workloads/args_generators/args_generator_builder.h"
@@ -54,7 +54,7 @@ public:
 #include "workloads/args_generators/args_generator_json_convector.h"
 #include "globals_extern.h"
 
-namespace microbench::workload {
+namespace microbench::workload::queue {
 
 struct StackThreadLoopBuilder : public ThreadLoopBuilder {
     RatioThreadLoopParameters parameters;
@@ -120,4 +120,4 @@ struct StackThreadLoopBuilder : public ThreadLoopBuilder {
     };
 };
 
-}  // namespace microbench::workload
+}  // namespace microbench::workload::queue
