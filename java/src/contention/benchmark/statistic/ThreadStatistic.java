@@ -27,14 +27,7 @@ public class ThreadStatistic {
     public long nodesTraversed;
     public long insertNodesTraversed = 0;
     public long deleteNodesTraversed = 0;
-
-    public long foundCnt;
-    public long foundTreeTraversed;
-    public long foundLogicalTraversed;
-    public long notFoundCnt;
-    public long notFoundTreeTraversed;
-    public long notFoundLogicalTraversed;
-    public long failedLockAcquire;
+    public long realNodesDeleted = 0;
 
     public long foundCnt;
     public long foundTreeTraversed;
@@ -58,6 +51,7 @@ public class ThreadStatistic {
         failures = 0;
         aborts = 0;
         nodesTraversed = 0;
+        realNodesDeleted = 0;
     	insertNodesTraversed = 0;
     	deleteNodesTraversed = 0;
         foundCnt = 0;
@@ -82,6 +76,7 @@ public class ThreadStatistic {
         failures += stats.failures;
         aborts += stats.aborts;
         nodesTraversed += stats.nodesTraversed;
+        realNodesDeleted += stats.realNodesDeleted;
     	insertNodesTraversed += stats.insertNodesTraversed;
     	deleteNodesTraversed += stats.deleteNodesTraversed;
         foundCnt += stats.foundCnt;

@@ -1,5 +1,6 @@
 ./src/trees/sequential/SequentialRBTreeIntSet.java
 ./src/trees/lockbased/LockBasedFriendlyTreeMap.java
+./src/trees/lockbased/LockBasedFriendlyTreeMapAvl.java
 ./src/trees/lockbased/catreeutils/STDAVLNodeDCAS.java
 ./src/trees/lockbased/catreeutils/DualLFCASAVLTreeMapSTD.java
 ./src/trees/lockbased/catreeutils/SplitableAndJoinableMap.java
@@ -9,6 +10,7 @@
 ./src/trees/lockbased/ConcurrencyOptimalTreeMap.java
 ./src/trees/lockbased/LockBasedFriendlyTreeMapSplay.java
 ./src/trees/lockbased/LockBasedStanfordTreeMap.java
+./src/trees/lockbased/LockBasedStanfordTreeMapCb.java
 ./src/trees/lockbased/CATreeMapAVL.java
 ./src/trees/lockbased/stanfordutils/Epoch.java
 ./src/trees/lockbased/stanfordutils/StripedSizedEpoch.java
@@ -22,7 +24,7 @@
 ./src/trees/lockbased/stanfordutils/CopyOnWriteManagerTest.java
 ./src/trees/lockbased/stanfordutils/EpochTest.java
 ./src/trees/lockbased/LockBasedStanfordTreeMapSplay.java
-./src/trees/lockbased/LogicalOrderingAVL.java
+./src/trees/lockbased/LogicalOrdering.java
 ./src/trees/lockbased/LogicalOrderingSplay.java
 ./src/trees/lockbased/FixedLockBasedFriendlyTreeMap.java
 ./src/trees/lockfree/NonBlockingTorontoBSTMap.java

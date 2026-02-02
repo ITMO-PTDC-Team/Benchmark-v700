@@ -19,6 +19,7 @@ public interface CompositionalMap<K, V> extends Map<K, V> {
     	public long nodesTraversed = 0;
     	public long insertNodesTraversed = 0;
     	public long deleteNodesTraversed = 0;
+		public long realNodesDeleted = 0;
     	public long structMods = 0;
     	public long foundCnt = 0;
     	public long foundTreeTraversed = 0;

@@ -46,15 +46,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.locks.ReentrantLock;
-
 
 import contention.abstractions.CompositionalMap;
 import contention.abstractions.CompositionalMap.Vars;
-import trees.lockbased.LockBasedStanfordTreeMapSplay.RebalanceMode;
 import trees.lockbased.stanfordutils.SnapTreeMap;
 
 /**
@@ -72,34 +67,17 @@ import trees.lockbased.stanfordutils.SnapTreeMap;
  * 
  * @author Nathan Bronson
  */
-public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> implements
+public class LockBasedStanfordTreeMapCb<K, V> extends AbstractMap<K, V> implements
 		CompositionalMap<K, V> {
 	// public class OptTreeMap<K,V> extends AbstractMap<K,V> implements
 	// ConcurrentMap<K,V> {
 
-	static class MyLock {
-		private volatile boolean locked = false;
-		private static final AtomicReferenceFieldUpdater<MyLock, Boolean> UPDATER = AtomicReferenceFieldUpdater.newUpdater(MyLock.class, Boolean.class, "locked");
-
-		public void lock() {
-			while (!UPDATER.compareAndSet(this, false, true)) {}
-		}
-
-		public boolean tryLock() {
-			return UPDATER.compareAndSet(this, false, true);
-		}
-
-		public void unlock() {
-			UPDATER.set(this, false);
-		}
-	}
-
-	public enum RebalanceMode {
-		None,
-		Splay,
-	}
 
 	static final int ThreadNum = Integer.parseInt(System.getProperty("THREAD_NUM", "1"));
+
+	private double rotateProb() {
+		return 1.0 / (10 * ThreadNum);
+	}
 
 	/**
 	 * This is a special value that indicates the presence of a null value, to
@@ -131,24 +109,8 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 	static final int ReturnKey = 0;
 	static final int ReturnEntry = 1;
 	static final int ReturnNode = 2;
-
-	static final boolean STRUCT_MODS = true;
-	final static boolean TRAVERSAL_COUNT = true;
-
-	private double splayProb = 1.0 / 8;
-	private double threadNum = 8;
-	private double k1 = 3.0;
-	private double k2 = 0.5;
-	private int maxDepth = 5;
-
-	final static ThreadLocal<Integer> counter = ThreadLocal.withInitial(() -> new Integer(0));
-
-	private double rotateProb(final long depth, final long iterations) {
-		if (iterations == 0) {
-			return 1.0 / ThreadNum;
-		}
-		return 1.0;
-	}
+	static boolean TRAVERSAL_COUNT = true;
+	static boolean STRUCT_MODS = true;
 
 	/**
 	 * An <tt>OVL</tt> is a version number and lock used for optimistic
@@ -231,21 +193,29 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 		volatile long changeOVL;
 		volatile Node<K, V> left;
 		volatile Node<K, V> right;
-		final public ReentrantLock lock;
-		@jdk.internal.vm.annotation.Contended
-		volatile int counter;
+		// Contended ?
+		volatile int selfCnt;
+		volatile int leftCnt;
+		// Выкинуть ?
+		volatile int rightCnt;
 
-		Node(final K key, final int height, final Object vOpt,
-				final Node<K, V> parent, final long changeOVL,
-				final Node<K, V> left, final Node<K, V> right) {
+		Node(
+			final K key,
+			final Object vOpt,
+			final Node<K, V> parent,
+			final long changeOVL,
+			final Node<K, V> left,
+			final Node<K, V> right
+		) {
 			this.key = key;
 			this.vOpt = vOpt;
 			this.parent = parent;
 			this.changeOVL = changeOVL;
 			this.left = left;
 			this.right = right;
-			this.lock = new ReentrantLock();
-			this.counter = 0;
+			this.selfCnt = 0;
+			this.leftCnt = 0;
+			this.rightCnt = 0;
 		}
 
 		Node<K, V> child(char dir) {
@@ -285,14 +255,12 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 			}
 
 			// spin and yield failed, use the nuclear option
-			lock.lock();
-			// we can't have gotten the lock unless the shrink was over
-			lock.unlock();
+			synchronized (this) {
+				// we can't have gotten the lock unless the shrink was over
+			}
 			assert (changeOVL != ovl);
 		}
 	}
-
-	// ////// node access functions
 
 	@SuppressWarnings("unchecked")
 	private V decodeNull(final Object vOpt) {
@@ -307,43 +275,114 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 	// ////////////// state
 
 	private Comparator<? super K> comparator;
-	private final Node<K, V> rootHolder = new Node<K, V>(null, 1, null, null,
-			0L, null, null);
+	private final Node<K, V> rootHolder = new Node<K, V>(null, null, null, 0L, null, null);
 	private final EntrySet entries = new EntrySet();
+
+	private void rebalance(Node<K, V> parent, Node<K, V> node) {
+		int nodePlusLeftCount = node.selfCnt + node.leftCnt;
+		int nodePlusRightCount = node.selfCnt + node.rightCnt;
+		int parentPlusRightCount = parent.selfCnt + parent.rightCnt;
+		int parentPlusLeftCount = parent.selfCnt + parent.leftCnt;
+		int nodeRightCount = node.rightCnt;
+		int nodeLeftCount = node.leftCnt;
+		double k = 1.2;
+
+		//decide whether to perform zig−zag step
+		if (nodeRightCount >= k * parentPlusRightCount){
+			Node grand = parent.parent;
+			synchronized (grand) {
+				if ((grand.left == parent) || (grand.right == parent)) {
+					synchronized (parent) {
+						if (parent.left == node) {
+							synchronized (node) {
+								Node rightChild = node.right;
+								if (rightChild != null){
+									synchronized (rightChild){
+										rotateRightOverLeft_nl(
+											grand,
+											parent,
+											node,
+											rightChild
+										);
+										parent.leftCnt = rightChild.rightCnt;
+										node.rightCnt = rightChild.leftCnt;
+										rightChild.rightCnt += parentPlusRightCount;
+										rightChild.leftCnt += nodePlusLeftCount;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		} else if (nodeLeftCount >= k * parentPlusLeftCount) {
+			Node grand = parent.parent;
+			synchronized (grand) {
+				if ((grand.left == parent) || (grand.right == parent)) {
+					synchronized (parent) {
+						if (parent.right == node) {
+							synchronized (node) {
+								Node leftChild = node.left;
+								if (leftChild != null){
+									synchronized (leftChild) {
+										rotateLeftOverRight_nl(
+											grand,
+											parent,
+											node,
+											leftChild
+										);
+										parent.rightCnt = leftChild.leftCnt;
+										node.leftCnt = leftChild.rightCnt;
+										leftChild.leftCnt += parentPlusLeftCount;
+										leftChild.rightCnt += nodePlusRightCount;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		//decide whether to perform zig step
+		} else if (nodePlusLeftCount > k * parentPlusRightCount) {
+			Node grand = parent.parent;
+			synchronized (grand) {
+				if ((grand. left == parent) || (grand.right == parent)) {
+					synchronized (parent) {
+						if (parent.left == node) {
+							synchronized (node) {
+								rotateRight_nl(grand, parent, node, node.right);
+								parent.leftCnt = node.rightCnt;
+								node.rightCnt += parentPlusRightCount;
+							}
+						}
+					}
+				}
+			}
+		} else if (nodePlusRightCount > k * parentPlusLeftCount) {
+			Node grand = parent.parent;
+			synchronized (grand) {
+				if ((grand.left == parent) || (grand.right == parent)) {
+					synchronized (parent) {
+						if (parent.right == node) {
+							synchronized (node) {
+								rotateLeft_nl(grand, parent, node, node.left);
+								parent.rightCnt = node.leftCnt;
+								node.leftCnt += parentPlusLeftCount;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 
 	// ////////////// public interface
 
-	void InitParamsFromEnv() {
-		String value = System.getenv("THREAD_NUM");
-		if (value != null) {
-			threadNum = Integer.parseInt(value);
-		}
-
-		splayProb = 1.0 / (Integer.parseInt(System.getenv("INV_SPLAY_PROB")) * threadNum);
-
-		value = System.getenv("K1");
-		if (value != null) {
-			k1 = Double.parseDouble(value);
-		}
-
-		value = System.getenv("K2");
-		if (value != null) {
-			k2 = Double.parseDouble(value);
-		}
-
-		value = System.getenv("MAX_DEPTH");
-		if (value != null) {
-			maxDepth = Integer.parseInt(value);
-		}
+	public LockBasedStanfordTreeMapCb() {
 	}
 
-	public LockBasedStanfordTreeMapSplay() {
-		InitParamsFromEnv();
-	}
-
-	public LockBasedStanfordTreeMapSplay(final Comparator<? super K> comparator) {
+	public LockBasedStanfordTreeMapCb(final Comparator<? super K> comparator) {
 		this.comparator = comparator;
-		InitParamsFromEnv();
 	}
 
 	@Override
@@ -366,9 +405,9 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 
 	@Override
 	public void clear() {
-		rootHolder.lock.lock();
-		rootHolder.right = null;
-		rootHolder.lock.unlock();
+		synchronized (rootHolder) {
+			rootHolder.right = null;
+		}
 	}
 
 	public Comparator<? super K> comparator() {
@@ -449,8 +488,9 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 				} else if (right == rootHolder.right) {
 					// the reread of .right is the one protected by our read of
 					// ovl
+					boolean doRebalance = ThreadLocalRandom.current().nextDouble() <= rotateProb();
 					final Object vo = attemptGet(k, right, (rightCmp < 0 ? Left
-							: Right), ovl, 1);
+							: Right), ovl, doRebalance);
 					if (vo != SpecialRetry) {
 						if (TRAVERSAL_COUNT) {
 							finishCount1(nodesTraversed);
@@ -464,7 +504,7 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 	}
 
 	private Object attemptGet(final Comparable<? super K> k,
-			final Node<K, V> node, final char dirToC, final long nodeOVL, final long depth) {
+			final Node<K, V> node, final char dirToC, final long nodeOVL, boolean doRebalance) {
 		int nodesTraversed = 0;
 		while (true) {
 			final Node<K, V> child = node.child(dirToC);
@@ -494,7 +534,10 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 					if (TRAVERSAL_COUNT) {
 						finishCount2(nodesTraversed);
 					}
-					splay(child, depth);
+					if (doRebalance) {
+						child.selfCnt += 1;
+						rebalance(node, child);
+					}
 					return child.vOpt;
 				}
 
@@ -534,8 +577,15 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 					// traversals were definitely okay. This means that we are
 					// no longer vulnerable to node shrinks, and we don't need
 					// to validate nodeOVL any more.
+					if (doRebalance) {
+						if (childCmp < 0) {
+							child.leftCnt += 1;
+						} else {
+							child.rightCnt += 1;
+						}
+					}
 					final Object vo = attemptGet(k, child, (childCmp < 0 ? Left
-							: Right), childOVL, depth + 1);
+							: Right), childOVL, doRebalance);
 					if (vo != SpecialRetry) {
 						if (TRAVERSAL_COUNT) {
 							finishCount2(nodesTraversed);
@@ -746,17 +796,13 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 	}
 
 	private boolean attemptInsertIntoEmpty(final K key, final Object vOpt) {
-		try {
-			rootHolder.lock.lock();
+		synchronized (rootHolder) {
 			if (rootHolder.right == null) {
-				rootHolder.right = new Node<K, V>(key, 1, vOpt, rootHolder, 0L,
-						null, null);
+				rootHolder.right = new Node<K, V>(key, vOpt, rootHolder, 0L, null, null);
 				return true;
 			} else {
 				return false;
 			}
-		} finally {
-			rootHolder.lock.unlock();
 		}
 	}
 
@@ -788,7 +834,7 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 
 		final int cmp = k.compareTo(node.key);
 		if (cmp == 0) {
-			return attemptNodeUpdate(func, expected, newValue, parent, node, nodeOVL);
+			return attemptNodeUpdate(func, expected, newValue, parent, node);
 		}
 
 		final char dirToC = cmp < 0 ? Left : Right;
@@ -810,8 +856,8 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 				} else {
 					// Update will be an insert.
 					final boolean success;
-					try {
-						node.lock.lock();
+					final Node<K, V> damaged;
+					synchronized (node) {
 						// Validate that we haven't been affected by past
 						// rotations. We've got the lock on node, so no future
 						// rotations can mess with us.
@@ -824,6 +870,7 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 							// to back up to the parent, but we must RETRY in
 							// the outer loop of this method.
 							success = false;
+							damaged = null;
 						} else {
 							// We're valid. Does the user still want to
 							// perform the operation?
@@ -832,12 +879,9 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 							}
 
 							// Create a new leaf
-							node.setChild(dirToC, new Node<K, V>((K) key, 1,
-									newValue, node, 0L, null, null));
+							node.setChild(dirToC, new Node<K, V>((K) key, newValue, node, 0L, null, null));
 							success = true;
 						}
-					} finally {
-						node.lock.unlock();
 					}
 					if (success) {
 						return null;
@@ -867,8 +911,16 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 					// traversals were definitely okay. This means that we are
 					// no longer vulnerable to node shrinks, and we don't need
 					// to validate nodeOVL any more.
-					final Object vo = attemptUpdate(key, k, func, expected,
-							newValue, node, child, childOVL);
+					final Object vo = attemptUpdate(
+						key,
+						k,
+						func,
+						expected,
+						newValue,
+						node,
+						child,
+						childOVL
+					);
 					if (vo != SpecialRetry) {
 						return vo;
 					}
@@ -884,7 +936,7 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 	 */
 	private Object attemptNodeUpdate(final int func, final Object expected,
 			final Object newValue, final Node<K, V> parent,
-			final Node<K, V> node, final long nodeOVL) {
+			final Node<K, V> node) {
 		if (newValue == null) {
 			// removal
 			if (node.vOpt == null) {
@@ -896,18 +948,13 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 		if (newValue == null && (node.left == null || node.right == null)) {
 			// potential unlink, get ready by locking the parent
 			final Object prev;
-			try {
-				node.lock.lock();
-
-				if (node.changeOVL != nodeOVL) {
+			final Node<K, V> damaged;
+			synchronized (parent) {
+				if (isUnlinked(parent.changeOVL) || node.parent != parent) {
 					return SpecialRetry;
 				}
 
-				try {
-					parent.lock.lock();
-					if (node.parent != parent || isUnlinked(parent.changeOVL)) {
-						return SpecialRetry;
-					}
+				synchronized (node) {
 					prev = node.vOpt;
 					if (prev == null || !shouldUpdate(func, prev, expected)) {
 						// nothing to do
@@ -916,17 +963,12 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 					if (!attemptUnlink_nl(parent, node)) {
 						return SpecialRetry;
 					}
-				} finally {
-					parent.lock.unlock();
 				}
-			} finally {
-				node.lock.unlock();
 			}
 			return prev;
 		} else {
 			// potential update (including remove-without-unlink)
-			try {
-				node.lock.lock();
+			synchronized (node) {
 				// regular version changes don't bother us
 				if (isUnlinked(node.changeOVL)) {
 					return SpecialRetry;
@@ -946,8 +988,6 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 				// update in-place
 				node.vOpt = newValue;
 				return prev;
-			} finally {
-				node.lock.unlock();
 			}
 		}
 	}
@@ -989,8 +1029,6 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 		node.changeOVL = UnlinkedOVL;
 		node.vOpt = null;
 
-		Vars vars = counts.get();
-		vars.realNodesDeleted += 1;
 		return true;
 	}
 
@@ -1043,25 +1081,20 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 			if (child == null) {
 				// potential unlink, get ready by locking the parent
 				final Object vo;
-				try {
-					parent.lock.lock();
+				final Node<K, V> damaged;
+				synchronized (parent) {
 					if (isUnlinked(parent.changeOVL) || node.parent != parent) {
 						return null;
 					}
 
-					try {
-						node.lock.lock();
+					synchronized (node) {
 						vo = node.vOpt;
 						if (node.child(dir) != null
 								|| !attemptUnlink_nl(parent, node)) {
 							return null;
 						}
 						// success!
-					} finally {
-						node.lock.unlock();
 					}
-				} finally {
-					parent.lock.unlock();
 				}
 				return new SimpleImmutableEntry<K, V>(node.key, decodeNull(vo));
 			} else {
@@ -1091,154 +1124,12 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 		}
 	}
 
-	private Node<K, V> lockParent(final Node<K, V> node) {
-		Node<K, V> parent = node.parent;
-		parent.lock.lock();
-		while (node.parent != parent) {
-			parent.lock.unlock();
-			parent = node.parent;
-			parent.lock.lock();
-		}
-		return parent;
-	}
-
-	class LockParentResult {
-		public final long conflicts;
-		public final Node<K,V> parent;
-		public LockParentResult(long conflicts, Node<K,V> parent) {
-			this.conflicts = conflicts;
-			this.parent = parent;
-		}
-	}
-
-	private LockParentResult tryLockParent(final Node<K,V> node, long conflicts) {
-		for (int tries = 0; tries < 2; tries++, conflicts++) {
-			if (conflicts >= 5) {
-				return new LockParentResult(0, null);
-			}
-			Node<K, V> parent = node.parent;
-			if (parent.lock.tryLock()) {
-				if (node.parent == parent) {
-					return new LockParentResult(conflicts, parent);
-				}
-				parent.lock.unlock();
-			}
-			counts.get().failedLockAcquire++;
-		}
-		return new LockParentResult(0, null);
-	}
-
-	private void splay(Node<K, V> node, long depth) {
-		long iterations = 0;
-		long conflicts = 0;
-		if (ThreadLocalRandom.current().nextDouble() >= rotateProb(depth, iterations)) {
-			return;
-		}
-		int curCounter = counter.get();
-		counter.set(curCounter + 1);
-		curCounter *= ThreadNum;
-		node.counter += 1;
-		int curNodeCounter = node.counter;
-		int m = (int)Math.floor(Math.log((double)curCounter / curNodeCounter));
-		if (depth <= k1 * m || depth < maxDepth) {
-			return;
-		}
-
-		node.lock.lock();
-
-		LockParentResult res = tryLockParent(node, conflicts);
-		if (res.parent == null) {
-			node.lock.unlock();
-			return;
-		}
-		conflicts = res.conflicts;
-		Node<K, V> parent = res.parent;
-
-		while (parent != rootHolder && !isUnlinked(node.changeOVL) && depth > k2 * m && depth > maxDepth + 1) {
-			res = tryLockParent(parent, conflicts);
-			if (res.parent == null) {
-				break;
-			}
-			conflicts = res.conflicts;
-			Node<K, V> gParent = res.parent;
-
-			if (gParent == rootHolder) {
-				zig(node, parent, gParent);
-				gParent.lock.unlock();
-				break;
-			}
-			res = tryLockParent(gParent, conflicts);
-			if (res.parent == null) {
-				gParent.lock.unlock();
-				break;
-			}
-			conflicts = res.conflicts;
-			Node<K, V> ggParent = res.parent;
-
-			boolean success = splay_once(node, parent, gParent, ggParent);
-			parent.lock.unlock();
-			gParent.lock.unlock();
-			parent = ggParent;
-			if (!success) {
-				break;
-			}
-			depth -= 2;
-			// iterations++;
-			// if (ThreadLocalRandom.current().nextDouble() >= rotateProb(depth, iterations)) {
-			// 	break;
-			// }
-		}
-
-		node.lock.unlock();
-		parent.lock.unlock();
-	}
-
-	private Node<K, V> zig(final Node<K, V> n, final Node<K, V> nParent, final Node<K, V> ngParent) {
-		final Node<K, V> nL = n.left;
-		final Node<K, V> nR = n.right;
-
-		if ((nL == null || nR == null) && n.vOpt == null && attemptUnlink_nl(nParent, n)) {
-			return null;
-		} else if (nParent.vOpt == null && (nParent.left == null || nParent.right == null) && attemptUnlink_nl(ngParent, nParent)) {
-			return n;
-		}
-
-		if (nParent.left == n) {
-			return rotateRight(ngParent, nParent, n, nR);
-		} else {
-			return rotateLeft(ngParent, nParent, n, nL);
-		}
-	}
-
-	private boolean splay_once(final Node<K, V> n,
-			final Node<K, V> nParent, final Node<K, V> ngParent,
-			final Node<K, V> nggParent) {
-		final Node<K, V> nL = n.left;
-		final Node<K, V> nR = n.right;
-
-		if ((nL == null || nR == null) && n.vOpt == null && attemptUnlink_nl(nParent, n)) {
-			return false;
-		} else if (nParent.vOpt == null && (nParent.left == null || nParent.right == null) && attemptUnlink_nl(ngParent, nParent)) {
-			return false;
-		} else if (ngParent.vOpt == null && (ngParent.left == null || ngParent.right == null) && attemptUnlink_nl(nggParent, ngParent)) {
-			return false;
-		}
-
-		if (ngParent.left == nParent && nParent.right == n) {
-			zigzagRight(nggParent, ngParent, nParent, n);
-		} else if (ngParent.right == nParent && nParent.left == n) {
-			zigzagLeft(nggParent, ngParent, nParent, n);
-		} else if (ngParent.left == nParent && nParent.left == n) {
-			zigzigRight(nggParent, ngParent, nParent, n);
-		} else if (ngParent.right == nParent && nParent.right == n) {
-			zigzigLeft(nggParent, ngParent, nParent, n);
-		}
-		return true;
-	}
-
-	private Node<K, V> rotateRight(final Node<K, V> nParent,
-			final Node<K, V> n, final Node<K, V> nL,
-			final Node<K, V> nLR) {
+	private void rotateRight_nl(
+		final Node<K, V> nParent,
+		final Node<K, V> n,
+		final Node<K, V> nL,
+		final Node<K, V> nLR
+	) {
 		final long nodeOVL = n.changeOVL;
 		final long leftOVL = nL.changeOVL;
 
@@ -1274,13 +1165,14 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 
 		nL.changeOVL = endGrow(leftOVL);
 		n.changeOVL = endShrink(nodeOVL);
-
-		return nL;
 	}
 
-	private Node<K, V> rotateLeft(final Node<K, V> nParent,
-			final Node<K, V> n, final Node<K, V> nR,
-			final Node<K, V> nRL) {
+	private void rotateLeft_nl(
+		final Node<K, V> nParent,
+		final Node<K, V> n,
+		final Node<K, V> nR,
+		final Node<K, V> nRL
+	) {
 		final long nodeOVL = n.changeOVL;
 		final long rightOVL = nR.changeOVL;
 
@@ -1308,12 +1200,14 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 
 		nR.changeOVL = endGrow(rightOVL);
 		n.changeOVL = endShrink(nodeOVL);
-
-		return nR;
 	}
 
-	private Node<K, V> zigzagRight(final Node<K, V> nParent,
-			final Node<K, V> n, final Node<K, V> nL, final Node<K, V> nLR) {
+	private void rotateRightOverLeft_nl(
+		final Node<K, V> nParent,
+		final Node<K, V> n,
+		final Node<K, V> nL,
+		final Node<K, V> nLR
+	) {
 		final long nodeOVL = n.changeOVL;
 		final long leftOVL = nL.changeOVL;
 		final long leftROVL = nLR.changeOVL;
@@ -1352,13 +1246,14 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 		nLR.changeOVL = endGrow(leftROVL);
 		nL.changeOVL = endShrink(leftOVL);
 		n.changeOVL = endShrink(nodeOVL);
-
-		return nLR;
 	}
 
-	private Node<K, V> zigzagLeft(final Node<K, V> nParent,
-			final Node<K, V> n, final Node<K, V> nR,
-			final Node<K, V> nRL) {
+	private void rotateLeftOverRight_nl(
+		final Node<K, V> nParent,
+		final Node<K, V> n,
+		final Node<K, V> nR,
+		final Node<K, V> nRL
+	) {
 		final long nodeOVL = n.changeOVL;
 		final long rightOVL = nR.changeOVL;
 		final long rightLOVL = nRL.changeOVL;
@@ -1397,99 +1292,6 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 		nRL.changeOVL = endGrow(rightLOVL);
 		nR.changeOVL = endShrink(rightOVL);
 		n.changeOVL = endShrink(nodeOVL);
-
-		return nRL;
-	}
-
-	private Node<K, V> zigzigRight(final Node<K, V> nParent,
-			final Node<K, V> n, final Node<K, V> nL, final Node<K, V> nLL) {
-		final long nodeOVL = n.changeOVL;
-		final long leftOVL = nL.changeOVL;
-		final long leftLOVL = nLL.changeOVL;
-		final Node<K, V> nPL = nParent.left;
-		final Node<K, V> nLR = nL.right;
-		final Node<K, V> nLLR = nLL.right;
-
-		if (STRUCT_MODS)
-			counts.get().structMods += 1;
-
-		n.changeOVL = beginShrink(nodeOVL);
-		nL.changeOVL = beginShrink(leftOVL);
-		nLL.changeOVL = beginGrow(leftLOVL);
-
-		nL.right = n;
-		nL.left = nLLR;
-		nLL.right = nL;
-
-		n.left = nLR;
-
-		if (nPL == n) {
-			nParent.left = nLL;
-		} else {
-			nParent.right = nLL;
-		}
-
-		nLL.parent = nParent;
-		nL.parent = nLL;
-		n.parent = nL;
-		if (nLLR != null) {
-			nLLR.parent = nL;
-		}
-		if (nLR != null) {
-			nLR.parent = n;
-		}
-
-		nLL.changeOVL = endGrow(leftLOVL);
-		nL.changeOVL = endShrink(leftOVL);
-		n.changeOVL = endShrink(nodeOVL);
-
-		return nLL;
-	}
-
-	private Node<K, V> zigzigLeft(final Node<K, V> nParent,
-			final Node<K, V> n, final Node<K, V> nR, final Node<K, V> nRR) {
-		final long nodeOVL = n.changeOVL;
-		final long rightOVL = nR.changeOVL;
-		final long rightROVL = nRR.changeOVL;
-
-		final Node<K, V> nPL = nParent.left;
-		final Node<K, V> nRL = nR.left;
-		final Node<K, V> nRRL = nRR.left;
-
-		if (STRUCT_MODS)
-			counts.get().structMods += 1;
-
-		n.changeOVL = beginShrink(nodeOVL);
-		nR.changeOVL = beginShrink(rightOVL);
-		nRR.changeOVL = beginGrow(rightROVL);
-
-		nR.left = n;
-		nR.right = nRRL;
-		nRR.left = nR;
-
-		n.right = nRL;
-
-		if (nPL == n) {
-			nParent.left = nRR;
-		} else {
-			nParent.right = nRR;
-		}
-
-		nRR.parent = nParent;
-		nR.parent = nRR;
-		n.parent = nR;
-		if (nRRL != null) {
-			nRRL.parent = nR;
-		}
-		if (nRL != null) {
-			nRL.parent = n;
-		}
-
-		nRR.changeOVL = endGrow(rightROVL);
-		nR.changeOVL = endShrink(rightOVL);
-		n.changeOVL = endShrink(nodeOVL);
-
-		return nRR;
 	}
 
 	// ////////////// iteration (node successor)
@@ -1725,17 +1527,17 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 
 		@Override
 		public int size() {
-			return LockBasedStanfordTreeMapSplay.this.size();
+			return LockBasedStanfordTreeMapCb.this.size();
 		}
 
 		@Override
 		public boolean isEmpty() {
-			return LockBasedStanfordTreeMapSplay.this.isEmpty();
+			return LockBasedStanfordTreeMapCb.this.isEmpty();
 		}
 
 		@Override
 		public void clear() {
-			LockBasedStanfordTreeMapSplay.this.clear();
+			LockBasedStanfordTreeMapCb.this.clear();
 		}
 
 		@Override
@@ -1745,7 +1547,7 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 			}
 			final Object k = ((Entry<?, ?>) o).getKey();
 			final Object v = ((Entry<?, ?>) o).getValue();
-			final Object actualVo = LockBasedStanfordTreeMapSplay.this.getImpl(k);
+			final Object actualVo = LockBasedStanfordTreeMapCb.this.getImpl(k);
 			if (actualVo == null) {
 				// no associated value
 				return false;
@@ -1767,7 +1569,7 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 			}
 			final Object k = ((Entry<?, ?>) o).getKey();
 			final Object v = ((Entry<?, ?>) o).getValue();
-			return LockBasedStanfordTreeMapSplay.this.remove(k, v);
+			return LockBasedStanfordTreeMapCb.this.remove(k, v);
 		}
 
 		@Override
@@ -1817,7 +1619,7 @@ public class LockBasedStanfordTreeMapSplay<K, V> extends AbstractMap<K, V> imple
 
 		@Override
 		public void remove() {
-			LockBasedStanfordTreeMapSplay.this.remove(mostRecentNode.key);
+			LockBasedStanfordTreeMapCb.this.remove(mostRecentNode.key);
 		}
 	}
 }
