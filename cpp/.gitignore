@@ -47,7 +47,11 @@ _bak
 */output_tex
 cpp/common/papi/a.out
 */python_env/
+
 *-build-*/
 ../.idea/
-cpp/.vscode/
+.vscode/
+build
+.cache
+compile_commands.json
 
