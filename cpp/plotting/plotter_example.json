@@ -1,0 +1,42 @@
+{
+    "folder": "tests-plots",
+    "json-file-input": "test.json",
+    "allocator": "",
+    "iterations": 2,
+    "compiled-path": "./bin/",
+    "competitors": [
+        {
+            "bin-name": "aksenov_splaylist_64.debra",
+            "display-name": "Aksenov Splaylist",
+            "data-structure-arguments": {
+
+            }
+        },
+        {
+            "bin-name": "srivastava_abtree_mcs.debra",
+            "display-name": "Srivastava ABTree",
+            "data-structure-arguments": {
+                
+            }
+        }
+    ],
+    "keys": [
+        {
+            "name": "test.threadLoopBuilders.0.quantity",
+            "values": [1, 2, 4, 8]
+        },
+        {
+            "name": "test.threadLoopBuilders.1.quantity",
+            "values": [1, 2, 4, 8]
+        },
+        {
+            "name": "test.numThreads",
+            "values": [2, 4, 8, 16]
+        }
+    ],
+    "key_title": "NumberofThreads",
+    "keys_title": ["2", "4", "8", "16"],
+    "aggregate_stat": "average_num_operations_total",
+    "y_label": "Average number of operations total",
+    "y_scale": "log"
+}

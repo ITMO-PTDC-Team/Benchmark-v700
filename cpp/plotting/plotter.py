@@ -1,277 +1,18 @@
 import abc
 import argparse
 from pathlib import Path
-import multiprocessing
 import subprocess
 import os
-import re
 from collections import defaultdict
-import numpy
-import logging
 import matplotlib.pyplot as plt
-import seaborn as sns
+import json
+import sys
+import copy
+import logging
+import glob
+
 
 DEFAULT_OUTPUT_DIR_NAME = "plotter-output"
-DEFAULT_TIMEOUT = 90
-
-COLOR_PALETTE = sns.color_palette()
-DS = ["redis_zset", "redist_sabt", "redis_sait", "redis_salt"]
-
-LOG_FILE = "log.txt"
-
-DEFAULT_FIG_SIZE = "15,8"
-LAYOUT = "constrained"
-FIG_FORMAT = "png"
-
-OUT_FORMAT = "txt"
-
-
-### Supported stats ###
-
-# Operations stats:
-TOTAL_FIND = "total-find"
-TOTAL_RQ = "total-rq"
-TOTAL_INSERTS = "total-inserts"
-TOTAL_DELETES = "total-deletes"
-TOTAL_UPDATES = "total-updates"
-TOTAL_OPS = "total-ops"
-
-OPERATIONS_STATS = {TOTAL_FIND, TOTAL_RQ, TOTAL_INSERTS, TOTAL_DELETES, TOTAL_UPDATES, TOTAL_OPS}
-
-# Throughput stats:
-THROUGHPUT_FIND = "find-throughput"
-THROUGHPUT_RQ = "rq-throughput"
-THROUGHPUT_UPDATE = "update-throughput"
-THROUGHPUT_TOTAL = "total-throughput"
-
-THROUGHPUT_STATS = {THROUGHPUT_FIND, THROUGHPUT_RQ, THROUGHPUT_UPDATE, THROUGHPUT_TOTAL}
-
-# Depth stats:
-TOTAL_KEY_DEPTH = "total-key-depth"
-KEY_DEPTH = "key-depth"
-
-DEPTH_STATS = {TOTAL_KEY_DEPTH, KEY_DEPTH}
-
-# Iter stats:
-TOTAL_KEY_SEARCH = "total-key-search"
-ITER_STATS = {TOTAL_KEY_SEARCH}
-
-ONLY_INS_DEL_STATS = {TOTAL_INSERTS, TOTAL_DELETES, TOTAL_UPDATES, THROUGHPUT_UPDATE}
-
-
-### Supported prefill strategies ###
-PREFILL_STRATEGY_INSERT = "insert"
-PREFILL_STRATEGY_MIXED = "mixed"
-
-PREFILL_STRATEGY_MAPPER = {
-    PREFILL_STRATEGY_INSERT: "-prefill-insert",
-    PREFILL_STRATEGY_MIXED: "-prefill-mixed"
-}
-
-
-def to_file_name(stat):
-    return "_".join(stat.lower().replace("/", " ").split())
-
-
-def get_label_by_stat(stat):
-    if stat in OPERATIONS_STATS:
-        return "operations"
-    elif stat in THROUGHPUT_STATS:
-        return "operations per second"
-    elif stat in DEPTH_STATS:
-        return "depth"
-    elif stat in ITER_STATS:
-        return "iters"
-    else:
-        return "stat"
-
-
-class StatAggregator(abc.ABC):
-    def __init__(self, **kwargs):
-        self.ds = kwargs["ds"]
-        assert self.ds is not None
-
-        self.color = kwargs["color"]
-        assert self.color is not None
-
-        self.logger = kwargs["logger"]
-        assert self.logger is not None
-
-    @abc.abstractmethod
-    def extract(self, keys_cnt, log):
-        """Extract stat from log."""
-
-    @abc.abstractmethod
-    def aggregate(self):
-        """Aggregate all extracted stat."""
-
-    @abc.abstractmethod
-    def plot(self, ax):
-        """Plot aggregated stat to specific ax."""
-
-    @abc.abstractmethod
-    def out(self, output_dir):
-        """Create file in the output_dir about all extracted stat"""
-
-
-class AvgStatAggregator(StatAggregator):
-    def __init__(self, stat, **kwargs):
-        super().__init__(**kwargs)
-        self.stat = stat
-        self.vals_by_key = defaultdict(list)
-
-    def get_extract_stat_name(self):
-        return self.stat
-
-    def extract_value(self, log):
-        if log is None:
-            return None
-        m = re.search(f"{self.get_extract_stat_name()}=([\d\.]+)", log)
-        return None if m is None else float(m.group(1))
-
-    def extract(self, keys_cnt, log):
-        value = self.extract_value(log)
-        if value is None:
-            self.logger.warning(f"keys_cnt={keys_cnt} - extract None")
-        self.vals_by_key[keys_cnt].append(numpy.inf if value is None else value)
-
-    def aggregate(self):
-        self.keys = []
-        self.avg_vals = []
-        for keys_cnt, values in sorted(self.vals_by_key.items()):
-            self.keys.append(keys_cnt)
-            self.avg_vals.append(numpy.average(values))
-
-    def plot(self, ax):
-        ax.plot(self.keys, self.avg_vals, color=self.color, label=self.ds)
-
-    def out(self, output_dir):
-        out_file = output_dir / f"{to_file_name(self.stat)}.{OUT_FORMAT}"
-        with open(out_file, "w") as ouf:
-            for key, avg_val in zip(self.keys, self.avg_vals):
-                ouf.write(f"key={key}\n")
-                ouf.write(f"values={self.vals_by_key[key]}\n")
-                ouf.write(f"avg_val={avg_val}\n\n")
-
-
-# Operations aggregators:
-
-class TotalFindAggregator(AvgStatAggregator):
-    def __init__(self, **kwargs):
-        super().__init__("total_find", **kwargs)
-
-class TotalRqAggregator(AvgStatAggregator):
-    def __init__(self, **kwargs):
-        super().__init__("total_rq", **kwargs)
-
-class TotalInsertsAggregator(AvgStatAggregator):
-    def __init__(self, **kwargs):
-        super().__init__("total_inserts", **kwargs)
-
-
-class TotalDeletesAggregator(AvgStatAggregator):
-    def __init__(self, **kwargs):
-        super().__init__("total_deletes", **kwargs)
-
-class TotalUpdatesAggregator(AvgStatAggregator):
-    def __init__(self, **kwargs):
-        super().__init__("total_updates", **kwargs)
-
-
-class TotalOpsAggregator(AvgStatAggregator):
-    def __init__(self, **kwargs):
-        super().__init__("total_ops", **kwargs)
-
-
-# Throughput aggregators:
-
-class ThroughputFindAggregator(AvgStatAggregator):
-    def __init__(self, **kwargs):
-        super().__init__("find_throughput", **kwargs)
-
-class ThroughputRqAggregator(AvgStatAggregator):
-    def __init__(self, **kwargs):
-        super().__init__("rq_throughput", **kwargs)
-
-class ThroughputUpdateAggregator(AvgStatAggregator):
-    def __init__(self, **kwargs):
-        super().__init__("update_throughput", **kwargs)
-
-
-class ThroughputTotalAggregator(AvgStatAggregator):
-    def __init__(self, **kwargs):
-        super().__init__("total_throughput", **kwargs)
-
-
-# Depth aggregators:
-
-class TotalKeyDepthAggregator(AvgStatAggregator):
-    def __init__(self, **kwargs):
-        super().__init__("total key depth", **kwargs)
-    
-    def get_extract_stat_name(self):
-        return "TOTAL_AVG_DEPTH"
-
-
-# TODO
-class KeyDepthAggregator(StatAggregator):
-    pass
-
-
-# Iters aggregators:
-
-class TotalKeySearchAggregator(AvgStatAggregator):
-    def __init__(self, **kwargs):
-        super().__init__("total key search", **kwargs)
-    
-    def get_extract_stat_name(self):
-        return "AVG_SEARCH_ITERS"
-
-
-AGGREGATOR_BY_STAT = {
-    TOTAL_FIND: TotalFindAggregator,
-    TOTAL_RQ: TotalRqAggregator,
-    TOTAL_INSERTS: TotalInsertsAggregator,
-    TOTAL_DELETES: TotalDeletesAggregator,
-    TOTAL_UPDATES: TotalUpdatesAggregator,
-    TOTAL_OPS: TotalOpsAggregator,
-
-    THROUGHPUT_FIND: ThroughputFindAggregator,
-    THROUGHPUT_RQ: ThroughputRqAggregator,
-    THROUGHPUT_UPDATE: ThroughputUpdateAggregator,
-    THROUGHPUT_TOTAL: ThroughputTotalAggregator,
-
-    TOTAL_KEY_DEPTH: TotalKeyDepthAggregator,
-    KEY_DEPTH: KeyDepthAggregator,
-
-    TOTAL_KEY_SEARCH: TotalKeySearchAggregator
-}
-
-
-def plot_avg_all(stat, title, ylabel, aggregators, output_dir, fig_size):
-    fig, ax = plt.subplots(figsize=fig_size, layout=LAYOUT)
-    fig.suptitle(title)
-    for aggregator in aggregators:
-        aggregator.plot(ax)
-    ax.set_xlabel("keys set size")
-    ax.set_xscale("log")
-    ax.set_ylabel(ylabel)
-    ax.grid(True)
-    ax.legend()
-    fig.savefig(output_dir / f"{to_file_name(stat)}.{FIG_FORMAT}")
-    plt.close(fig)
-
-
-def plot_all(stat, title, aggregators, output_dir, fig_size):
-    if not aggregators:
-        return
-    ylabel = get_label_by_stat(stat)
-    first = next(iter(aggregators))
-    if isinstance(first, AvgStatAggregator):
-        plot_avg_all(stat, title, ylabel, aggregators, output_dir, fig_size)
-    elif isinstance(first, KeyDepthAggregator):
-        # TODO
-        pass
 
 
 def create_logger(name, log_file):
@@ -289,178 +30,329 @@ def create_logger(name, log_file):
     return logger
 
 
-def task(top_dir, ip, dp, rp, fp, workload, workload_name, stats, args):
-    log_file = top_dir / LOG_FILE
-    logger_prefix = f"{to_file_name(workload_name)} - {ip}/{dp}/{fp}"
+def handle_file_error(exc: Exception, filepath: str = ""):
+    if isinstance(exc, json.JSONDecodeError):
+        print(f"Error: Invalid JSON or file read failed - '{filepath}'")
+    elif isinstance(exc, FileNotFoundError):
+        print(f"Error: File not found - '{filepath}'")
+    elif isinstance(exc, KeyError):
+        print(f"Error: Missing key in JSON - {exc}")
+    else:
+        print(f"Unexpected error: {exc}")
 
-    stats_info = defaultdict(dict)
-    for stat in stats:
-        for ind, ds in enumerate(args.ds):
-            aggregator_logger = create_logger(f"{logger_prefix} - {stat} - {ds}", log_file)
-            stats_info[stat][ds] = AGGREGATOR_BY_STAT[stat](ds=ds, color=args.color[ind], logger=aggregator_logger)
+    sys.exit(1)
 
-    task_logger = create_logger(logger_prefix, log_file)
 
-    for ds in args.ds:
-        for key, prefill_size in zip(args.key, args.prefill_size):
-            for _ in range(args.avg):
-                run_command = f"./bin/{ds}.debra -{workload} -insdel {ip} {dp} -rq {rp} "\
-                              f"-k {key} -prefillsize {prefill_size} -t {args.time} "\
-                              f"-nwork {args.nwork} -nprefill {args.nprefill} {PREFILL_STRATEGY_MAPPER[args.prefill_strategy]}"
-                if args.non_shuffle:
-                    run_command += " -non-shuffle"
-                if args.prefill_sequential:
-                    run_command += " -prefill-sequential"
+class JsonStatExtractor(abc.ABC):
+    def __init__(self, **kwargs):
+        self.path = kwargs["path"]
+        assert self.path is not None
 
-                ld_preload = f"../lib/{args.allocator}.so"
-                task_logger.info(f"Running LD_PRELOAD={ld_preload} {run_command}")
+    @abc.abstractmethod
+    def extract(self):
+        """Extract stats from json by 'path'."""
+
+    @abc.abstractmethod
+    def run_extractor(self):
+        """Run the custom extractor."""
+
+
+def get_ds_suffix(ds_args):
+    return ('.'.join(map(lambda item: f"{item[0]}_{item[1]}", ds_args.items())) + ".") if ds_args else ""
+
+
+class PlotterJsonExtractor(JsonStatExtractor):
+    def __init__(self, no_run, **kwargs):
+        super().__init__(**kwargs)
+        self.out_folder = "folder"
+        self.allocator = ""
+        self.compiled_path = "./bin/"
+        self.iterations = 1
+        self.agg_stat = "average_num_operations_total"
+        self.ylabel = "Average number of operations total"
+        self.yscale = "linear"
+        self.timeout = 100000
+
+        self.xtitle = "NumberOfThreads"
+        self.xvalues = []
+
+        self.ds = []
+        self.ds_args = []
+        self.display_ds = []
+        self.settings = defaultdict(dict)
+        self.no_run = no_run
+
+    def extract(self):
+        try:
+            with open(self.path, 'r') as file:
+                data = json.load(file)
+
+            # necessary
+            if "folder" not in data:
+                raise Exception("Please, set up the \"folder\" parameter.")
+            self.out_folder = data['folder']
+
+            if "json-file-input" not in data:
+                raise Exception("Please, set up the \"json-file-input\" parameter.")
+            self.input_path = data['json-file-input']
+
+            if "key_title" not in data:
+                raise Exception("Please, set up the \"key_title\" parameter.")
+            self.xtitle = data['key_title']
+
+            if "keys_title" not in data:
+                raise Exception("Please, set up the \"keys_title\" parameter.")
+            self.xvalues = data['keys_title']
+
+            # optional
+            if "iterations" in data:
+                self.iterations = data['iterations']
+
+            if "timeout" in data:
+                self.timeout = data['timeout']
+
+            if "allocator" in data:
+                self.allocator = data['allocator']
+
+            if "compiled-path" in data:
+                self.compiled_path = data['compiled-path']
+
+            if "aggregate_stat" in data:
+                self.agg_stat = data['aggregate_stat']
+
+            if "y_label" in data:
+                self.ylabel = data['y_label']
+
+            if "y_scale" in data:
+                self.yscale = data['y_scale']
+
+            for structs in data['competitors']:
+                ds_name = structs['bin-name']
+                self.ds.append(ds_name)
+                self.ds_args.append(structs['data-structure-arguments'] if 'data-structure-arguments' in structs else {})
+                self.display_ds.append(structs['display-name'] if 'display-name' in structs else ds_name)
+
+                for cur_keys in data['keys']:
+                    assert(len(cur_keys['values']) == len(self.xvalues))
+                    self.settings[cur_keys['name']] = cur_keys['values']
+        except Exception as e:
+            handle_file_error(e, self.path)
+
+    def run_extractor(self):
+        if not (self.no_run):
+            folder_path = f"../plotting/{self.out_folder}/"
+            if os.path.exists(folder_path):
+                files = glob.glob(os.path.join(folder_path, "*"))
+                for f in files:
+                    try:
+                        if os.path.isfile(f):
+                            os.remove(f)
+                    except Exception as e:
+                        print(f"Error during file deletion {f}: {e}")
+            # create folder
+            if not os.path.exists(self.out_folder):
+                os.makedirs(self.out_folder)
+            log_folder = f"{self.out_folder}/logs/"
+            if not os.path.exists(log_folder):
+                os.makedirs(log_folder)
+            # populate folder with temporary configs
+            with open(self.input_path, 'r') as file:
+                original_data = json.load(file)
+            for iter_num in range(len(self.xvalues)):
+                temp_data = copy.copy(original_data)
+                for key_path, values in self.settings.items():
+                    set_value(temp_data, key_path, values[iter_num])
+                title = str(self.xtitle) + '_' + self.xvalues[iter_num]
+                temp_file = os.path.join(self.out_folder, f"temp_config.{title}.json")
+                with open(temp_file, 'w') as temp:
+                    json.dump(temp_data, temp, indent=4)
+
+        for ds_name, ds_args in zip(self.ds, self.ds_args):
+            for iter_num in range(len(self.xvalues)):
+                title = str(self.xtitle) + '_' + self.xvalues[iter_num]
+                modify_and_run_second_json(
+                    self.out_folder,
+                    self.input_path,
+                    self.allocator,
+                    self.compiled_path,
+                    self.iterations,
+                    self.timeout,
+                    self.agg_stat,
+                    self.no_run,
+                    ds_name,
+                    ds_args,
+                    title
+                )
+
+
+class ResultJsonExtractor(JsonStatExtractor):
+    def __init__(self, agg_label, **kwargs):
+        super().__init__(**kwargs)
+        self.aggregate_label = agg_label
+        self.agg_stat = 1
+        # can add more parameters
+
+    def extract(self):
+        try:
+            with open(self.path, 'r', encoding='utf-8') as file:
+                data_temp = json.load(file)
+            if self.aggregate_label in data_temp:
+                self.agg_stat = data_temp[self.aggregate_label]
+            else:
+                print(f"No key")
+        except Exception as e:
+            handle_file_error(e, self.path)
+
+    def run_extractor(self):
+        return
+
+
+class IterationsJsonAggregator(JsonStatExtractor):
+    def __init__(self, file_name, iters, stats, **kwargs):
+        super().__init__(**kwargs)
+        self.file_name = file_name
+        self.iters = iters
+        self.stats = stats
+        self.aggregated = {}
+
+    def extract(self):
+        for stat in self.stats:
+            agg_stat = 0
+            for iter_num in range(1, self.iters + 1):
+                try:
+                    current_path = f"{self.path}/{self.file_name}.iter_{iter_num}.json"
+                    with open(current_path, 'r', encoding='utf-8') as file:
+                        data_temp = json.load(file)
+                    if stat in data_temp:
+                        agg_stat += data_temp[stat]
+                    else:
+                        print(f"No key")
+                except Exception as e:
+                    handle_file_error(e, current_path)
+            self.aggregated[stat] = agg_stat / self.iters
+
+    def run_extractor(self):
+        agg_path = f"{self.path}/{self.file_name}.aggregated.json"
+        try:
+            with open(agg_path, 'w') as outfile:
+                json.dump(self.aggregated, outfile)
+        except Exception as e:
+            print(f"Error: {e}")
+        return
+
+
+def set_value(data, path, new_value):
+    keys = path.split('.')
+    current = data
+    for key in keys[:-1]:
+        try:
+            current = current[int(key)]
+        except ValueError:
+            current = current[key]
+    current[keys[-1]] = new_value
+
+
+def modify_and_run_second_json(folder,
+                               params,
+                               allocator,
+                               compiled_path,
+                               iters,
+                               timeout,
+                               agg_stat,
+                               no_run,
+                               ds,
+                               ds_args,
+                               title):
+    try:
+        # In the future, these parameters will be passed to the command line.
+        ds_suffix = get_ds_suffix(ds_args)
+
+        log_file = Path.cwd().parent / "plotting" / folder / "logs" / f"log_{ds}.{ds_suffix}{title}.txt"
+        task_logger = create_logger("logger_prefix", log_file)
+        ld_preload = f"../lib/{allocator}.so" if allocator != "" else ""
+        inp = f"../plotting/{folder}/temp_config.{title}.json"
+        file_name = f"{ds}.{ds_suffix}{title}"
+        if not (no_run):
+            print("Running for " + ds + " with suffix " + ds_suffix + title)
+
+            for iter_num in range(1, iters + 1):
+                out = f"../plotting/{folder}/{file_name}.iter_{iter_num}.json"
+                # In the future, these ds_args will be passed to the command line.
+                run_command = f"{compiled_path}{ds} -json-file {inp} -result-file {out}"
+                # TODO:
+                # for argument, value in additional: 
+                #    run_command += f"-{argument} {value}"
 
                 try:
                     env = os.environ.copy()
                     env["LD_PRELOAD"] = ld_preload
                     cp = subprocess.run(
                         run_command.split(),
-                        cwd=str(args.setbench_dir / "microbench"),
+                        cwd=str(Path.cwd().parent / "microbench"),
                         env=env,
-                        timeout=args.timeout,
+                        timeout=timeout,
                         check=True,
                         capture_output=True,
                         text=True
                     )
                     if cp.stderr:
+                        print(f"Error stream is not empty {cp.stderr}")
                         task_logger.info(f"stderr: {cp.stderr}")
-                    log = cp.stdout
                 except subprocess.CalledProcessError as exc:
-                    task_logger.error(
-                        f"ProcessError while running command: {exc}")
-                    log = exc.stdout
+                    print(f"Error whilst launching subprocess {exc}")
+                    task_logger.error(f"ProcessError while running command: {exc}")
                 except subprocess.TimeoutExpired as exc:
-                    task_logger.error(
-                        f"TimeoutExpired while running command: {exc}")
-                    log = exc.stdout
+                    print(f"Timeout in subprocess {exc}")
+                    task_logger.error(f"TimeoutExpired while running command: {exc}")
+                except Exception as e:
+                    handle_file_error(e, out)
 
-                log = str(log)
+        # Aggregate
+        aggregator = IterationsJsonAggregator(file_name=file_name, iters=iters, stats=[agg_stat], path=folder)
+        aggregator.extract()
+        aggregator.run_extractor()
 
-                for stat in stats:
-                    stats_info[stat][ds].extract(key, log)
+    except Exception as e:
+        handle_file_error(e, params)
 
-        for stat in stats:
-            stats_info[stat][ds].aggregate()
+def run(args):
+    plotter_initial = PlotterJsonExtractor(path=args.file, no_run=args.no_run)
+    plotter_initial.extract()
+    plotter_initial.run_extractor()
 
-    for stat, aggregators_dict in stats_info.items():
-        title = f"stat: {stat} | workload: {workload_name} | i={ip} d={dp} rq={rp} f={fp}"
-        plot_all(stat, title, aggregators_dict.values(), top_dir, args.fig_size)
+    fig, ax = plt.subplots()
+    fig.suptitle(args.title if args.title is not None else "Result graph")
+    ax.set_xlabel(plotter_initial.xtitle)
+    # ax.xaxis.labelpad = 2
+    ax.set_yscale(plotter_initial.yscale)
+    ax.set_ylabel(plotter_initial.ylabel)
 
-    ds_dict = {}
-    for ds in args.ds:
-        ds_dir = top_dir / to_file_name(ds)
-        ds_dir.mkdir(exist_ok=True)
-        ds_dict[ds] = ds_dir
+    for ds, ds_args, name in zip(plotter_initial.ds, plotter_initial.ds_args, plotter_initial.display_ds):
+        yvalues = []
+        for val in plotter_initial.xvalues:
+            ds_suffix = get_ds_suffix(ds_args)
+            path_to_result = f"{plotter_initial.out_folder}/{ds}.{ds_suffix}{plotter_initial.xtitle}_{val}.aggregated.json"
+            plotter_final = ResultJsonExtractor(agg_label=plotter_initial.agg_stat, path=path_to_result)
+            plotter_final.extract()
+            yvalues.append(plotter_final.agg_stat)
+        ax.plot(plotter_initial.xvalues, yvalues, label = name)
 
-    for aggregators_dict in stats_info.values():
-        for ds, aggregators in aggregators_dict.items():
-            aggregators.out(ds_dict[ds])
-
-
-def get_colors(ds):
-    colors = []
-    for i, ds_in in enumerate(ds):
-        index = i
-        for j, ds_out in enumerate(DS):
-            if ds_out in ds_in:
-                index = j
-                break
-        colors.append(COLOR_PALETTE[index])
-    return colors
-
-
-def start(args):
-    args.output_dir.mkdir(exist_ok=True)
-
-    if not args.color:
-        args.color = get_colors(args.ds)
-
-    tasks = []
-    for insdelrq in args.insdelrq:
-        ip, dp, rp = map(float, insdelrq.split("/"))
-        fp = round(1 - ip - dp - rp, 2)
-        for workload, workload_name in zip(args.workload, args.workload_name):
-            top_dir = args.output_dir / to_file_name(workload_name) / to_file_name(insdelrq)
-            top_dir.mkdir(parents=True, exist_ok=True)
-            stats = [stat for stat in args.stat if not ((rp + fp == 1) and stat in ONLY_INS_DEL_STATS)]
-            tasks.append((top_dir, ip, dp, rp, fp, workload, workload_name, stats, args))
-
-    print("START PLOTTING")
-
-    with multiprocessing.Pool(args.nprocess) as pool:
-        pool.starmap(task, tasks)
-
-    print("END PLOTTING")
-
-
-def check_args(args):
-    if not (1 <= args.nprocess <= multiprocessing.cpu_count()):
-        raise ValueError("nprocess must be in [1; cpu_count]")
-    if any(map(lambda k: k <= 0, args.key)):
-        raise ValueError("all keys must be > 0")
-    if any(map(lambda ps: ps < 0, args.prefill_size)):
-        raise ValueError("all prefill-sizes must be >= 0")
-    if len(args.prefill_size) != len(args.key):
-        raise ValueError("must be: len(prefill_size) == len(key)")
-    if args.avg <= 0:
-        raise ValueError("avg must be > 0")
-    if args.timeout <= 0:
-        raise ValueError("timeout must be > 0")
-    if args.time <= 0:
-        raise ValueError("time must be > 0")
-    if args.nwork <= 0:
-        raise ValueError("nwork must be > 0")
-    if args.nprefill <= 0:
-        raise ValueError("nprefill must be > 0")
-    if args.color and len(args.color) != len(args.ds):
-        raise ValueError(
-            "if color specified then must be: len(color) == len(ds)")
-    if not args.color and len(COLOR_PALETTE) < len(args.ds):
-        raise ValueError(
-            "not enough colors to draw all ds: specify colors by yourself")
-    if args.workload_name and len(args.workload_name) != len(args.workload):
-        raise ValueError(
-            "if workload_name specified then must be: len(workload_name) == len(workload)")
+    ax.grid(True)
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(args.pathg if args.pathg is not None else f"Result_graph.png")
+    plt.close(fig)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="""
-        Script for plotting setbench benchmarks' results.
-
-        Can launch benchmarks in multiple threads (--nprocess) to produce result faster.
+        Script for plotting benchmarks' results.
     """)
-    plotter_group = parser.add_argument_group("plotter args")
-    plotter_group.add_argument("--stat", nargs="+", required=True, choices=[*AGGREGATOR_BY_STAT], help="Stats to plot.")
-    plotter_group.add_argument("-o", "--output-dir", type=Path, default=Path.cwd() / DEFAULT_OUTPUT_DIR_NAME, help="Directory where results will be stored")
-    plotter_group.add_argument("-s", "--setbench-dir", type=Path, default=Path.cwd().parent, help="Directory where setbench is located")
-    plotter_group.add_argument("--nprocess", type=int, default=1, help="Specifies how many processes will be spawned to run benchmarks. Recommendation: nproccess * nwork <= cpu_count")
-    plotter_group.add_argument("-c", "--color", nargs="*", action="extend", help="Colors for data structures. Supports all colors which can render matplotlib. If not specified, using DEFAULT_COLORS")
-    plotter_group.add_argument("--avg", type=int, default=3, help="Number used for averaging results.")
-    plotter_group.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT, help="Timeout in seconds for waiting results of each benchmark.")
-    plotter_group.add_argument("--fig-size", type=str, default=DEFAULT_FIG_SIZE, help="figsize of plots")
-
-    setbench_group = parser.add_argument_group("setbench args")
-    setbench_group.add_argument("--ds", nargs="+", required=True, action="extend", help="Data structures to benchmark")
-    setbench_group.add_argument("--workload", nargs="+", required=True, action="extend", help="Workloads' params to benchmark")
-    setbench_group.add_argument("--workload-name", nargs="*", action="extend", help="Specifies workloads' names (used together with --workload)")
-    setbench_group.add_argument("--insdelrq", nargs="+", required=True, help="inserts + deletes + rq + finds = 1. If insdelrq==0.3/0.3/0.3 then inserts == 0.3, deletes == 0.3, rq == 0.3 and finds == 0.1")
-    setbench_group.add_argument("-k", "--key", nargs="+", required=True, type=int, action="extend", help="Stands for -k setbench arg")
-    setbench_group.add_argument("-ps", "--prefill-size", nargs="+", required=True, type=int, action="extend", help="Stands for -prefillsize setbench arg")
-    setbench_group.add_argument("-t", "--time", required=True, type=int, help="How long to run each benchmark? (ms) Stands for -t setbench arg")
-    setbench_group.add_argument("--nwork", type=int, default=1, help="How many threads will do operations on each data structure at the same time? Stands for -nwork setbench arg")
-    setbench_group.add_argument("--nprefill", type=int, default=1, help="How many threads will prefill each data structure? Stands for -nprefill setbench arg")
-    setbench_group.add_argument("--prefill-strategy", choices=[*PREFILL_STRATEGY_MAPPER], default=PREFILL_STRATEGY_INSERT, help="Strategy to use to prefill each DS")
-    setbench_group.add_argument("--non-shuffle", action="store_true", help="-non-shuffle setbench arg")
-    setbench_group.add_argument("--prefill-sequential", action="store_true", help="-prefill-sequential setbench arg")
-    setbench_group.add_argument("--allocator", default="libjemalloc", help="Allocator used while benchmarking")
+    parser.add_argument('-f', '--file', type=str, required=True, help='File with benchmark parameters. See README')
+    parser.add_argument('-t', '--title', type=str, help='Name for the resulting graph')
+    parser.add_argument('-pg', '--pathg', type=str, help='Path for graph')
+    parser.add_argument('-no-run', action='store_true', help='Flag for benchmark running before plot. Use flag to only plot. Uses paths and structures from parameter file')
 
     args = parser.parse_args()
-    args.fig_size = eval(args.fig_size)
 
-    check_args(args)
-    start(args)
+    run(args)
