@@ -17,10 +17,10 @@ option(SKIP_VALIDATION "enable validation skipping
     (validate data structure or not)"                       OFF)
 option(TESTING         "enable utility code testing
     (compile target for testing workloads code)"            OFF)
-option(MAX_THREADS     "declare max threads
-    (should be power of 2)"                                 512)
-option(CPU_FREQ        "declare freq for server clock"      2.1)
 option(KEY_TOTAL_STAT  "trace depth & search total stats"    ON)
+
+set(MAX_THREADS "512" CACHE STRING "declare max threads (should be power of 2)")
+set(CPU_FREQ "2.1" CACHE STRING "declare freq for server clock")
 
 
 ##### compiler configuration #####
