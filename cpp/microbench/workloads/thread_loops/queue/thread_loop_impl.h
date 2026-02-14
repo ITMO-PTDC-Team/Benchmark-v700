@@ -1,19 +1,14 @@
-//
-// Created by Ravil Galiev on 21.07.2023.
-//
 #pragma once
 
 #include "adapter.h"
 #include "globals_t_impl.h"
 
-namespace microbench::workload {
+namespace microbench::workload::queue {
 
 #define THREAD_MEASURED_PRE                                                        \
     tid = this->threadId;                                                          \
     binding_bindThread(tid);                                                       \
     garbage = 0;                                                                   \
-    rqResultKeys = new K[this->RQ_RANGE + MAX_KEYS_PER_NODE];                      \
-    rqResultValues = new VALUE_TYPE[this->RQ_RANGE + MAX_KEYS_PER_NODE];           \
     NO_VALUE = this->g->dsAdapter->getNoValue();                                   \
     __RLU_INIT_THREAD;                                                             \
     __RCU_INIT_THREAD;                                                             \
@@ -31,7 +26,6 @@ namespace microbench::workload {
                    .count());                                                      \
     papi_start_counters(tid);                                                      \
     int cnt = 0;                                                                   \
-    rq_cnt = 0;                                                                    \
     DURATION_START(tid);
 
 #define THREAD_MEASURED_POST                                                       \
@@ -50,57 +44,13 @@ namespace microbench::workload {
     this->g->dsAdapter->deinitThread(tid);                                         \
     __RCU_DEINIT_THREAD;                                                           \
     __RLU_DEINIT_THREAD;                                                           \
-    delete[] rqResultKeys;                                                         \
-    delete[] rqResultValues;                                                       \
     this->g->garbage += garbage;
 
-template <typename K>
-K* ThreadLoop::execute_insert(K& key) {
-    TRACE COUTATOMICTID("### calling INSERT " << key << std::endl);
-
-    VALUE_TYPE value = g->dsAdapter->insertIfAbsent(threadId, key, KEY_TO_VALUE(key));
-    //    K *value = (K *) g->dsAdapter->insertIfAbsent(threadId, key, KEY_TO_VALUE(key));
-
-    if (value == g->dsAdapter->getNoValue()) {
-        TRACE COUTATOMICTID("### completed INSERT modification for " << key << std::endl);
-        GSTATS_ADD(threadId, key_checksum, key);
-        //             GSTATS_ADD(tid, size_checksum, 1);
-        GSTATS_ADD(threadId, num_successful_inserts, 1);
-    } else {
-        TRACE COUTATOMICTID("### completed READ-ONLY" << std::endl);
-        GSTATS_ADD(threadId, num_fail_inserts, 1);
-    }
-    GSTATS_ADD(threadId, num_inserts, 1);
-    GSTATS_ADD(threadId, num_operations, 1);
-
-    return (K*)value;
-}
 
 template <typename K>
-K* ThreadLoop::execute_remove(const K& key) {
-    TRACE COUTATOMICTID("### calling ERASE " << key << std::endl);
-    //    K *value = (K *) g->dsAdapter->erase(this->threadId, key);
-    VALUE_TYPE value = g->dsAdapter->erase(this->threadId, key);
-
-    if (value != this->g->dsAdapter->getNoValue()) {
-        TRACE COUTATOMICTID("### completed ERASE modification for " << key << std::endl);
-        GSTATS_ADD(threadId, key_checksum, -key);
-        //             GSTATS_ADD(tid, size_checksum, -1);
-        GSTATS_ADD(threadId, num_successful_removes, 1);
-    } else {
-        TRACE COUTATOMICTID("### completed READ-ONLY" << std::endl);
-        GSTATS_ADD(threadId, num_fail_removes, 1);
-    }
-    GSTATS_ADD(threadId, num_removes, 1);
-    GSTATS_ADD(threadId, num_operations, 1);
-
-    return (K*)value;
-}
-
-template <typename K>
-K* ThreadLoop::execute_get(const K& key) {
+K* QueueThreadLoop::execute_get(const K& key) {
     //    K *value = (K *) this->g->dsAdapter->find(this->threadId, key);
-    VALUE_TYPE value = this->g->dsAdapter->find(this->threadId, key);
+    K* value = (K*) this->g->dsAdapter->find(this->threadId, key);
 
     if (value != this->g->dsAdapter->getNoValue()) {
         garbage += key;  // prevent optimizing out
@@ -115,7 +65,41 @@ K* ThreadLoop::execute_get(const K& key) {
 }
 
 template <typename K>
-bool ThreadLoop::execute_contains(const K& key) {
+K* QueueThreadLoop::execute_push(const K& key) {
+    TRACE COUTATOMICTID("### calling PUSH " << key << std::endl);
+
+    auto value = g->dsAdapter->push(threadId, key);
+    for (int i = 0; i < this->nopCount; i++) {
+        __asm__ __volatile__("nop");
+    }
+    //    K *value = (K *) g->dsAdapter->insertIfAbsent(threadId, key, KEY_TO_VALUE(key));
+    garbage += key;  // prevent optimizing out
+    GSTATS_ADD(threadId, num_pushes, 1);
+    GSTATS_ADD(threadId, num_operations, 1);
+    return (K*)value;
+}
+
+template <typename K>
+K* QueueThreadLoop::execute_pop() {
+    TRACE COUTATOMICTID("### calling POP " << std::endl);
+    //    K *value = (K *) this->g->dsAdapter->find(this->threadId, key);
+    VALUE_TYPE value = this->g->dsAdapter->pop(this->threadId);
+
+    if (value != this->g->dsAdapter->getNoValue()) {
+        TRACE COUTATOMICTID("### completed POP modification for " << value << std::endl);
+        GSTATS_ADD(threadId, num_successful_pops, 1);
+    } else {
+        TRACE COUTATOMICTID("### completed READ-ONLY" << std::endl);
+        GSTATS_ADD(threadId, num_fail_pops, 1);
+    }
+    GSTATS_ADD(threadId, num_pops, 1);
+    GSTATS_ADD(threadId, num_operations, 1);
+
+    return (K*)value;
+}
+
+template <typename K>
+bool QueueThreadLoop::execute_contains(const K& key) {
     bool value = this->g->dsAdapter->contains(this->threadId, key);
 
     if (value) {
@@ -130,24 +114,7 @@ bool ThreadLoop::execute_contains(const K& key) {
     return value;
 }
 
-/**
- * the result is in the arrays rqResultKeys and rqResultValues
- */
-template <typename K>
-void ThreadLoop::execute_range_query(const K& leftKey, const K& rightKey) {
-    ++rq_cnt;
-    size_t rqcnt;
-    if ((rqcnt = this->g->dsAdapter->rangeQuery(this->threadId, leftKey, rightKey, rqResultKeys,
-                                                (VALUE_TYPE*)rqResultValues))) {
-        garbage +=
-            rqResultKeys[0] +
-            rqResultKeys[rqcnt - 1];  // prevent rqResultValues and count from being optimized out
-    }
-    GSTATS_ADD(threadId, num_rq, 1);
-    GSTATS_ADD(threadId, num_operations, 1);
-}
-
-void ThreadLoop::run() {
+void QueueThreadLoop::run() {
     THREAD_MEASURED_PRE
     while (!stopCondition->is_stopped(threadId)) {
         ++cnt;
@@ -157,4 +124,5 @@ void ThreadLoop::run() {
     THREAD_MEASURED_POST
 }
 
-}  // namespace microbench::workload
+}
+

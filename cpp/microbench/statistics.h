@@ -29,6 +29,14 @@ struct Statistic {
     int64_t totalFailRemoves;
     int64_t totalFailUpdates;
 
+    #if defined(USE_STACK_OPERATIONS) || defined(USE_QUEUE_OPERATIONS)
+    int64_t totalPushes;
+    int64_t totalPops;
+
+    int64_t totalSuccessfulPops;
+    int64_t totalFailPops;
+    #endif
+
     double SECONDS_TO_RUN;
     int64_t throughputSearches;
     int64_t throughputRQs;
@@ -42,6 +50,13 @@ struct Statistic {
         totalQueries = totalGets + totalRQs;
         totalInserts = GSTATS_GET_STAT_METRICS(num_inserts, TOTAL)[0].sum;
         totalRemoves = GSTATS_GET_STAT_METRICS(num_removes, TOTAL)[0].sum;
+        #if defined(USE_STACK_OPERATIONS) || defined(USE_QUEUE_OPERATIONS)
+        totalPushes = GSTATS_GET_STAT_METRICS(num_pushes, TOTAL)[0].sum;
+        totalPops = GSTATS_GET_STAT_METRICS(num_pops, TOTAL)[0].sum;
+
+        totalSuccessfulPops = GSTATS_GET_STAT_METRICS(num_successful_pops, TOTAL)[0].sum;
+        totalFailPops = GSTATS_GET_STAT_METRICS(num_fail_pops, TOTAL)[0].sum;
+        #endif
         totalUpdates = totalInserts + totalRemoves;
 
         totalSuccessfulGets = GSTATS_GET_STAT_METRICS(num_successful_searches, TOTAL)[0].sum;

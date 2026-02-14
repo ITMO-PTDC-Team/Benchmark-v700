@@ -7,12 +7,12 @@
 #include <string>
 
 #include "random_xoshiro256p.h"
-#include "workloads/thread_loops/thread_loop.h"
+#include "workloads/thread_loops/map/map_thread_loop.h"
 #include "workloads/args_generators/args_generator.h"
 
-namespace microbench::workload {
+namespace microbench::workload::map {
 
-class PrefillInsertThreadLoop : public ThreadLoop {
+class PrefillInsertThreadLoop : public MapThreadLoop {
 private:
     PAD;
     Random64& rng_;
@@ -25,7 +25,7 @@ public:
     PrefillInsertThreadLoop(globals_t* g, Random64& rng, size_t thread_id,
                             StopCondition* stop_condition, size_t rq_range,
                             ArgsGenerator<K>* args_generator, size_t number_of_attempts)
-        : ThreadLoop(g, thread_id, stop_condition, rq_range),
+        : MapThreadLoop(g, thread_id, stop_condition, rq_range),
           rng_(rng),
           args_generator_(args_generator),
           number_of_attempts_(number_of_attempts) {
@@ -48,7 +48,7 @@ public:
     }
 };
 
-}  // namespace microbench::workload
+}  // namespace microbench::workload::map
 
 #include "workloads/thread_loops/thread_loop_builder.h"
 #include "workloads/args_generators/args_generator_builder.h"
@@ -56,7 +56,7 @@ public:
 #include "workloads/args_generators/args_generator_json_convector.h"
 #include "globals_extern.h"
 
-namespace microbench::workload {
+namespace microbench::workload::map {
 
 struct PrefillInsertThreadLoopBuilder : public ThreadLoopBuilder {
     ArgsGeneratorBuilder* argsGeneratorBuilder = new DefaultArgsGeneratorBuilder();
@@ -111,4 +111,4 @@ struct PrefillInsertThreadLoopBuilder : public ThreadLoopBuilder {
     };
 };
 
-}  // namespace microbench::workload
+}  // namespace microbench::workload::map

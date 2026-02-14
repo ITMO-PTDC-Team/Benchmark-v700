@@ -65,6 +65,13 @@ if (SKIP_VALIDATION)
     add_definitions("-DSKIP_VALIDATION")
 endif ()
 
+if (USE_STACK_OPERATIONS)
+    add_definitions("-DUSE_STACK_OPERATIONS")
+endif ()
+if (USE_QUEUE_OPERATIONS)
+    add_definitions("-DUSE_QUEUE_OPERATIONS")
+endif ()
+
 add_definitions("-DMAX_THREADS_POW2=512"
         "-DCPU_FREQ_GHZ=2.1"
         "-DMEMORY_STATS=if\(1\)"
@@ -111,10 +118,14 @@ endforeach ()
 
 include_directories(ds/verlib_structs/include)
 
+find_package(Boost 1.66 REQUIRED COMPONENTS coroutine context fiber)
+
 foreach (DS ${DATA_STRUCTURES})
     message(DS_DIR= "${DS_DIR}/${DS}")
     set(DS_RUN ${DS}${RECLAIM})
     add_executable(${DS_RUN} ${SOURCE_EXE})
+    target_include_directories(${DS_RUN} PRIVATE ${Boost_INCLUDE_DIRS})
+    target_link_libraries(${DS_RUN} PRIVATE ${Boost_LIBRARIES})
     target_include_directories(${DS_RUN} PUBLIC ${DS_DIR}/${DS})
     target_link_libraries(${DS_RUN} PUBLIC ${CXX_LIBS_LIST})
     if (${DS} MATCHES "dragfly.*")

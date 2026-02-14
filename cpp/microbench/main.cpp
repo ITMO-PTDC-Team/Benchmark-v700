@@ -89,7 +89,6 @@ __thread int tid = 0;
 #define __RCU_INIT_ALL
 #define __RCU_DEINIT_ALL
 #endif
-
 #ifdef USE_RLU
 #include "rlu.h"
 PAD;
@@ -168,8 +167,13 @@ GSTATS_DECLARE_STATS_OBJECT(MAX_THREADS_POW2);
 #define RQS_BETWEEN_TIME_CHECKS 10
 #endif
 
+#if defined(USE_STACK_OPERATIONS) || defined(USE_QUEUE_OPERATIONS)
+#include "workloads/thread_loops/queue/thread_loop_impl.h"
+#else
+#include "workloads/thread_loops/map/thread_loop_impl.h"
+#endif
+
 #include "workloads/bench_parameters.h"
-#include "workloads/thread_loops/thread_loop_impl.h"
 
 #include "globals_t_impl.h"
 #include "statistics.h"
@@ -211,6 +215,11 @@ void execute(globals_t* g, Parameters* parameters) {
     bind_threads(parameters->get_num_threads());
 
     std::cout << "creating threads...\n";
+    // int num_coroutine_threads = parameters->get_num_threads();
+    // auto thread_adapter = std::make_unique<CoroutineThreadAdapter<K, ThreadLoop>>(
+    //     parameters->get_num_threads(), 
+    //     num_coroutine_threads
+    // );
 
     for (int i = 0; i < parameters->get_num_threads(); ++i) {
         threads[i] = new std::thread(&ThreadLoop::run, thread_loops[i]);
@@ -352,8 +361,14 @@ void run(globals_t* g) {
         {
             // print prefilling status information
             using namespace std::chrono;
-            const int64_t total_updates = GSTATS_OBJECT_NAME.get_sum<int64_t>(num_inserts) +
-                                           GSTATS_OBJECT_NAME.get_sum<int64_t>(num_removes);
+            const int64_t total_updates =
+                GSTATS_OBJECT_NAME.get_sum<int64_t>(num_inserts) +
+                GSTATS_OBJECT_NAME.get_sum<int64_t>(num_removes)
+                #if defined(USE_STACK_OPERATIONS) || defined(USE_QUEUE_OPERATIONS)
+                + GSTATS_OBJECT_NAME.get_sum<int64_t>(num_pops) 
+                + GSTATS_OBJECT_NAME.get_sum<int64_t>(num_pushes)
+                #endif
+                ;
             g->curKeySum += GSTATS_OBJECT_NAME.get_sum<int64_t>(key_checksum);
             g->curSize += GSTATS_OBJECT_NAME.get_sum<int64_t>(num_successful_inserts) -
                           GSTATS_OBJECT_NAME.get_sum<int64_t>(num_successful_removes);
