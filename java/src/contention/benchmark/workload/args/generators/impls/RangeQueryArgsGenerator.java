@@ -3,20 +3,17 @@ package contention.benchmark.workload.args.generators.impls;
 import contention.benchmark.tools.Pair;
 import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
 import contention.benchmark.workload.data.map.abstractions.DataMap;
+import contention.benchmark.workload.distributions.abstractions.Distribution;
 
-import java.util.Random;
-
-public class CreakersAndWavePrefillArgsGenerator implements ArgsGenerator {
+public class RangeQueryArgsGenerator implements ArgsGenerator {
     private final DataMap data;
-    private final int waveBegin;
-    private final int prefillLength;
-    private final Random random;
+    private final Distribution distribution;
+    private final int interval;
 
-    public CreakersAndWavePrefillArgsGenerator(int  waveBegin, int prefillLength, DataMap data) {
+    public RangeQueryArgsGenerator(DataMap data, Distribution distribution, int interval) {
         this.data = data;
-        this.waveBegin = waveBegin;
-        this.prefillLength = prefillLength;
-        this.random = new Random();
+        this.distribution = distribution;
+        this.interval = interval;
     }
 
     @Override
@@ -26,7 +23,7 @@ public class CreakersAndWavePrefillArgsGenerator implements ArgsGenerator {
 
     @Override
     public int nextInsert() {
-        return data.get(waveBegin + random.nextInt(prefillLength));
+        throw new UnsupportedOperationException("Insert not supported");
     }
 
     @Override
@@ -36,7 +33,9 @@ public class CreakersAndWavePrefillArgsGenerator implements ArgsGenerator {
 
     @Override
     public Pair<Integer, Integer> nextRange() {
-        throw new UnsupportedOperationException("Range Query not supported");
+        int index = distribution.next();
+        int left = data.get(index);
+        int right = left + interval;
+        return new Pair<>(left, right);
     }
-
 }

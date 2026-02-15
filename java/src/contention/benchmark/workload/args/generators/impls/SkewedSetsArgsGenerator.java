@@ -1,8 +1,9 @@
 package contention.benchmark.workload.args.generators.impls;
 
+import contention.benchmark.tools.Pair;
+import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
 import contention.benchmark.workload.data.map.abstractions.DataMap;
 import contention.benchmark.workload.distributions.abstractions.Distribution;
-import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
 
 public class SkewedSetsArgsGenerator implements ArgsGenerator {
     private final int range;
@@ -43,4 +44,8 @@ public class SkewedSetsArgsGenerator implements ArgsGenerator {
         return nextWrite();
     }
 
+    @Override
+    public Pair<Integer, Integer> nextRange() {
+        throw new UnsupportedOperationException("Range Query not supported");
+    }
 }

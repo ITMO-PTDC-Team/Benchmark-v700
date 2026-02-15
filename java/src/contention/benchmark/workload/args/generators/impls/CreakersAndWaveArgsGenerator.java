@@ -1,9 +1,10 @@
 package contention.benchmark.workload.args.generators.impls;
 
+import contention.benchmark.tools.Pair;
+import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
 import contention.benchmark.workload.data.map.abstractions.DataMap;
 import contention.benchmark.workload.distributions.abstractions.Distribution;
 import contention.benchmark.workload.distributions.abstractions.MutableDistribution;
-import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -81,4 +82,8 @@ public class CreakersAndWaveArgsGenerator implements ArgsGenerator {
         return waveShift(waveEnd);
     }
 
+    @Override
+    public Pair<Integer, Integer> nextRange() {
+        throw new UnsupportedOperationException("Range Query not supported");
+    }
 }

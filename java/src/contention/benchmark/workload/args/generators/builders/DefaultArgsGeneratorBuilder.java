@@ -1,11 +1,11 @@
 package contention.benchmark.workload.args.generators.builders;
 
-import contention.benchmark.workload.args.generators.impls.DefaultArgsGenerator;
-import contention.benchmark.workload.distributions.abstractions.DistributionBuilder;
-import contention.benchmark.workload.distributions.builders.UniformDistributionBuilder;
 import contention.benchmark.workload.args.generators.abstractions.ArgsGeneratorBuilder;
+import contention.benchmark.workload.args.generators.impls.DefaultArgsGenerator;
 import contention.benchmark.workload.data.map.abstractions.DataMapBuilder;
 import contention.benchmark.workload.data.map.builders.IdDataMapBuilder;
+import contention.benchmark.workload.distributions.abstractions.DistributionBuilder;
+import contention.benchmark.workload.distributions.builders.UniformDistributionBuilder;
 
 import static contention.benchmark.tools.StringFormat.indentedTitle;
 import static contention.benchmark.tools.StringFormat.indentedTitleWithData;
@@ -43,7 +43,7 @@ public class DefaultArgsGeneratorBuilder implements ArgsGeneratorBuilder {
     @Override
     public StringBuilder toStringBuilder(int indents) {
         return new StringBuilder()
-                .append(indentedTitleWithData("Type", "Default", indents))
+                .append(indentedTitleWithData("Type", "DEFAULT", indents))
                 .append(indentedTitle("Distribution", indents))
                 .append(distributionBuilder.toStringBuilder(indents + 1))
                 .append(indentedTitle("DataMap", indents))

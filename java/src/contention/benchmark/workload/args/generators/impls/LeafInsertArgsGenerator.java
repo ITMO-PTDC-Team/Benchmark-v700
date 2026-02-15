@@ -1,7 +1,8 @@
 package contention.benchmark.workload.args.generators.impls;
 
-import contention.benchmark.workload.data.map.impls.LeafInsertDataMap;
+import contention.benchmark.tools.Pair;
 import contention.benchmark.workload.args.generators.abstractions.ArgsGenerator;
+import contention.benchmark.workload.data.map.impls.LeafInsertDataMap;
 
 import java.util.Random;
 
@@ -66,6 +67,11 @@ public class LeafInsertArgsGenerator implements ArgsGenerator {
         }
 
         return value;
+    }
+
+    @Override
+    public Pair<Integer, Integer> nextRange() {
+        throw new UnsupportedOperationException("Range Query not supported");
     }
 
 }
