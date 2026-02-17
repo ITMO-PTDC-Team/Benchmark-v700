@@ -6,7 +6,7 @@
 #include <string>
 #include "distribution.h"
 #include "random_xoshiro256p.h"
-#include "json/single_include/nlohmann/json.hpp"
+#include "nlohmann/json.hpp"
 
 namespace microbench::workload {
 

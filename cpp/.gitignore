@@ -50,4 +50,5 @@ cpp/common/papi/a.out
 *-build-*/
 ../.idea/
 cpp/.vscode/
-
+build
+.cache
