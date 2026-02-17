@@ -3,7 +3,7 @@
 //
 #pragma once
 
-#include "json/single_include/nlohmann/json.hpp"
+#include "nlohmann/json.hpp"
 
 namespace microbench::workload {
 

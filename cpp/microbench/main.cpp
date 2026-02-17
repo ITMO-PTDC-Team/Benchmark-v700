@@ -69,7 +69,8 @@ __thread int tid = 0;
 #include "plaf.h"
 
 #include "globals_extern.h"
-#include "json/single_include/nlohmann/json.hpp"
+#include "nlohmann/json.hpp"
+#include "random_xoshiro256p.h"
 #include "binding.h"
 #include "papi_util_impl.h"
 #include "rq_provider.h"

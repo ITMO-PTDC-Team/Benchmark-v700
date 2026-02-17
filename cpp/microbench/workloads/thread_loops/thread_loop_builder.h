@@ -6,7 +6,7 @@
 #include <string>
 #include "random_xoshiro256p.h"
 #include "thread_loop.h"
-#include "json/single_include/nlohmann/json.hpp"
+#include "nlohmann/json.hpp"
 #include "globals_t.h"
 
 namespace microbench::workload {

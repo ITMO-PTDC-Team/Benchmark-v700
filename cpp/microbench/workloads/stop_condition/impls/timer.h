@@ -8,7 +8,7 @@
 #include "globals_extern.h"
 #include "plaf.h"
 #include "workloads/stop_condition/stop_condition.h"
-#include "json/single_include/nlohmann/json.hpp"
+#include "nlohmann/json.hpp"
 
 namespace microbench::workload {
 

@@ -6,7 +6,7 @@
 #include "define_global_statistics.h"
 #include "gstats_global.h"
 #include "debugprinting.h"
-#include "json/single_include/nlohmann/json.hpp"
+#include "nlohmann/json.hpp"
 #include "globals_extern.h"
 
 struct Statistic {
