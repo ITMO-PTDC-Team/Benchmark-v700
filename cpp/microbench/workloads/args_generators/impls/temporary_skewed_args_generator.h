@@ -207,7 +207,7 @@ public:
 
     TemporarySkewedArgsGeneratorBuilder* set_set_dist_builder(
         const size_t index, SkewedUniformDistributionBuilder* set_dist_builder) {
-        assert(index < setNumber);
+        assert(index < set_number_);
         hot_dist_builders_[index] = set_dist_builder;
         return this;
     }
@@ -221,20 +221,20 @@ public:
     TemporarySkewedArgsGeneratorBuilder* set_hot_size_and_ratio(const size_t index,
                                                                 const double hot_size,
                                                                 const double hot_ratio) {
-        assert(index < setNumber);
+        assert(index < set_number_);
         hot_dist_builders_[index]->set_hot_size(hot_size);
         hot_dist_builders_[index]->set_hot_ratio(hot_ratio);
         return this;
     }
 
     TemporarySkewedArgsGeneratorBuilder* set_hot_size(const size_t index, const double hot_size) {
-        assert(index < setNumber);
+        assert(index < set_number_);
         hot_dist_builders_[index]->set_hot_size(hot_size);
         return this;
     }
 
     TemporarySkewedArgsGeneratorBuilder* set_hot_ratio(const size_t index, const double hot_ratio) {
-        assert(index < setNumber);
+        assert(index < set_number_);
         hot_dist_builders_[index]->set_hot_ratio(hot_ratio);
         return this;
     }
@@ -250,7 +250,7 @@ public:
     }
 
     TemporarySkewedArgsGeneratorBuilder* set_hot_time(const size_t index, const int64_t hot_time) {
-        assert(index < setNumber);
+        assert(index < set_number_);
 
         hot_times_[index] = hot_time;
         return this;
@@ -258,7 +258,7 @@ public:
 
     TemporarySkewedArgsGeneratorBuilder* set_relax_time(const size_t index,
                                                         const int64_t relax_time) {
-        assert(index < setNumber);
+        assert(index < set_number_);
 
         relax_times_[index] = relax_time;
         return this;
@@ -280,7 +280,7 @@ public:
     }
 
     TemporarySkewedArgsGeneratorBuilder* set_set_begin(const size_t index, const double set_begin) {
-        assert(index < setNumber);
+        assert(index < set_number_);
         set_begins_[index] = set_begin;
         return this;
     }
