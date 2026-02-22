@@ -12,6 +12,3 @@
 	path = cpp/ds/srivastava_abtree_pub
 	url = https://gitlab.com/SrivastavaAnubhav/srivastava_abtree.git
 	branch = pub-noheightbound
-[submodule "cpp/json"]
-	path = cpp/json
-	url = https://github.com/nlohmann/json.git
