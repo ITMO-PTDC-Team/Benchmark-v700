@@ -163,7 +163,7 @@ public:
         } else {
             pin_.resize(num_threads_, -1);
         }
-        assert(numThreads == pin.size());
+        assert(num_threads_ == pin_.size());
         return this;
     }
 
