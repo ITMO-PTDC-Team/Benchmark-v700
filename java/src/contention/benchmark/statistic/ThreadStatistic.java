@@ -11,6 +11,7 @@ public class ThreadStatistic {
      */
     public long numAdd = 0;
     public long numRemove = 0;
+    public long numRangeQuery = 0;
     public long numAddAll = 0;
     public long numRemoveAll = 0;
     public long numSize = 0;
@@ -33,6 +34,7 @@ public class ThreadStatistic {
         total = 0;
         numAdd = 0;
         numRemove = 0;
+        numRangeQuery = 0;
         numAddAll = 0;
         numRemoveAll = 0;
         numSize = 0;
@@ -47,6 +49,7 @@ public class ThreadStatistic {
     public void add(ThreadStatistic stats) {
         total += stats.total;
         numAdd += stats.numAdd;
+        numRangeQuery += stats.numRangeQuery;
         numRemove += stats.numRemove;
         numAddAll += stats.numAddAll;
         numRemoveAll += stats.numRemoveAll;
