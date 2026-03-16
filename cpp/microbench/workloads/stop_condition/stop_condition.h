@@ -27,10 +27,11 @@ struct StopCondition {
     virtual ~StopCondition() = default;
 };
 
+using StopConditionPtr = std::shared_ptr<StopCondition>;
+
 void to_json(nlohmann::json& j, const StopCondition& s) {
     s.to_json(j);
     assert(j.contains("ClassName"));
-    //    assert(j["stopConditionType"] != nullptr);
 }
 
 void from_json(const nlohmann::json& j, StopCondition& s) {

@@ -3,21 +3,27 @@
 //
 #pragma once
 
+#include <cstdint>
+#include <memory>
 #include <utility>
 
 namespace microbench::workload {
 
-template <typename K>
+using KeyType = int64_t;
+
 struct ArgsGenerator {
-    virtual K next_get() = 0;
+    virtual KeyType next_get() = 0;
 
-    virtual K next_insert() = 0;
+    virtual KeyType next_insert() = 0;
 
-    virtual K next_remove() = 0;
+    virtual KeyType next_remove() = 0;
 
-    virtual std::pair<K, K> next_range() = 0;
+    virtual std::pair<KeyType, KeyType> next_range() = 0;
 
     virtual ~ArgsGenerator() = default;
 };
+
+using ArgsGeneratorPtr = std::unique_ptr<ArgsGenerator>;
+
 
 }  // namespace microbench::workload

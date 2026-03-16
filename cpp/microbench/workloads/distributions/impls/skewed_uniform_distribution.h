@@ -14,18 +14,18 @@ class SkewedUniformDistribution : public Distribution {
 private:
     PAD;
     Random64& rng_;
-    Distribution* hot_distribution_;
-    Distribution* cold_distribution_;
+    DistributionPtr hot_distribution_;
+    DistributionPtr cold_distribution_;
     double hot_prob_;
     size_t hot_set_length_;
     PAD;
 
 public:
-    SkewedUniformDistribution(Random64& rng, Distribution* hot_distribution,
-                              Distribution* cold_distribution, const double hot_prob,
+    SkewedUniformDistribution(Random64& rng, DistributionPtr hot_distribution,
+                              DistributionPtr cold_distribution, const double hot_prob,
                               const size_t hot_set_length)
-        : hot_distribution_(hot_distribution),
-          cold_distribution_(cold_distribution),
+        : hot_distribution_(std::move(hot_distribution)),
+          cold_distribution_(std::move(cold_distribution)),
           rng_(rng),
           hot_prob_(hot_prob),
           hot_set_length_(hot_set_length) {
@@ -46,10 +46,7 @@ public:
         return value;
     }
 
-    ~SkewedUniformDistribution() override {
-        delete hot_distribution_;
-        delete cold_distribution_;
-    }
+    ~SkewedUniformDistribution() override = default;
 };
 
 }  // namespace microbench::workload

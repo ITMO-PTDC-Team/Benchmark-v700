@@ -16,8 +16,9 @@
 #include <perftools.h>
 #include <regex>
 
-#include "random_xoshiro256p.h"
+#define DISTR_CONV_IMPL
 
+#include "random_xoshiro256p.h"
 
 #define MAIN_BENCH
 
@@ -203,21 +204,21 @@ Statistic get_statistic(int64_t elapsed_millis) {
     return Statistic(elapsed_millis / 1000.);
 }
 
-void execute(globals_t* g, Parameters* parameters) {
+void execute(globals_t* g, Parameters const& parameters) {
     std::thread** threads = new std::thread*[MAX_THREADS_POW2];
-    ThreadLoop** thread_loops = parameters->get_workload(g, g->rngs);
+    std::vector<ThreadLoopPtr> thread_loops = parameters.get_workload(g, g->rngs);
 
     std::cout << "binding threads...\n";
-    binding_setCustom(parameters->get_pin());
-    bind_threads(parameters->get_num_threads());
+    binding_setCustom(parameters.get_pin());
+    bind_threads(parameters.get_num_threads());
 
     std::cout << "creating threads...\n";
 
-    for (int i = 0; i < parameters->get_num_threads(); ++i) {
-        threads[i] = new std::thread(&ThreadLoop::run, thread_loops[i]);
+    for (int i = 0; i < parameters.get_num_threads(); ++i) {
+        threads[i] = new std::thread(&ThreadLoop::run, thread_loops[i].get());
     }
 
-    while (g->running < parameters->get_num_threads()) {
+    while (g->running < parameters.get_num_threads()) {
         TRACE COUTATOMIC("main thread: waiting for threads to START running=" << g->running
                                                                               << std::endl);
     }  // wait for all threads to be ready
@@ -233,11 +234,11 @@ void execute(globals_t* g, Parameters* parameters) {
     ___timeline_use = 1;
 #endif
 
-    parameters->stopCondition->start(parameters->get_num_threads());
+    parameters.stopCondition->start(parameters.get_num_threads());
     g->start = true;
     SOFTWARE_BARRIER;
 
-    for (size_t i = 0; i < parameters->get_num_threads(); ++i) {
+    for (size_t i = 0; i < parameters.get_num_threads(); ++i) {
         threads[i]->join();
     }
 
@@ -298,9 +299,8 @@ void execute(globals_t* g, Parameters* parameters) {
     g->elapsedMillis =
         std::chrono::duration_cast<std::chrono::milliseconds>(g->endTime - g->startTime).count();
 
-    parameters->stopCondition->clean();
+    parameters.stopCondition->clean();
     delete[] threads;
-    delete[] thread_loops;
     binding_deinit();
 
     g->start = false;
@@ -345,7 +345,7 @@ void run(globals_t* g) {
     /**
      * PREFILL STAGE
      */
-    if (g->benchParameters->prefill->get_num_threads() != 0) {
+    if (g->benchParameters->prefill.get_num_threads() != 0) {
         COUTATOMIC(to_string_stage("Prefill stage"))
 
         execute(g, g->benchParameters->prefill);
@@ -354,7 +354,7 @@ void run(globals_t* g) {
             // print prefilling status information
             using namespace std::chrono;
             const int64_t total_updates = GSTATS_OBJECT_NAME.get_sum<int64_t>(num_inserts) +
-                                           GSTATS_OBJECT_NAME.get_sum<int64_t>(num_removes);
+                                          GSTATS_OBJECT_NAME.get_sum<int64_t>(num_removes);
             g->curKeySum += GSTATS_OBJECT_NAME.get_sum<int64_t>(key_checksum);
             g->curSize += GSTATS_OBJECT_NAME.get_sum<int64_t>(num_successful_inserts) -
                           GSTATS_OBJECT_NAME.get_sum<int64_t>(num_successful_removes);
@@ -378,7 +378,7 @@ void run(globals_t* g) {
     /**
      * WARM UP STAGE
      */
-    if (g->benchParameters->warmUp->get_num_threads() != 0) {
+    if (g->benchParameters->warmUp.get_num_threads() != 0) {
         COUTATOMIC(to_string_stage("WarmUp stage"))
 
         execute(g, g->benchParameters->warmUp);
@@ -386,7 +386,7 @@ void run(globals_t* g) {
         // print warm up status information
         using namespace std::chrono;
         const int64_t total_updates = GSTATS_OBJECT_NAME.get_sum<int64_t>(num_inserts) +
-                                       GSTATS_OBJECT_NAME.get_sum<int64_t>(num_removes);
+                                      GSTATS_OBJECT_NAME.get_sum<int64_t>(num_removes);
         g->curKeySum += GSTATS_OBJECT_NAME.get_sum<int64_t>(key_checksum);
         g->curSize += GSTATS_OBJECT_NAME.get_sum<int64_t>(num_successful_inserts) -
                       GSTATS_OBJECT_NAME.get_sum<int64_t>(num_successful_removes);
@@ -662,13 +662,13 @@ int main(int argc, char** argv) {
     }
 
     if (prefill != nullptr) {
-        bench_parameters->set_prefill(prefill);
+        bench_parameters->set_prefill(std::move(*prefill));
     }
     if (test != nullptr) {
-        bench_parameters->set_test(test);
+        bench_parameters->set_test(std::move(*test));
     }
     if (warm_up != nullptr) {
-        bench_parameters->set_warm_up(warm_up);
+        bench_parameters->set_warm_up(std::move(*warm_up));
     }
     if (range != -1) {
         bench_parameters->set_range(range);

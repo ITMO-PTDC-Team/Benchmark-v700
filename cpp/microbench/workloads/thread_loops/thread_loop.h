@@ -3,51 +3,51 @@
 //
 #pragma once
 
+#include <memory>
 #include "workloads/stop_condition/stop_condition.h"
-#include "globals_t.h"
+
+namespace microbench {
+struct globals_t;
+}
 
 namespace microbench::workload {
 
-using K = int64_t;
+using KeyType = int64_t;
+using ValueType = void*;
 
 class ThreadLoop {
 protected:
-    K garbage = 0;
-    K* rqResultKeys;
-    VALUE_TYPE* rqResultValues;
-    VALUE_TYPE NO_VALUE;
+    KeyType garbage = 0;
+    std::vector<KeyType> rqResultKeys;
+    std::vector<ValueType> rqResultValues;
+    ValueType NO_VALUE;
     int rq_cnt;
     size_t RQ_RANGE;
 
 public:
     size_t threadId;
     globals_t* g;
-    StopCondition* stopCondition;
+    StopConditionPtr stopCondition;
 
-    ThreadLoop(globals_t* g, size_t thread_id, StopCondition* stop_condition, size_t rq_range)
+    ThreadLoop(globals_t* g, size_t thread_id, StopConditionPtr stop_condition, size_t rq_range)
         : g(g),
           threadId(thread_id),
-          stopCondition(stop_condition),
+          stopCondition(std::move(stop_condition)),
           RQ_RANGE(rq_range) {
     }
 
-    template <typename K>
-    K* execute_insert(K& key);
+    KeyType* execute_insert(KeyType& key);
 
-    template <typename K>
-    K* execute_remove(const K& key);
+    KeyType* execute_remove(const KeyType& key);
 
-    template <typename K>
-    K* execute_get(const K& key);
+    KeyType* execute_get(const KeyType& key);
 
-    template <typename K>
-    bool execute_contains(const K& key);
+    bool execute_contains(const KeyType& key);
 
     /**
      * the result is in the arrays rqResultKeys and rqResultValues
      */
-    template <typename K>
-    void execute_range_query(const K& left_key, const K& right_key);
+    void execute_range_query(const KeyType& left_key, const KeyType& right_key);
 
     virtual void run();
 
@@ -56,27 +56,22 @@ public:
 
 #ifndef MAIN_BENCH
 
-template <typename K>
-void ThreadLoop::execute_range_query(const K& left_key, const K& right_key) {
+void ThreadLoop::execute_range_query(const KeyType& left_key, const KeyType& right_key) {
 }
 
-template <typename K>
-bool ThreadLoop::execute_contains(const K& key) {
+bool ThreadLoop::execute_contains(const KeyType& key) {
     return false;
 }
 
-template <typename K>
-K* ThreadLoop::execute_get(const K& key) {
+KeyType* ThreadLoop::execute_get(const KeyType& key) {
     return nullptr;
 }
 
-template <typename K>
-K* ThreadLoop::execute_remove(const K& key) {
+KeyType* ThreadLoop::execute_remove(const KeyType& key) {
     return nullptr;
 }
 
-template <typename K>
-K* ThreadLoop::execute_insert(K& key) {
+KeyType* ThreadLoop::execute_insert(KeyType& key) {
     return nullptr;
 }
 
@@ -84,5 +79,7 @@ void ThreadLoop::run() {
 }
 
 #endif
+
+using ThreadLoopPtr = std::unique_ptr<ThreadLoop>;
 
 }  // namespace microbench::workload

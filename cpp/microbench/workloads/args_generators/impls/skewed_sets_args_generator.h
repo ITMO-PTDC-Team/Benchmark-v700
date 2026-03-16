@@ -5,23 +5,22 @@
 
 #include "workloads/args_generators/args_generator.h"
 
-#include "globals_extern.h"
 #include "workloads/data_maps/data_map.h"
-#include "workloads/data_maps/data_map_json_convector.h"
 #include "workloads/distributions/distribution.h"
 
 namespace microbench::workload {
 
-template <typename K>
-class SkewedSetsArgsGenerator : public ArgsGenerator<K> {
+using KeyType = int64_t;
+
+class SkewedSetsArgsGenerator : public ArgsGenerator {
     //    PAD;
     size_t range_;
     size_t write_set_begins_;
-    Distribution* read_dist_;
-    Distribution* write_dist_;
-    DataMap<K>* data_map_;
+    DistributionPtr read_dist_;
+    DistributionPtr write_dist_;
+    DataMapPtr data_map_;
 
-    K next_write() {
+    KeyType next_write() {
         size_t index = write_set_begins_ + write_dist_->next();
         if (index >= range_) {
             index -= range_;
@@ -30,41 +29,37 @@ class SkewedSetsArgsGenerator : public ArgsGenerator<K> {
     }
 
 public:
-    SkewedSetsArgsGenerator(size_t range, size_t write_set_begins, Distribution* read_dist,
-                            Distribution* write_dist, DataMap<K>* data_map)
+    SkewedSetsArgsGenerator(size_t range, size_t write_set_begins, DistributionPtr read_dist,
+                            DistributionPtr write_dist, DataMapPtr data_map)
         : range_(range),
           write_set_begins_(write_set_begins),
-          read_dist_(read_dist),
-          write_dist_(write_dist),
-          data_map_(data_map) {
+          read_dist_(std::move(read_dist)),
+          write_dist_(std::move(write_dist)),
+          data_map_(std::move(data_map)) {
     }
 
-    K next_get() override {
+    KeyType next_get() override {
         return data_map_->get(read_dist_->next());
     }
 
-    K next_insert() override {
+    KeyType next_insert() override {
         return next_write();
     }
 
-    K next_remove() override {
+    KeyType next_remove() override {
         return next_write();
     }
 
-    std::pair<K, K> next_range() override {
-        K left = next_get();
-        K right = next_get();
+    std::pair<KeyType, KeyType> next_range() override {
+        KeyType left = next_get();
+        KeyType right = next_get();
         if (left > right) {
             std::swap(left, right);
         }
         return {left, right};
     }
 
-    ~SkewedSetsArgsGenerator() override {
-        delete read_dist_;
-        delete write_dist_;
-        delete data_map_;
-    };
+    ~SkewedSetsArgsGenerator() override = default;
 };
 
 }  // namespace microbench::workload

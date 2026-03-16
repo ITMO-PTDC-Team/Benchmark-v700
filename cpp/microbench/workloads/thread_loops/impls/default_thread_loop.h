@@ -3,6 +3,7 @@
 //
 #pragma once
 
+#include <memory>
 #include "plaf.h"
 #include "random_xoshiro256p.h"
 #include "workloads/thread_loops/thread_loop.h"
@@ -13,20 +14,20 @@ namespace microbench::workload {
 
 class DefaultThreadLoop : public ThreadLoop {
     PAD;
-    double* cdf_;
+    std::array<double, 4> cdf_;
     Random64& rng_;
     PAD;
-    ArgsGenerator<K>* args_generator_;
+    ArgsGeneratorPtr args_generator_;
     PAD;
 
 public:
-    DefaultThreadLoop(globals_t* g, Random64& rng, size_t thread_id, StopCondition* stop_condition,
-                      size_t rq_range, ArgsGenerator<K>* args_generator,
+    DefaultThreadLoop(globals_t* g, Random64& rng, size_t thread_id,
+                      StopConditionPtr stop_condition, size_t rq_range,
+                      ArgsGeneratorPtr args_generator,
                       RatioThreadLoopParameters& thread_loop_parameters)
-        : ThreadLoop(g, thread_id, stop_condition, rq_range),
+        : ThreadLoop(g, thread_id, std::move(stop_condition), rq_range),
           rng_(rng),
-          args_generator_(args_generator) {
-        cdf_ = new double[3];
+          args_generator_(std::move(args_generator)) {
         cdf_[0] = thread_loop_parameters.INS_RATIO;
         cdf_[1] = cdf_[0] + thread_loop_parameters.REM_RATIO;
         cdf_[2] = cdf_[1] + thread_loop_parameters.RQ_RATIO;
@@ -35,16 +36,16 @@ public:
     void step() override {
         double op = (double)rng_.next() / (double)rng_.max_value;
         if (op < cdf_[0]) {  // insert
-            K key = this->args_generator_->next_insert();
+            KeyType key = this->args_generator_->next_insert();
             this->execute_insert(key);
         } else if (op < cdf_[1]) {  // remove
-            K key = this->args_generator_->next_remove();
+            KeyType key = this->args_generator_->next_remove();
             this->execute_remove(key);
         } else if (op < cdf_[2]) {  // range query
-            std::pair<K, K> keys = this->args_generator_->next_range();
+            std::pair<KeyType, KeyType> keys = this->args_generator_->next_range();
             this->execute_range_query(keys.first, keys.second);
         } else {  // read
-            K key = this->args_generator_->next_get();
+            KeyType key = this->args_generator_->next_get();
             this->GET_FUNC(key);
         }
     }
@@ -63,40 +64,40 @@ namespace microbench::workload {
 struct DefaultThreadLoopBuilder : public ThreadLoopBuilder {
     RatioThreadLoopParameters parameters;
 
-    ArgsGeneratorBuilder* argsGeneratorBuilder = new DefaultArgsGeneratorBuilder();
+    ArgsGeneratorBuilderPtr argsGeneratorBuilder = std::make_unique<DefaultArgsGeneratorBuilder>();
 
-    DefaultThreadLoopBuilder* set_ins_ratio(double ins_ratio) {
+    DefaultThreadLoopBuilder& set_ins_ratio(double ins_ratio) {
         parameters.INS_RATIO = ins_ratio;
-        return this;
+        return *this;
     }
 
-    DefaultThreadLoopBuilder* set_rem_ratio(double del_ratio) {
+    DefaultThreadLoopBuilder& set_rem_ratio(double del_ratio) {
         parameters.REM_RATIO = del_ratio;
-        return this;
+        return *this;
     }
 
-    DefaultThreadLoopBuilder* set_rq_ratio(double rq_ratio) {
+    DefaultThreadLoopBuilder& set_rq_ratio(double rq_ratio) {
         parameters.RQ_RATIO = rq_ratio;
-        return this;
+        return *this;
     }
 
-    DefaultThreadLoopBuilder* set_args_generator_builder(
-        ArgsGeneratorBuilder* args_generator_builder) {
-        argsGeneratorBuilder = args_generator_builder;
-        return this;
+    DefaultThreadLoopBuilder& set_args_generator_builder(
+        ArgsGeneratorBuilderPtr args_generator_builder) {
+        argsGeneratorBuilder = std::move(args_generator_builder);
+        return *this;
     }
 
-    DefaultThreadLoopBuilder* init(int range) override {
+    DefaultThreadLoopBuilder& init(int range) override {
         ThreadLoopBuilder::init(range);
         argsGeneratorBuilder->init(range);
-        return this;
+        return *this;
     }
 
-    //    template<typename K>
-    ThreadLoop* build(globals_t* g, Random64& rng, size_t thread_id,
-                      StopCondition* stop_condition) override {
-        return new DefaultThreadLoop(g, rng, thread_id, stop_condition, this->RQ_RANGE,
-                                     argsGeneratorBuilder->build(rng), parameters);
+    ThreadLoopPtr build(globals_t* g, Random64& rng, size_t thread_id,
+                        StopConditionPtr stop_condition) override {
+        return std::make_unique<DefaultThreadLoop>(g, rng, thread_id, std::move(stop_condition),
+                                                   this->RQ_RANGE, argsGeneratorBuilder->build(rng),
+                                                   parameters);
     }
 
     void to_json(nlohmann::json& json) const override {
@@ -119,9 +120,7 @@ struct DefaultThreadLoopBuilder : public ThreadLoopBuilder {
                argsGeneratorBuilder->to_string(indents + 1);
     }
 
-    ~DefaultThreadLoopBuilder() override {
-        delete argsGeneratorBuilder;
-    };
+    ~DefaultThreadLoopBuilder() override = default;
 };
 
 }  // namespace microbench::workload

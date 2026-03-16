@@ -9,50 +9,46 @@
 
 namespace microbench::workload {
 
-template <typename K>
-class DefaultArgsGenerator : public ArgsGenerator<K> {
-private:
-    //    PAD;
-    Distribution* distribution_;
-    DataMap<K>* data_;
-    //    PAD;
+using KeyType = int64_t;
 
-    K next() {
+class DefaultArgsGenerator : public ArgsGenerator {
+private:
+    DistributionPtr distribution_;
+    DataMapPtr data_;
+
+    KeyType next() {
         size_t index = distribution_->next();
         return data_->get(index);
     }
 
 public:
-    DefaultArgsGenerator(DataMap<K>* data, Distribution* distribution)
-        : data_(data),
-          distribution_(distribution) {
+    DefaultArgsGenerator(DataMapPtr data, DistributionPtr distribution)
+        : data_(std::move(data)),
+          distribution_(std::move(distribution)) {
     }
 
-    K next_get() {
+    KeyType next_get() override {
         return next();
     }
 
-    K next_insert() {
+    KeyType next_insert() override {
         return next();
     }
 
-    K next_remove() {
+    KeyType next_remove() override {
         return next();
     }
 
-    std::pair<K, K> next_range() {
-        K left = next_get();
-        K right = next_get();
+    std::pair<KeyType, KeyType> next_range() override {
+        KeyType left = next_get();
+        KeyType right = next_get();
         if (left > right) {
             std::swap(left, right);
         }
         return {left, right};
     }
 
-    ~DefaultArgsGenerator() {
-        delete distribution_;
-        delete data_;
-    }
+    ~DefaultArgsGenerator() override = default;
 };
 
 }  // namespace microbench::workload

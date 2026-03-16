@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cassert>
+#include "distributions/distribution.h"
 #include "globals_extern.h"
 #include "random_xoshiro256p.h"
 #include "plaf.h"
@@ -17,17 +18,17 @@ struct ZipfianDistributionBuilder : public MutableDistributionBuilder {
     double alpha = 1;
     PAD;
 
-    ZipfianDistributionBuilder* set_alpha(double alpha) {
+    ZipfianDistributionBuilder& set_alpha(double alpha) {
         alpha = alpha;
-        return this;
+        return *this;
     }
 
-    ZipfDistribution* build(Random64& rng, size_t range) override {
-        return new ZipfDistribution(rng, alpha, range);
+    DistributionPtr build(Random64& rng, size_t range) override {
+        return std::make_unique<ZipfDistribution>(rng, alpha, range);
     }
 
-    ZipfDistribution* build(Random64& rng) override {
-        return new ZipfDistribution(rng, alpha);
+    MutableDistributionPtr build(Random64& rng) override {
+        return std::make_unique<ZipfDistribution>(rng, alpha);
     }
 
     void to_json(nlohmann::json& j) const override {

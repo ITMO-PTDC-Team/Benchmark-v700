@@ -1,22 +1,23 @@
 #pragma once
 
+#include "args_generators/args_generator.h"
+#include "args_generators/impls/generalized_args_generator.h"
 #include "args_generators/impls/null_args_generator_builder.h"
-#include "workloads/args_generators/impls/generalized_args_generator.h"
+#include "errors.h"
 #include "workloads/args_generators/args_generator_builder.h"
-#include "workloads/args_generators/impls/null_args_generator.h"
 #include "globals_extern.h"
+#include <memory>
 #include <set>
 #include <string>
 
 namespace microbench::workload {
 
+ArgsGeneratorBuilderPtr get_args_generator_from_json(const nlohmann::json& j);
+
 static const std::set<std::string> OPER_TYPES{"get", "insert", "remove", "rangeQuery"};
 
-ArgsGeneratorBuilder* get_args_generator_from_json(const nlohmann::json& j);
-
-// template<typename K>
 class GeneralizedArgsGeneratorBuilder : public ArgsGeneratorBuilder {
-    std::vector<std::pair<std::vector<std::string>, std::shared_ptr<ArgsGeneratorBuilder>>>
+    std::vector<std::pair<std::vector<std::string>, ArgsGeneratorBuilderPtr>>
         args_generator_builders_;
 
     std::set<std::string> undec_oper_types_ = OPER_TYPES;
@@ -24,8 +25,8 @@ class GeneralizedArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 public:
     GeneralizedArgsGeneratorBuilder() = default;
 
-    GeneralizedArgsGeneratorBuilder* add_args_generator_builder(
-        const std::vector<std::string>& opers, ArgsGeneratorBuilder* args_gen_builder) {
+    GeneralizedArgsGeneratorBuilder& add_args_generator_builder(
+        const std::vector<std::string>& opers, ArgsGeneratorBuilderPtr args_gen_builder) {
         for (auto oper_type : opers) {
             if (OPER_TYPES.find(oper_type) == OPER_TYPES.end()) {
                 setbench_error("Unsupported operation type: " + oper_type);
@@ -36,39 +37,35 @@ public:
             std::cout << undec_oper_types_.erase(oper_type);
         }
 
-        std::shared_ptr<ArgsGeneratorBuilder> new_builder;
-        new_builder.reset(args_gen_builder);
-        args_generator_builders_.push_back({opers, new_builder});
+        args_generator_builders_.emplace_back(opers, std::move(args_gen_builder));
 
-        return this;
+        return *this;
     }
 
-    GeneralizedArgsGeneratorBuilder* init(size_t range) override {
+    GeneralizedArgsGeneratorBuilder& init(size_t range) override {
         if (!undec_oper_types_.empty()) {
             add_args_generator_builder(
                 std::vector<std::string>(undec_oper_types_.begin(), undec_oper_types_.end()),
-                new NullArgsGeneratorBuilder());
+                std::make_unique<NullArgsGeneratorBuilder>());
         }
 
         for (auto& it : args_generator_builders_) {
             it.second->init(range);
         }
-        return this;
+        return *this;
     }
 
-    GeneralizedArgsGenerator<K>* build(Random64& rng) override {
-        std::map<std::string, std::shared_ptr<ArgsGenerator<K>>> built;
+    ArgsGeneratorPtr build(Random64& rng) override {
+        std::map<std::string, ArgsGeneratorPtr> built;
         for (auto& it : args_generator_builders_) {
-            std::shared_ptr<ArgsGenerator<K>> u;
-            u.reset(it.second->build(rng));
             for (auto& oper_type : it.first) {
-                built.insert({oper_type, u});
+                built.emplace(oper_type, it.second->build(rng));
             }
         }
 
-        return new GeneralizedArgsGenerator<K>(std::move(built["get"]), std::move(built["insert"]),
-                                               std::move(built["remove"]),
-                                               std::move(built["rangeQuery"]));
+        return ArgsGeneratorPtr(new GeneralizedArgsGenerator(
+            std::move(built["get"]), std::move(built["insert"]), std::move(built["remove"]),
+            std::move(built["rangeQuery"])));
     }
 
     void to_json(nlohmann::json& j) const override {

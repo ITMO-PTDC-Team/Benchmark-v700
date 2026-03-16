@@ -3,27 +3,26 @@
 //
 #pragma once
 
-#include <algorithm>
+#include <functional>
+#include <vector>
 #include "workloads/data_maps/data_map.h"
 
 namespace microbench::workload {
 
-class ArrayDataMap : public DataMap<int64_t> {
+class ArrayDataMap : public DataMap {
 private:
-    int64_t* data_;
+    std::reference_wrapper<const std::vector<int64_t>> data_;
 
 public:
-    explicit ArrayDataMap(int64_t* data)
+    explicit ArrayDataMap(const std::vector<int64_t>& data)
         : data_(data) {
     }
 
     int64_t get(size_t index) override {
-        return data_[index];
+        return data_.get()[index];
     }
 
-    ~ArrayDataMap() {
-        delete[] data_;
-    }
+    ~ArrayDataMap() override = default;
 };
 
 }  // namespace microbench::workload

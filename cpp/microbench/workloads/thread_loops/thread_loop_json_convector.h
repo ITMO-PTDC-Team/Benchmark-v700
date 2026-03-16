@@ -3,6 +3,7 @@
 //
 #pragma once
 
+#include <memory>
 #include "thread_loop_builder.h"
 #include "workloads/thread_loops/impls/default_thread_loop.h"
 #include "workloads/thread_loops/impls/prefill_insert_thread_loop.h"
@@ -11,16 +12,16 @@
 
 namespace microbench::workload {
 
-ThreadLoopBuilder* get_thread_loop_from_json(const nlohmann::json& j) {
+ThreadLoopBuilderPtr get_thread_loop_from_json(const nlohmann::json& j) {
     std::string class_name = j["ClassName"];
-    ThreadLoopBuilder* thread_loop_builder;
+    ThreadLoopBuilderPtr thread_loop_builder;
 
     if (class_name == "DefaultThreadLoopBuilder") {
-        thread_loop_builder = new DefaultThreadLoopBuilder();
+        thread_loop_builder = std::make_unique<DefaultThreadLoopBuilder>();
     } else if (class_name == "TemporaryOperationsThreadLoopBuilder") {
-        thread_loop_builder = new TemporaryOperationsThreadLoopBuilder();
+        thread_loop_builder = std::make_unique<TemporaryOperationsThreadLoopBuilder>();
     } else if (class_name == "PrefillInsertThreadLoopBuilder") {
-        thread_loop_builder = new PrefillInsertThreadLoopBuilder();
+        thread_loop_builder = std::make_unique<PrefillInsertThreadLoopBuilder>();
     } else {
         setbench_error("JSON PARSER: Unknown class name ThreadLoopBuilder -- " + class_name)
     }

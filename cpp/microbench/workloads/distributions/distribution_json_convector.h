@@ -3,23 +3,36 @@
 //
 #pragma once
 
-#include "distribution_builder.h"
-#include "workloads/distributions/builders/uniform_distribution_builder.h"
-#include "workloads/distributions/builders/zipfian_distribution_builder.h"
-#include "workloads/distributions/builders/skewed_uniform_distribution_builder.h"
+#include "distributions/distribution_builder.h"
+#include "nlohmann/json_fwd.hpp"
+
+namespace microbench::workload {
+
+DistributionBuilderPtr get_distribution_from_json(const nlohmann::json& j);
+
+MutableDistributionBuilderPtr get_mutable_distribution_from_json(const nlohmann::json& j);
+
+}  // namespace microbench::workload
+
+#ifdef DISTR_CONV_IMPL
+
+#include "distributions/builders/skewed_uniform_distribution_builder.h"
+#include "distributions/builders/uniform_distribution_builder.h"
+#include "distributions/builders/zipfian_distribution_builder.h"
+#include "workloads/distributions/distribution_builder.h"
 #include "errors.h"
 
 namespace microbench::workload {
 
-DistributionBuilder* get_distribution_from_json(const nlohmann::json& j) {
+DistributionBuilderPtr get_distribution_from_json(const nlohmann::json& j) {
     std::string class_name = j["ClassName"];
-    DistributionBuilder* distribution_builder;
+    DistributionBuilderPtr distribution_builder;
     if (class_name == "UniformDistributionBuilder") {
-        distribution_builder = new UniformDistributionBuilder();
+        distribution_builder = std::make_unique<UniformDistributionBuilder>();
     } else if (class_name == "ZipfianDistributionBuilder") {
-        distribution_builder = new ZipfianDistributionBuilder();
+        distribution_builder = std::make_unique<ZipfianDistributionBuilder>();
     } else if (class_name == "SkewedUniformDistributionBuilder") {
-        distribution_builder = new SkewedUniformDistributionBuilder();
+        distribution_builder = std::make_unique<SkewedUniformDistributionBuilder>();
     } else {
         setbench_error("JSON PARSER: Unknown class name DistributionBuilder -- " + class_name)
     }
@@ -28,8 +41,11 @@ DistributionBuilder* get_distribution_from_json(const nlohmann::json& j) {
     return distribution_builder;
 }
 
-MutableDistributionBuilder* get_mutable_distribution_from_json(const nlohmann::json& j) {
-    return dynamic_cast<MutableDistributionBuilder*>(get_distribution_from_json(j));
+MutableDistributionBuilderPtr get_mutable_distribution_from_json(const nlohmann::json& j) {
+    return std::unique_ptr<MutableDistributionBuilder>(
+        dynamic_cast<MutableDistributionBuilder*>(get_distribution_from_json(j).release()));
 }
 
 }  // namespace microbench::workload
+
+#endif
