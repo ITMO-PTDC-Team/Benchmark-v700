@@ -3,10 +3,11 @@
 //
 #pragma once
 
+#include <memory>
 #include <string>
 #include "random_xoshiro256p.h"
+#include "stop_condition/stop_condition.h"
 #include "thread_loop.h"
-#include "nlohmann/json.hpp"
 #include "globals_t.h"
 
 namespace microbench::workload {
@@ -14,13 +15,13 @@ namespace microbench::workload {
 struct ThreadLoopBuilder {
     size_t RQ_RANGE;
 
-    virtual ThreadLoopBuilder* init(int range) {
+    virtual ThreadLoopBuilder& init(int range) {
         RQ_RANGE = range;
-        return this;
+        return *this;
     };
 
-    virtual ThreadLoop* build(globals_t* g, Random64& rng, size_t tid,
-                              StopCondition* stop_condition) = 0;
+    virtual ThreadLoopPtr build(globals_t* g, Random64& rng, size_t tid,
+                                StopConditionPtr stop_condition) = 0;
 
     virtual void to_json(nlohmann::json& j) const = 0;
 
@@ -39,5 +40,7 @@ void to_json(nlohmann::json& j, const ThreadLoopBuilder& s) {
 void from_json(const nlohmann::json& j, ThreadLoopBuilder& s) {
     s.from_json(j);
 }
+
+using ThreadLoopBuilderPtr = std::shared_ptr<ThreadLoopBuilder>;
 
 }  // namespace microbench::workload

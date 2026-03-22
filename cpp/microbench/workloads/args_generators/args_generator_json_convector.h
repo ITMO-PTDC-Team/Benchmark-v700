@@ -3,7 +3,7 @@
 //
 #pragma once
 
-#include "nlohmann/json.hpp"
+#include <memory>
 #include "args_generator_builder.h"
 #include "workloads/args_generators/impls/default_args_generator_builder.h"
 #include "workloads/args_generators/impls/skewed_sets_args_generator_builder.h"
@@ -18,29 +18,29 @@
 
 namespace microbench::workload {
 
-ArgsGeneratorBuilder* get_args_generator_from_json(const nlohmann::json& j) {
+ArgsGeneratorBuilderPtr get_args_generator_from_json(const nlohmann::json& j) {
     std::string class_name = j["ClassName"];
-    ArgsGeneratorBuilder* args_generator_builder;
+    ArgsGeneratorBuilderPtr args_generator_builder;
     if (class_name == "DefaultArgsGeneratorBuilder") {
-        args_generator_builder = new DefaultArgsGeneratorBuilder();
+        args_generator_builder = std::make_shared<DefaultArgsGeneratorBuilder>();
     } else if (class_name == "SkewedSetsArgsGeneratorBuilder") {
-        args_generator_builder = new SkewedSetsArgsGeneratorBuilder();
+        args_generator_builder = std::make_shared<SkewedSetsArgsGeneratorBuilder>();
     } else if (class_name == "TemporarySkewedArgsGeneratorBuilder") {
-        args_generator_builder = new TemporarySkewedArgsGeneratorBuilder();
+        args_generator_builder = std::make_shared<TemporarySkewedArgsGeneratorBuilder>();
     } else if (class_name == "CreakersAndWaveArgsGeneratorBuilder") {
-        args_generator_builder = new CreakersAndWaveArgsGeneratorBuilder();
+        args_generator_builder = std::make_shared<CreakersAndWaveArgsGeneratorBuilder>();
     } else if (class_name == "CreakersAndWavePrefillArgsGeneratorBuilder") {
-        args_generator_builder = new CreakersAndWavePrefillArgsGeneratorBuilder();
+        args_generator_builder = std::make_shared<CreakersAndWavePrefillArgsGeneratorBuilder>();
     } else if (class_name == "LeafsHandshakeArgsGeneratorBuilder") {
-        args_generator_builder = new LeafsHandshakeArgsGeneratorBuilder();
+        args_generator_builder = std::make_shared<LeafsHandshakeArgsGeneratorBuilder>();
     } else if (class_name == "SkewedInsertArgsGeneratorBuilder") {
-        args_generator_builder = new SkewedInsertArgsGeneratorBuilder();
+        args_generator_builder = std::make_shared<SkewedInsertArgsGeneratorBuilder>();
     } else if (class_name == "GeneralizedArgsGeneratorBuilder") {
-        args_generator_builder = new GeneralizedArgsGeneratorBuilder();
+        args_generator_builder = std::make_shared<GeneralizedArgsGeneratorBuilder>();
     } else if (class_name == "NullArgsGeneratorBuilder") {
-        args_generator_builder = new NullArgsGeneratorBuilder();
+        args_generator_builder = std::make_shared<NullArgsGeneratorBuilder>();
     } else if (class_name == "RangeQueryArgsGeneratorBuilder") {
-        args_generator_builder = new RangeQueryArgsGeneratorBuilder();
+        args_generator_builder = std::make_shared<RangeQueryArgsGeneratorBuilder>();
     } else {
         setbench_error("JSON PARSER: Unknown class name ArgsGeneratorBuilder -- " + class_name)
     }

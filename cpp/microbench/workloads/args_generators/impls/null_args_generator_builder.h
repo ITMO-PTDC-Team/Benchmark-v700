@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+#include "args_generators/args_generator.h"
 #include "workloads/args_generators/impls/null_args_generator.h"
 #include "workloads/args_generators/args_generator_builder.h"
 #include "globals_extern.h"
@@ -8,13 +10,12 @@ namespace microbench::workload {
 
 class NullArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 public:
-    NullArgsGeneratorBuilder* init(size_t range) override {
-        //        dataMapBuilder->init(_range);
-        return this;
+    NullArgsGeneratorBuilder& init(size_t range) override {
+        return *this;
     }
 
-    NullArgsGenerator<K>* build(Random64& rng) override {
-        return new NullArgsGenerator<K>();
+    ArgsGeneratorPtr build(Random64& rng) override {
+        return std::make_shared<NullArgsGenerator>();
     }
 
     void to_json(nlohmann::json& j) const override {

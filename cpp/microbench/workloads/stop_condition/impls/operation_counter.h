@@ -29,7 +29,7 @@ class OperationCounter : public StopCondition {
     };
 
     PAD;
-    Counter* counters_;
+    std::vector<Counter> counters_;
     PAD;
     size_t common_operation_limit_;
     PAD;
@@ -51,7 +51,7 @@ public:
         int64_t operation_limit = common_operation_limit_ / num_threads;
         int64_t remainder = common_operation_limit_ % num_threads;
 
-        counters_ = new Counter[num_threads];
+        counters_.resize(num_threads);
 
         for (int i = 0; i < num_threads; i++) {
             counters_[i].operCount = operation_limit + (--remainder >= 0 ? 1 : 0);
@@ -59,7 +59,6 @@ public:
     }
 
     void clean() override {
-        delete[] counters_;
     }
 
     bool is_stopped(int id) override {

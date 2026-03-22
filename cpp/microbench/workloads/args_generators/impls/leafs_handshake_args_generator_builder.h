@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+#include "args_generators/args_generator.h"
+#include "distributions/builders/zipfian_distribution_builder.h"
 #include "workloads/args_generators/impls/leafs_handshake_args_generator.h"
 #include "workloads/distributions/distribution_builder.h"
 #include "workloads/data_maps/data_map_builder.h"
@@ -16,56 +19,55 @@ class LeafsHandshakeArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 private:
     size_t range_;
 
-    DistributionBuilder* read_dist_builder_ = new UniformDistributionBuilder();
-    MutableDistributionBuilder* insert_dist_builder_ = new ZipfianDistributionBuilder();
-    DistributionBuilder* remove_dist_builder_ = new UniformDistributionBuilder();
+    DistributionBuilderPtr read_dist_builder_ = std::make_shared<UniformDistributionBuilder>();
+    MutableDistributionBuilderPtr insert_dist_builder_ =
+        std::make_shared<ZipfianDistributionBuilder>();
+    DistributionBuilderPtr remove_dist_builder_ = std::make_shared<UniformDistributionBuilder>();
 
-    DataMapBuilder* read_data_map_builder_ = new IdDataMapBuilder();
-    DataMapBuilder* remove_data_map_builder_ = new IdDataMapBuilder();
-    std::atomic<size_t>* deleted_value_;
+    DataMapBuilderPtr read_data_map_builder_ = std::make_shared<IdDataMapBuilder>();
+    DataMapBuilderPtr remove_data_map_builder_ = std::make_shared<IdDataMapBuilder>();
+    std::atomic<size_t> deleted_value_;
 
 public:
-    LeafsHandshakeArgsGeneratorBuilder* set_read_dist_builder(
-        DistributionBuilder* read_dist_builder) {
-        read_dist_builder_ = read_dist_builder;
-        return this;
+    LeafsHandshakeArgsGeneratorBuilder& set_read_dist_builder(
+        DistributionBuilderPtr read_dist_builder) {
+        read_dist_builder_ = std::move(read_dist_builder);
+        return *this;
     }
 
-    LeafsHandshakeArgsGeneratorBuilder* set_insert_dist_builder(
-        MutableDistributionBuilder* insert_dist_builder) {
-        insert_dist_builder_ = insert_dist_builder;
-        return this;
+    LeafsHandshakeArgsGeneratorBuilder& set_insert_dist_builder(
+        MutableDistributionBuilderPtr insert_dist_builder) {
+        insert_dist_builder_ = std::move(insert_dist_builder);
+        return *this;
     }
 
-    LeafsHandshakeArgsGeneratorBuilder* set_remove_dist_builder(
-        DistributionBuilder* remove_dist_builder) {
-        remove_dist_builder_ = remove_dist_builder;
-        return this;
+    LeafsHandshakeArgsGeneratorBuilder& set_remove_dist_builder(
+        DistributionBuilderPtr remove_dist_builder) {
+        remove_dist_builder_ = std::move(remove_dist_builder);
+        return *this;
     }
 
-    LeafsHandshakeArgsGeneratorBuilder* set_read_data_map_builder(
-        DataMapBuilder* read_data_map_builder) {
-        read_data_map_builder_ = read_data_map_builder;
-        return this;
+    LeafsHandshakeArgsGeneratorBuilder& set_read_data_map_builder(
+        DataMapBuilderPtr read_data_map_builder) {
+        read_data_map_builder_ = std::move(read_data_map_builder);
+        return *this;
     }
 
-    LeafsHandshakeArgsGeneratorBuilder* set_remove_data_map_builder(
-        DataMapBuilder* remove_data_map_builder) {
-        remove_data_map_builder_ = remove_data_map_builder;
-        return this;
+    LeafsHandshakeArgsGeneratorBuilder& set_remove_data_map_builder(
+        DataMapBuilderPtr remove_data_map_builder) {
+        remove_data_map_builder_ = std::move(remove_data_map_builder);
+        return *this;
     }
 
-    LeafsHandshakeArgsGeneratorBuilder* init(size_t range) override {
+    LeafsHandshakeArgsGeneratorBuilder& init(size_t range) override {
         range_ = range;
-        //        readDataMapBuilder->init(_range);
-        //        removeDataMapBuilder->init(_range);
-        deleted_value_ = new std::atomic<size_t>(range_ / 2);
+        deleted_value_ = range_ / 2;
 
-        return this;
+        return *this;
     }
 
-    LeafsHandshakeArgsGenerator<K>* build(Random64& rng) override {
-        return new LeafsHandshakeArgsGenerator<K>(
+    ArgsGeneratorPtr build(Random64& rng) override {
+        return std::make_shared<LeafsHandshakeArgsGenerator>(
             rng, range_, deleted_value_, read_dist_builder_->build(rng, range_),
             insert_dist_builder_->build(rng), remove_dist_builder_->build(rng, range_),
             read_data_map_builder_->build(), remove_data_map_builder_->build());
@@ -84,8 +86,8 @@ public:
         read_dist_builder_ = get_distribution_from_json(j["readDistBuilder"]);
         insert_dist_builder_ = get_mutable_distribution_from_json(j["insertDistBuilder"]);
         remove_dist_builder_ = get_distribution_from_json(j["removeDistBuilder"]);
-        read_data_map_builder_ = get_data_map_from_json(j["readDataMapBuilder"]);
-        remove_data_map_builder_ = get_data_map_from_json(j["removeDataMapBuilder"]);
+        read_data_map_builder_ = (get_data_map_from_json(j["readDataMapBuilder"]));
+        remove_data_map_builder_ = (get_data_map_from_json(j["removeDataMapBuilder"]));
     }
 
     std::string to_string(size_t indents = 1) override {
@@ -102,12 +104,7 @@ public:
                remove_data_map_builder_->to_string(indents + 1);
     }
 
-    ~LeafsHandshakeArgsGeneratorBuilder() override {
-        delete read_dist_builder_;
-        delete insert_dist_builder_;
-        delete remove_dist_builder_;
-        //        delete dataMapBuilder; //TODO may delete twice
-    };
+    ~LeafsHandshakeArgsGeneratorBuilder() override = default;
 };
 
 }  // namespace microbench::workload

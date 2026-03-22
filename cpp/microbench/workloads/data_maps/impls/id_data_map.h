@@ -8,7 +8,7 @@
 
 namespace microbench::workload {
 
-struct IdDataMap : public DataMap<int64_t> {
+struct IdDataMap : public DataMap {
     int64_t get(size_t index) override {
         return index + 1;
     }

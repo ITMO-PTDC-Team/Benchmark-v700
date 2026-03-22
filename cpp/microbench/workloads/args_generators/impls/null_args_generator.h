@@ -1,27 +1,29 @@
 #pragma once
 
+#include "errors.h"
 #include "workloads/args_generators/args_generator.h"
 
 namespace microbench::workload {
 
-template <typename K>
-class NullArgsGenerator : public ArgsGenerator<K> {
+using KeyType = int64_t;
+
+class NullArgsGenerator : public ArgsGenerator {
 public:
     NullArgsGenerator() = default;
 
-    K next_get() {
+    KeyType next_get() {
         setbench_error("Operation not supported");
     }
 
-    K next_insert() {
+    KeyType next_insert() {
         setbench_error("Operation not supported");
     }
 
-    K next_remove() {
+    KeyType next_remove() {
         setbench_error("Operation not supported");
     }
 
-    std::pair<K, K> next_range() {
+    std::pair<KeyType, KeyType> next_range() {
         setbench_error("Operation not supported");
     }
 

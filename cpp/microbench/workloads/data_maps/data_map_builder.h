@@ -3,22 +3,23 @@
 //
 #pragma once
 
+#include <memory>
 #include <string>
 #include "data_map.h"
 #include "nlohmann/json.hpp"
 
 namespace microbench::workload {
 
-using K = int64_t;
+using KeyType = int64_t;
 
 struct DataMapBuilder {
     static size_t id_counter;
 
     const size_t id = id_counter++;
 
-    virtual DataMapBuilder* init(size_t range) = 0;
+    virtual DataMapBuilder& init(size_t range) = 0;
 
-    virtual DataMap<K>* build() = 0;
+    virtual DataMapPtr build() = 0;
 
     virtual std::string to_string(size_t indents = 1) = 0;
 
@@ -28,6 +29,10 @@ struct DataMapBuilder {
 
     virtual ~DataMapBuilder() = default;
 };
+
+// since DataMap can share state we use shared_ptr
+using DataMapBuilderPtr = std::shared_ptr<DataMapBuilder>;
+
 
 size_t DataMapBuilder::id_counter = 0;
 

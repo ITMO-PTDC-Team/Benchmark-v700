@@ -3,7 +3,9 @@
 //
 #pragma once
 
+#include <memory>
 #include <random>
+#include "data_maps/data_map.h"
 #include "globals_extern.h"
 #include "workloads/data_maps/data_map_builder.h"
 #include "workloads/data_maps/impls/array_data_map.h"
@@ -11,24 +13,21 @@
 namespace microbench::workload {
 
 class ArrayDataMapBuilder : public DataMapBuilder {
-    int64_t* data_ = nullptr;
+    std::vector<int64_t> data_;
 
 public:
-    ArrayDataMapBuilder* init(size_t range) override {
-        delete[] data_;
-
-        data_ = new int64_t[range];
+    ArrayDataMapBuilder& init(size_t range) override {
+        data_.clear();
+        data_.resize(range);
         for (int64_t i = 0; i < range; i++) {
             data_[i] = i + 1;
         }
-
-        //        std::random_shuffle(data, data + range - 1);
-        std::shuffle(data_, data_ + range, std::mt19937(std::random_device()()));
-        return this;
+        std::shuffle(data_.begin(), data_.end(), std::mt19937(std::random_device()()));
+        return *this;
     }
 
-    ArrayDataMap* build() override {
-        return new ArrayDataMap(data_);
+    DataMapPtr build() override {
+        return std::make_shared<ArrayDataMap>(data_);
     }
 
     void to_json(nlohmann::json& j) const override {

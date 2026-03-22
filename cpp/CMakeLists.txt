@@ -205,3 +205,8 @@ if(TESTING)
     add_executable(tests ${testSources})
     target_link_libraries(tests microbench::microbench GTest::gtest GTest::gtest_main)
 endif()
+
+# TODO: untangle exe when microbench will be separated
+add_executable(json-example microbench/json_example/json_example.cpp)
+target_include_directories(json-example PUBLIC ${DSDir}/_dummy/_dummy1_noop)
+target_link_libraries(json-example PUBLIC microbench::microbench ${libs})

@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 
 namespace microbench::workload {
 
@@ -12,6 +13,8 @@ struct Distribution {
 
     virtual ~Distribution() = default;
 };
+
+using DistributionPtr = std::shared_ptr<Distribution>;
 
 struct MutableDistribution : public Distribution {
     virtual void set_range(size_t range) = 0;
@@ -23,5 +26,7 @@ struct MutableDistribution : public Distribution {
         return this->next();
     }
 };
+
+using MutableDistributionPtr = std::shared_ptr<MutableDistribution>;
 
 }  // namespace microbench::workload

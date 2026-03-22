@@ -10,9 +10,9 @@
 #include "workloads/distributions/distribution.h"
 #include "workloads/data_maps/data_map.h"
 
-#include "globals_extern.h"
-
 namespace microbench::workload {
+
+using KeyType = int64_t;
 
 /**
     старички + волна
@@ -32,20 +32,19 @@ namespace microbench::workload {
             // при желании можно переработать на "100% - ca — чтение, ca — запись"
                 (то есть брать ca не от общей вероятности, а только при чтении"
  */
-template <typename K>
-class CreakersAndWaveArgsGenerator : public ArgsGenerator<K> {
+class CreakersAndWaveArgsGenerator : public ArgsGenerator {
     PAD;
     Random64& rng_;
     PAD;
     double creakers_ratio_;
     size_t creakers_begin_;
-    Distribution* creakers_dist_;
-    MutableDistribution* wave_dist_;
-    DataMap<K>* data_map_;
+    DistributionPtr creakers_dist_;
+    MutableDistributionPtr wave_dist_;
+    DataMapPtr data_map_;
     PAD;
-    std::atomic<size_t>* wave_begin_;
+    std::atomic<size_t> wave_begin_;
     PAD;
-    std::atomic<size_t>* wave_end_;
+    std::atomic<size_t> wave_end_;
     PAD;
 
     /**
@@ -62,7 +61,7 @@ class CreakersAndWaveArgsGenerator : public ArgsGenerator<K> {
         return z < creakers_ratio_;
     }
 
-    K get_creaker() {
+    KeyType get_creaker() {
         /**
          *                             creakersBegin
          * |________________________________|,,,,,,,,,,,,,,,,,,,,|
@@ -74,14 +73,12 @@ class CreakersAndWaveArgsGenerator : public ArgsGenerator<K> {
         return data_map_->get(creakers_begin_ + creakers_dist_->next());
     }
 
-    K get_wave() {
+    KeyType get_wave() {
         /**
          * In waveDist the first indexes have a higher probability
          */
-        size_t local_wave_begin = *wave_begin_;
-        size_t local_wave_end = *wave_end_;
-        //            size_t localWaveLength = (localWaveEnd - localWaveBegin + creakersBegin) %
-        //            creakersBegin;
+        size_t local_wave_begin = wave_begin_.load();
+        size_t local_wave_end = wave_end_.load();
         size_t local_wave_length;
         size_t index;
         if (local_wave_end < local_wave_begin) {
@@ -107,35 +104,34 @@ class CreakersAndWaveArgsGenerator : public ArgsGenerator<K> {
         return data_map_->get(index);
     };
 
-    K wave_shift(std::atomic<size_t>* wave_edge) {
-        size_t local_wave_edge = *wave_edge;
+    KeyType wave_shift(std::atomic<size_t>& wave_edge) {
+        size_t local_wave_edge = wave_edge.load();
         size_t new_wave_edge;
         if (local_wave_edge == 0) {
             new_wave_edge = creakers_begin_ - 1;
         } else {
             new_wave_edge = local_wave_edge - 1;
         }
-        wave_edge->compare_exchange_weak(local_wave_edge, new_wave_edge);
+        wave_edge.compare_exchange_weak(local_wave_edge, new_wave_edge);
         return data_map_->get(new_wave_edge);
     }
 
 public:
     CreakersAndWaveArgsGenerator(Random64& rng, double creakers_ratio, size_t creakers_begin,
-                                 std::atomic<size_t>* wave_begin, std::atomic<size_t>* wave_end,
-                                 Distribution* creakers_dist, MutableDistribution* wave_dist,
-                                 DataMap<K>* data_map)
+                                 size_t wave_begin, size_t wave_end, DistributionPtr creakers_dist,
+                                 MutableDistributionPtr wave_dist, DataMapPtr data_map)
         : rng_(rng),
           creakers_ratio_(creakers_ratio),
           creakers_begin_(creakers_begin),
           wave_begin_(wave_begin),
           wave_end_(wave_end),
-          creakers_dist_(creakers_dist),
-          wave_dist_(wave_dist),
-          data_map_(data_map) {
+          creakers_dist_(std::move(creakers_dist)),
+          wave_dist_(std::move(wave_dist)),
+          data_map_(std::move(data_map)) {
     }
 
-    K next_get() override {
-        K value;
+    KeyType next_get() override {
+        KeyType value;
         if (next_coin()) {
             value = get_creaker();
         } else {
@@ -144,17 +140,17 @@ public:
         return value;
     }
 
-    K next_insert() override {
+    KeyType next_insert() override {
         return wave_shift(wave_begin_);
     }
 
-    K next_remove() override {
+    KeyType next_remove() override {
         return wave_shift(wave_end_);
     }
 
-    std::pair<K, K> next_range() override {
-        K left;
-        K right;
+    std::pair<KeyType, KeyType> next_range() override {
+        KeyType left;
+        KeyType right;
         if (next_coin()) {
             left = get_creaker();
             right = get_creaker();
@@ -168,11 +164,7 @@ public:
         return {left, right};
     }
 
-    ~CreakersAndWaveArgsGenerator() override {
-        delete creakers_dist_;
-        delete wave_dist_;
-        delete data_map_;
-    };
+    ~CreakersAndWaveArgsGenerator() override = default;
 };
 
 }  // namespace microbench::workload

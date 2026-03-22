@@ -3,11 +3,10 @@
 //
 #pragma once
 
+#include <vector>
 #include "workloads/args_generators/args_generator.h"
 #include "workloads/distributions/distribution.h"
 #include "workloads/data_maps/data_map.h"
-
-#include "globals_extern.h"
 
 namespace microbench::workload {
 
@@ -23,22 +22,19 @@ namespace microbench::workload {
           // rt — если relax time всегда одинаковый
           // rti — relax time после горячей работы с i-ым множеством
  */
-template <typename K>
-class TemporarySkewedArgsGenerator : public ArgsGenerator<K> {
+using KeyType = int64_t;
+
+class TemporarySkewedArgsGenerator : public ArgsGenerator {
     size_t time_;
     size_t pointer_;
     bool is_relax_time_;
 
-    Distribution** hot_dists_;
-    Distribution* relax_dist_;
-    DataMap<K>* data_map_;
-    // PAD;
-    int64_t* hot_times_;
-    // PAD;
-    int64_t* relax_times_;
-    // PAD;
-    size_t* set_begins_;
-    // PAD;
+    std::vector<DistributionPtr> hot_dists_;
+    DistributionPtr relax_dist_;
+    DataMapPtr data_map_;
+    std::vector<int64_t> hot_times_;
+    std::vector<int64_t> relax_times_;
+    std::vector<size_t> set_begins_;
     size_t set_number_;
     size_t range_;
 
@@ -61,9 +57,9 @@ class TemporarySkewedArgsGenerator : public ArgsGenerator<K> {
         ++time_;
     }
 
-    K next() {
+    KeyType next() {
         update_pointer();
-        K value;
+        KeyType value;
 
         if (is_relax_time_) {
             value = data_map_->get(relax_dist_->next());
@@ -80,15 +76,16 @@ class TemporarySkewedArgsGenerator : public ArgsGenerator<K> {
     }
 
 public:
-    TemporarySkewedArgsGenerator(size_t set_number, size_t range, int64_t* hot_times,
-                                 int64_t* relax_times, size_t* set_begins, Distribution** hot_dists,
-                                 Distribution* relax_dist, DataMap<K>* data_map)
-        : hot_dists_(hot_dists),
-          relax_dist_(relax_dist),
-          data_map_(data_map),
-          hot_times_(hot_times),
-          relax_times_(relax_times),
-          set_begins_(set_begins),
+    TemporarySkewedArgsGenerator(size_t set_number, size_t range, std::vector<int64_t> hot_times,
+                                 std::vector<int64_t> relax_times, std::vector<size_t> set_begins,
+                                 std::vector<DistributionPtr> hot_dists, DistributionPtr relax_dist,
+                                 DataMapPtr data_map)
+        : hot_dists_(std::move(hot_dists)),
+          relax_dist_(std::move(relax_dist)),
+          data_map_(std::move(data_map)),
+          hot_times_(std::move(hot_times)),
+          relax_times_(std::move(relax_times)),
+          set_begins_(std::move(set_begins)),
           set_number_(set_number),
           range_(range),
           time_(0),
@@ -96,22 +93,22 @@ public:
           is_relax_time_(false) {
     }
 
-    K next_get() override {
+    KeyType next_get() override {
         return next();
     }
 
-    K next_insert() override {
+    KeyType next_insert() override {
         return next();
     }
 
-    K next_remove() override {
+    KeyType next_remove() override {
         return next();
     }
 
-    std::pair<K, K> next_range() override {
+    std::pair<KeyType, KeyType> next_range() override {
         --time_;
-        K left = next();
-        K right = next();
+        KeyType left = next();
+        KeyType right = next();
 
         if (left > right) {
             std::swap(left, right);
@@ -119,11 +116,7 @@ public:
         return {left, right};
     }
 
-    ~TemporarySkewedArgsGenerator() override {
-        delete[] hot_dists_;
-        delete relax_dist_;
-        //        delete dataMap; //TODO may deleted twice
-    };
+    ~TemporarySkewedArgsGenerator() override = default;
 };
 
 }  // namespace microbench::workload

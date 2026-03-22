@@ -3,121 +3,122 @@
 //
 #pragma once
 
-#include "globals_extern.h"
+#include <cassert>
 #include "parameters.h"
-#include "workloads/stop_condition/impls/operation_counter.h"
 
 namespace microbench::workload {
 
 struct BenchParameters {
     size_t range;
 
-    Parameters* test;
-    Parameters* prefill;
-    Parameters* warmUp;
+    std::optional<Parameters> test{};
+    std::optional<Parameters> prefill{};
+    std::optional<Parameters> warmUp{};
 
     BenchParameters() {
         range = 2048;
-        //        test = nullptr;
-        //        prefill = nullptr;
-        //        warmUp = nullptr;
-        test = new Parameters();
-        prefill = new Parameters();
-        warmUp = new Parameters();
     }
 
-    BenchParameters(const BenchParameters& p) = default;
-
     BenchParameters& create_default_prefill(size_t thread_num) {
-        prefill = (new Parameters())
-                      ->set_stop_condition(new OperationCounter(range / 2))
-                      ->add_thread_loop_builder(new PrefillInsertThreadLoopBuilder(), thread_num);
+        assert(!prefill.has_value());
+        prefill.emplace();
+        prefill->set_stop_condition(std::make_shared<OperationCounter>(range / 2))
+            .add_thread_loop_builder(std::make_shared<PrefillInsertThreadLoopBuilder>(),
+                                     thread_num);
         return *this;
     }
 
     BenchParameters& create_default_prefill() {
-        prefill = new Parameters();
-        prefill->stopCondition = new OperationCounter(range / 2);
-        prefill->add_thread_loop_builder(new PrefillInsertThreadLoopBuilder(), 1);
+        assert(!prefill.has_value());
+        prefill.emplace();
+        prefill->stopCondition = std::make_shared<OperationCounter>(range / 2);
+        prefill->add_thread_loop_builder(std::make_shared<PrefillInsertThreadLoopBuilder>(), 1);
         return create_default_prefill(1);
     }
 
     BenchParameters& set_range(size_t range) {
-        range = range;
+        this->range = range;
         return *this;
     }
 
-    BenchParameters& set_test(Parameters* test) {
-        test = test;
+    BenchParameters& set_test(Parameters test) {
+        this->test = std::move(test);
         return *this;
     }
 
-    BenchParameters& set_prefill(Parameters* prefill) {
-        prefill = prefill;
+    BenchParameters& set_prefill(Parameters prefill) {
+        this->prefill = std::move(prefill);
         return *this;
     }
 
-    BenchParameters& set_warm_up(Parameters* warm_up) {
-        warmUp = warm_up;
+    BenchParameters& set_warm_up(Parameters warm_up) {
+        this->warmUp = std::move(warm_up);
         return *this;
     }
 
     size_t get_total_threads() {
-        return prefill->get_num_threads() + warmUp->get_num_threads() + test->get_num_threads();
+        return (prefill.has_value() ? prefill->get_num_threads() : 0) +
+               (warmUp.has_value() ? warmUp->get_num_threads() : 0) +
+               (test.has_value() ? test->get_num_threads() : 0);
     }
 
     size_t get_max_threads() {
-        return std::max(prefill->get_num_threads(),
-                        std::max(warmUp->get_num_threads(), test->get_num_threads()));
+        return std::max({(prefill.has_value() ? prefill->get_num_threads() : 0),
+                         (warmUp.has_value() ? warmUp->get_num_threads() : 0),
+                         (test.has_value() ? test->get_num_threads() : 0)});
     }
 
     void init() {
-        //        if (test == nullptr) {
-        //            test = new Parameters();
-        //        }
-        //        if (prefill == nullptr) {
-        //            prefill = new Parameters();
-        //        }
-        //        if (warmUp == nullptr) {
-        //            warmUp = new Parameters();
-        //        }
         init_data_map_builders(range);
-        prefill->init(range);
-        warmUp->init(range);
-        test->init(range);
+        if (prefill.has_value()) {
+            prefill->init(range);
+        }
+        if (warmUp.has_value()) {
+            warmUp->init(range);
+        }
+        if (test.has_value()) {
+            test->init(range);
+        }
     }
 
     std::string to_string(size_t indents = 1) {
         return indented_title_with_data("Range", range, indents) +
-               (prefill->get_num_threads() == 0
+               (!prefill.has_value()
                     ? to_string_stage("without prefill")
                     : to_string_stage("prefill parameters") + prefill->to_string(indents + 1)) +
-               (warmUp->get_num_threads() == 0
+               (!warmUp.has_value()
                     ? to_string_stage("without warmUp")
                     : to_string_stage("warmUp parameters") + warmUp->to_string(indents + 1)) +
                to_string_stage("test parameters") + test->to_string(indents + 1);
     }
 
-    ~BenchParameters() {
-        delete test;
-        delete prefill;
-        delete warmUp;
-        delete_data_map_builders();
-    }
+    ~BenchParameters() = default;
 };
 
 void to_json(nlohmann::json& json, const BenchParameters& s) {
     json["range"] = s.range;
-    json["test"] = *s.test;
-    json["prefill"] = *s.prefill;
-    json["warmUp"] = *s.warmUp;
+    if (s.test.has_value()) {
+        json["test"] = s.test;
+    }
+    if (s.prefill.has_value()) {
+        json["prefill"] = s.prefill;
+    }
+    if (s.warmUp.has_value()) {
+        json["warmUp"] = s.warmUp;
+    }
 }
 
 void from_json(const nlohmann::json& json, BenchParameters& s) {
     s.range = json["range"];
-    s.test = new Parameters(json["test"]);
-    s.prefill = new Parameters(json["prefill"]);
-    s.warmUp = new Parameters(json["warmUp"]);
+    if (json.contains("test")) {
+        s.test = Parameters(json["test"]);
+    }
+    if (json.contains("prefill")) {
+        s.prefill = Parameters(json["prefill"]);
+    }
+    if (json.contains("warmUp")) {
+        s.warmUp = Parameters(json["warmUp"]);
+    }
 }
 
 }  // namespace microbench::workload

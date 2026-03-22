@@ -3,6 +3,7 @@
 //
 #pragma once
 
+#include <memory>
 #include <vector>
 #include <string>
 #include <iostream>
@@ -10,17 +11,15 @@
 #include "workloads/stop_condition/stop_condition.h"
 #include "workloads/stop_condition/impls/timer.h"
 #include "workloads/thread_loops/thread_loop_builder.h"
-#include "workloads/thread_loops/impls/default_thread_loop.h"
 #include "globals_t.h"
 #include "workloads/thread_loops/thread_loop.h"
 #include "workloads/stop_condition/stop_condition_json_convector.h"
 #include "workloads/thread_loops/thread_loop_json_convector.h"
-#include "binding.h"
 
 namespace microbench::workload {
 
 struct ThreadLoopSettings {
-    ThreadLoopBuilder* threadLoopBuilder;
+    std::shared_ptr<ThreadLoopBuilder> threadLoopBuilder;
     size_t quantity;
     std::string pinPattern;
 
@@ -34,33 +33,31 @@ struct ThreadLoopSettings {
         threadLoopBuilder = get_thread_loop_from_json(j["threadLoopBuilder"]);
     }
 
-    ThreadLoopSettings* set_thread_loop_builder(ThreadLoopBuilder* thread_loop_builder) {
-        threadLoopBuilder = thread_loop_builder;
-        return this;
+    ThreadLoopSettings& set_thread_loop_builder(ThreadLoopBuilderPtr thread_loop_builder) {
+        threadLoopBuilder = std::move(thread_loop_builder);
+        return *this;
     }
 
-    ThreadLoopSettings* set_quantity(size_t quantity) {
+    ThreadLoopSettings& set_quantity(size_t quantity) {
         quantity = quantity;
-        return this;
+        return *this;
     }
 
-    ThreadLoopSettings* set_pin(const std::string& pin_pattern) {
+    ThreadLoopSettings& set_pin(const std::string& pin_pattern) {
         pinPattern = pin_pattern;
-        return this;
+        return *this;
     }
 
     ThreadLoopSettings() = default;
 
-    explicit ThreadLoopSettings(ThreadLoopBuilder* thread_loop_builder, size_t quantity = 1,
+    explicit ThreadLoopSettings(ThreadLoopBuilderPtr thread_loop_builder, size_t quantity = 1,
                                 const std::string& pin_pattern = "")
-        : threadLoopBuilder(thread_loop_builder),
+        : threadLoopBuilder(std::move(thread_loop_builder)),
           quantity(quantity),
           pinPattern(pin_pattern) {
     }
 
-    ~ThreadLoopSettings() {
-        delete threadLoopBuilder;
-    }
+    ~ThreadLoopSettings() = default;
 };
 
 void to_json(nlohmann::json& j, const ThreadLoopSettings& s) {
@@ -87,7 +84,7 @@ class Parameters {
     std::vector<int> pin_;
 
 public:
-    static void parse_binding(std::string& pin_pattern, std::vector<int>& result_pin) {
+    static void parse_binding(std::string const& pin_pattern, std::vector<int>& result_pin) {
         std::istringstream iss(pin_pattern);
         char c;
         int num;
@@ -120,17 +117,14 @@ public:
         }
     }
 
-    StopCondition* stopCondition;
+    StopConditionPtr stopCondition;
 
-    std::vector<ThreadLoopSettings*> threadLoopBuilders;
+    std::vector<ThreadLoopSettings> threadLoopBuilders;
 
-    //    Parameters() : numThreads(0), stopCondition(nullptr) {}
     Parameters()
         : num_threads_(0),
           stopCondition(new Timer(5000)) {
     }
-
-    Parameters(const Parameters& p) = default;
 
     size_t get_num_threads() const {
         return num_threads_;
@@ -140,61 +134,61 @@ public:
         return pin_;
     }
 
-    Parameters* set_stop_condition(StopCondition* stop_condition) {
-        stopCondition = stop_condition;
-        return this;
+    Parameters& set_stop_condition(StopConditionPtr stop_condition) {
+        stopCondition = std::move(stop_condition);
+        return *this;
     }
 
-    Parameters* set_thread_loop_builders(
-        const std::vector<ThreadLoopSettings*>& thread_loop_builders) {
-        Parameters::threadLoopBuilders = thread_loop_builders;
-        return this;
+    Parameters& set_thread_loop_builders(std::vector<ThreadLoopSettings> thread_loop_builders) {
+        Parameters::threadLoopBuilders = std::move(thread_loop_builders);
+        return *this;
     }
 
-    Parameters* add_thread_loop_builder(ThreadLoopSettings* thread_loop_settings) {
-        threadLoopBuilders.push_back(thread_loop_settings);
-        num_threads_ += thread_loop_settings->quantity;
-        if ((thread_loop_settings != nullptr) && !thread_loop_settings->pinPattern.empty()) {
+    Parameters& add_thread_loop_builder(ThreadLoopSettings thread_loop_settings) {
+        threadLoopBuilders.push_back(std::move(thread_loop_settings));
+        auto const& settings = threadLoopBuilders.back();
+        num_threads_ += settings.quantity;
+        if (!settings.pinPattern.empty()) {
             std::vector<int> cur_pin;
-            parse_binding(thread_loop_settings->pinPattern, cur_pin);
-            for (size_t i = 0; i < thread_loop_settings->quantity; ++i) {
+            parse_binding(settings.pinPattern, cur_pin);
+            for (size_t i = 0; i < settings.quantity; ++i) {
                 pin_.push_back(cur_pin[i % cur_pin.size()]);
             }
         } else {
             pin_.resize(num_threads_, -1);
         }
         assert(num_threads_ == pin_.size());
-        return this;
+        return *this;
     }
 
-    Parameters* add_thread_loop_builder(ThreadLoopBuilder* thread_loop_builder, size_t quantity = 1,
-                                        const std::string& pin_pattern = "") {
+    Parameters& add_thread_loop_builder(ThreadLoopBuilderPtr thread_loop_builder,
+                                        size_t quantity = 1, const std::string& pin_pattern = "") {
         return add_thread_loop_builder(
-            new ThreadLoopSettings(thread_loop_builder, quantity, pin_pattern));
+            ThreadLoopSettings(std::move(thread_loop_builder), quantity, pin_pattern));
     }
 
-    Parameters* init(int range) {
+    Parameters& init(int range) {
         if (stopCondition == nullptr) {
-            stopCondition = new Timer(5000);
+            stopCondition = std::make_shared<Timer>(5000);
         }
 
-        for (ThreadLoopSettings* thread_loop_settings : threadLoopBuilders) {
-            thread_loop_settings->threadLoopBuilder->init(range);
+        for (ThreadLoopSettings& thread_loop_settings : threadLoopBuilders) {
+            thread_loop_settings.threadLoopBuilder->init(range);
         }
-        return this;
+        return *this;
     }
 
-    ThreadLoop** get_workload(globals_t* g, Random64* rngs) const {
-        ThreadLoop** workload = new ThreadLoop*[this->num_threads_];
+    std::vector<ThreadLoopPtr> get_workload(globals_t* g, Random64* rngs) const {
+        std::vector<ThreadLoopPtr> workload;
         for (size_t thread_id = 0, i = 0, cur_quantity = 0; thread_id < this->num_threads_;
              ++thread_id, ++cur_quantity) {
-            if (cur_quantity >= threadLoopBuilders[i]->quantity) {
+            if (cur_quantity >= threadLoopBuilders[i].quantity) {
                 cur_quantity = 0;
                 ++i;
             }
 
-            workload[thread_id] = threadLoopBuilders[i]->threadLoopBuilder->build(
-                g, rngs[thread_id], thread_id, stopCondition);
+            workload.push_back(threadLoopBuilders[i].threadLoopBuilder->build(
+                g, rngs[thread_id], thread_id, stopCondition));
         }
         return workload;
     }
@@ -202,8 +196,8 @@ public:
     void to_json(nlohmann::json& j) const {
         j["numThreads"] = num_threads_;
         j["stopCondition"] = *stopCondition;
-        for (ThreadLoopSettings* tls : threadLoopBuilders) {
-            j["threadLoopBuilders"].push_back(*tls);
+        for (ThreadLoopSettings const& tls : threadLoopBuilders) {
+            j["threadLoopBuilders"].push_back(tls);
         }
     }
 
@@ -212,7 +206,7 @@ public:
 
         if (j.contains("threadLoopBuilders")) {
             for (const auto& i : j["threadLoopBuilders"]) {
-                add_thread_loop_builder(new ThreadLoopSettings(i));
+                add_thread_loop_builder(ThreadLoopSettings(i));
             }
         }
     }
@@ -231,24 +225,19 @@ public:
         result += indented_title_with_str_data("all pins", pin_string, indents) +
                   indented_title("thread loops", indents);
 
-        for (auto tls : threadLoopBuilders) {
-            result += indented_title_with_data("quantity", tls->quantity, indents + 1);
+        for (auto const& tls : threadLoopBuilders) {
+            result += indented_title_with_data("quantity", tls.quantity, indents + 1);
 
-            if (!tls->pinPattern.empty()) {
-                result += indented_title_with_str_data("pin", tls->pinPattern, indents + 1);
+            if (!tls.pinPattern.empty()) {
+                result += indented_title_with_str_data("pin", tls.pinPattern, indents + 1);
             }
 
-            result += tls->threadLoopBuilder->to_string(indents + 2);
+            result += tls.threadLoopBuilder->to_string(indents + 2);
         }
         return result;
     }
 
-    ~Parameters() {
-        delete stopCondition;
-        for (ThreadLoopSettings* tls : threadLoopBuilders) {
-            delete tls;
-        }
-    }
+    ~Parameters() = default;
 };
 
 void to_json(nlohmann::json& json, const Parameters& s) {

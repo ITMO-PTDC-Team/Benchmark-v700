@@ -3,19 +3,20 @@
 //
 #pragma once
 
+#include <memory>
 #include <string>
 #include "args_generator.h"
-#include "random_xoshiro256p.h"
 #include "nlohmann/json.hpp"
+#include "random_xoshiro256p.h"
 
 namespace microbench::workload {
 
-using K = int64_t;
+using KeyType = int64_t;
 
 struct ArgsGeneratorBuilder {
-    virtual ArgsGeneratorBuilder* init(size_t range) = 0;
+    virtual ArgsGeneratorBuilder& init(size_t range) = 0;
 
-    virtual ArgsGenerator<K>* build(Random64& rng) = 0;
+    virtual ArgsGeneratorPtr build(Random64& rng) = 0;
 
     virtual void to_json(nlohmann::json& j) const = 0;
 
@@ -26,10 +27,11 @@ struct ArgsGeneratorBuilder {
     virtual ~ArgsGeneratorBuilder() = default;
 };
 
+using ArgsGeneratorBuilderPtr = std::shared_ptr<ArgsGeneratorBuilder>;
+
 void to_json(nlohmann::json& j, const ArgsGeneratorBuilder& s) {
     s.to_json(j);
     assert(j.contains("ClassName"));
-    //    assert(j["argsGeneratorType"] != nullptr);
 }
 
 void from_json(const nlohmann::json& j, ArgsGeneratorBuilder& s) {

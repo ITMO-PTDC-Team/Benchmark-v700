@@ -1,5 +1,9 @@
 #pragma once
 
+#include <memory>
+#include "args_generators/args_generator.h"
+#include "distributions/builders/skewed_uniform_distribution_builder.h"
+#include "distributions/distribution.h"
 #include "workloads/args_generators/impls/temporary_skewed_args_generator.h"
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/distributions/builders/uniform_distribution_builder.h"
@@ -13,13 +17,10 @@ namespace microbench::workload {
 class TemporarySkewedArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     size_t range_;
     size_t set_number_ = 0;
-    SkewedUniformDistributionBuilder** hot_dist_builders_;
-    DistributionBuilder* relax_dist_builder_ = new UniformDistributionBuilder();
-    PAD;
-    int64_t* hot_times_;
-    PAD;
-    int64_t* relax_times_;
-    PAD;
+    std::vector<std::shared_ptr<SkewedUniformDistributionBuilder>> hot_dist_builders_;
+    DistributionBuilderPtr relax_dist_builder_ = std::make_shared<UniformDistributionBuilder>();
+    std::vector<int64_t> hot_times_;
+    std::vector<int64_t> relax_times_;
     int64_t default_hot_time_ = -1;
     int64_t default_relax_time_ = -1;
 
@@ -27,143 +28,143 @@ class TemporarySkewedArgsGeneratorBuilder : public ArgsGeneratorBuilder {
      * manual setting of the begins of sets
      */
     bool manual_setting_set_begins_ = false;
-    double* set_begins_;
+    std::vector<double> set_begins_;
     PAD;
-    size_t* set_begin_indexes_;
+    std::vector<size_t> set_begin_indexes_;
     PAD;
 
-    DataMapBuilder* data_map_builder_ = new ArrayDataMapBuilder();
+    DataMapBuilderPtr data_map_builder_ = std::make_shared<ArrayDataMapBuilder>();
 
 public:
-    TemporarySkewedArgsGeneratorBuilder* enable_manual_setting_set_begins() {
+    TemporarySkewedArgsGeneratorBuilder& enable_manual_setting_set_begins() {
         manual_setting_set_begins_ = true;
-        set_begins_ = new double[set_number_];
-        std::fill(set_begins_, set_begins_ + set_number_, 0);
-        return this;
+        set_begins_.resize(set_number_);
+        std::fill(set_begins_.begin(), set_begins_.end(), 0);
+        return *this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* disable_manual_setting_set_begins() {
+    TemporarySkewedArgsGeneratorBuilder& disable_manual_setting_set_begins() {
         manual_setting_set_begins_ = false;
-        return this;
+        return *this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_set_number(const size_t set_number) {
+    TemporarySkewedArgsGeneratorBuilder& set_set_number(const size_t set_number) {
         set_number_ = set_number;
-        hot_dist_builders_ = new SkewedUniformDistributionBuilder*[set_number];
-        hot_times_ = new int64_t[set_number_];
-        relax_times_ = new int64_t[set_number_];
+        hot_dist_builders_.resize(set_number_);
+        hot_times_.resize(set_number_);
+        relax_times_.resize(set_number_);
 
         if (manual_setting_set_begins_) {
-            set_begins_ = new double[set_number_];
-            std::fill(set_begins_, set_begins_ + set_number_, 0);
+            set_begins_.resize(set_number_);
+            std::fill(set_begins_.begin(), set_begins_.end(), 0);
         }
 
         /**
          * if hotTimes[point] == -1, we will use hotTime
          * relaxTime analogically
          */
-        std::fill(hot_times_, hot_times_ + set_number_, default_hot_time_);
-        std::fill(relax_times_, relax_times_ + set_number_, default_relax_time_);
+        std::fill(hot_times_.begin(), hot_times_.end(), default_hot_time_);
+        std::fill(relax_times_.begin(), relax_times_.end(), default_relax_time_);
 
         for (size_t i = 0; i < set_number_; ++i) {
-            hot_dist_builders_[i] = new SkewedUniformDistributionBuilder();
+            hot_dist_builders_[i] = std::make_shared<SkewedUniformDistributionBuilder>();
         }
 
-        return this;
+        return *this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_sets_dist_builder(
-        SkewedUniformDistributionBuilder** sets_dist_builder) {
-        hot_dist_builders_ = sets_dist_builder;
-        return this;
+    TemporarySkewedArgsGeneratorBuilder& set_sets_dist_builder(
+        std::vector<std::shared_ptr<SkewedUniformDistributionBuilder>> sets_dist_builder) {
+        hot_dist_builders_ = std::move(sets_dist_builder);
+        return *this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_set_dist_builder(
-        const size_t index, SkewedUniformDistributionBuilder* set_dist_builder) {
+    TemporarySkewedArgsGeneratorBuilder& set_set_dist_builder(
+        const size_t index, std::shared_ptr<SkewedUniformDistributionBuilder> set_dist_builder) {
         assert(index < set_number_);
-        hot_dist_builders_[index] = set_dist_builder;
-        return this;
+        hot_dist_builders_[index] = std::move(set_dist_builder);
+        return *this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_relax_dist_builder(
-        DistributionBuilder* relax_dist_builder) {
-        relax_dist_builder_ = relax_dist_builder;
-        return this;
+    TemporarySkewedArgsGeneratorBuilder& set_relax_dist_builder(
+        DistributionBuilderPtr relax_dist_builder) {
+        relax_dist_builder_ = std::move(relax_dist_builder);
+        return *this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_hot_size_and_ratio(const size_t index,
+    TemporarySkewedArgsGeneratorBuilder& set_hot_size_and_ratio(const size_t index,
                                                                 const double hot_size,
                                                                 const double hot_ratio) {
         assert(index < set_number_);
         hot_dist_builders_[index]->set_hot_size(hot_size);
         hot_dist_builders_[index]->set_hot_ratio(hot_ratio);
-        return this;
+        return *this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_hot_size(const size_t index, const double hot_size) {
+    TemporarySkewedArgsGeneratorBuilder& set_hot_size(const size_t index, const double hot_size) {
         assert(index < set_number_);
         hot_dist_builders_[index]->set_hot_size(hot_size);
-        return this;
+        return *this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_hot_ratio(const size_t index, const double hot_ratio) {
+    TemporarySkewedArgsGeneratorBuilder& set_hot_ratio(const size_t index, const double hot_ratio) {
         assert(index < set_number_);
         hot_dist_builders_[index]->set_hot_ratio(hot_ratio);
-        return this;
+        return *this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_hot_times(int64_t* hot_times) {
-        hot_times_ = hot_times;
-        return this;
+    TemporarySkewedArgsGeneratorBuilder& set_hot_times(std::vector<int64_t> hot_times) {
+        hot_times_ = std::move(hot_times);
+        return *this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_relax_times(int64_t* relax_times) {
-        relax_times_ = relax_times;
-        return this;
+    TemporarySkewedArgsGeneratorBuilder& set_relax_times(std::vector<int64_t> relax_times) {
+        relax_times_ = std::move(relax_times);
+        return *this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_hot_time(const size_t index, const int64_t hot_time) {
+    TemporarySkewedArgsGeneratorBuilder& set_hot_time(const size_t index, const int64_t hot_time) {
         assert(index < set_number_);
 
         hot_times_[index] = hot_time;
-        return this;
+        return *this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_relax_time(const size_t index,
+    TemporarySkewedArgsGeneratorBuilder& set_relax_time(const size_t index,
                                                         const int64_t relax_time) {
         assert(index < set_number_);
 
         relax_times_[index] = relax_time;
-        return this;
+        return *this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_default_hot_time(const int64_t hot_time) {
+    TemporarySkewedArgsGeneratorBuilder& set_default_hot_time(const int64_t hot_time) {
         default_hot_time_ = hot_time;
-        return this;
+        return *this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_default_relax_time(const int64_t relax_time) {
+    TemporarySkewedArgsGeneratorBuilder& set_default_relax_time(const int64_t relax_time) {
         default_relax_time_ = relax_time;
-        return this;
+        return *this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_set_begins(double* set_begins) {
-        set_begins_ = set_begins;
-        return this;
+    TemporarySkewedArgsGeneratorBuilder& set_set_begins(std::vector<double> set_begins) {
+        set_begins_ = std::move(set_begins);
+        return *this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_set_begin(const size_t index, const double set_begin) {
+    TemporarySkewedArgsGeneratorBuilder& set_set_begin(const size_t index, const double set_begin) {
         assert(index < set_number_);
         set_begins_[index] = set_begin;
-        return this;
+        return *this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* set_data_map_builder(DataMapBuilder* data_map_builder) {
-        data_map_builder_ = data_map_builder;
-        return this;
+    TemporarySkewedArgsGeneratorBuilder& set_data_map_builder(DataMapBuilderPtr data_map_builder) {
+        data_map_builder_ = std::move(data_map_builder);
+        return *this;
     }
 
-    TemporarySkewedArgsGeneratorBuilder* init(size_t range) override {
+    TemporarySkewedArgsGeneratorBuilder& init(size_t range) override {
         range_ = range;
 
         for (int i = 0; i < set_number_; ++i) {
@@ -178,7 +179,8 @@ public:
             }
         }
 
-        set_begin_indexes_ = new size_t[set_number_];
+        set_begin_indexes_.clear();
+        set_begin_indexes_.resize(set_number_);
 
         if (manual_setting_set_begins_) {
             for (size_t i = 0; i < set_number_; ++i) {
@@ -193,19 +195,19 @@ public:
         }
 
         //        dataMapBuilder->init(range);
-        return this;
+        return *this;
     }
 
-    TemporarySkewedArgsGenerator<K>* build(Random64& rng) override {
-        Distribution** hot_dists = new Distribution*[set_number_];
+    ArgsGeneratorPtr build(Random64& rng) override {
+        std::vector<DistributionPtr> hot_dists;
 
         for (size_t i = 0; i < set_number_; ++i) {
-            hot_dists[i] = hot_dist_builders_[i]->build(rng, range_);
+            hot_dists.emplace_back(hot_dist_builders_[i]->build(rng, range_));
         }
 
-        return new TemporarySkewedArgsGenerator<K>(
-            set_number_, range_, hot_times_, relax_times_, set_begin_indexes_, hot_dists,
-            relax_dist_builder_->build(rng, range_), data_map_builder_->build());
+        return ArgsGeneratorPtr(new TemporarySkewedArgsGenerator(
+            set_number_, range_, hot_times_, relax_times_, set_begin_indexes_, std::move(hot_dists),
+            relax_dist_builder_->build(rng, range_), data_map_builder_->build()));
     }
 
     void to_json(nlohmann::json& j) const override {
@@ -233,11 +235,11 @@ public:
 
         this->set_set_number(j["setNumber"]);
 
-        std::copy(std::begin(j["hotTimes"]), std::end(j["hotTimes"]), hot_times_);
-        std::copy(std::begin(j["relaxTimes"]), std::end(j["relaxTimes"]), relax_times_);
+        std::copy(std::begin(j["hotTimes"]), std::end(j["hotTimes"]), hot_times_.begin());
+        std::copy(std::begin(j["relaxTimes"]), std::end(j["relaxTimes"]), relax_times_.begin());
 
         if (manual_setting_set_begins_) {
-            std::copy(std::begin(j["setBegins"]), std::end(j["setBegins"]), set_begins_);
+            std::copy(std::begin(j["setBegins"]), std::end(j["setBegins"]), set_begins_.begin());
         }
 
         relax_dist_builder_ = get_distribution_from_json(j["relaxDistBuilder"]);
@@ -245,8 +247,7 @@ public:
 
         size_t i = 0;
         for (const auto& j_i : j["hotDistBuilders"]) {
-            hot_dist_builders_[i] =
-                dynamic_cast<SkewedUniformDistributionBuilder*>(get_distribution_from_json(j_i));
+            hot_dist_builders_[i] = std::dynamic_pointer_cast<SkewedUniformDistributionBuilder>(get_distribution_from_json(j_i));
             ++i;
         }
     }
@@ -296,17 +297,7 @@ public:
         return result;
     }
 
-    ~TemporarySkewedArgsGeneratorBuilder() override {
-        delete[] hot_times_;
-        delete[] relax_times_;
-        if (manual_setting_set_begins_) {
-            delete[] set_begins_;
-            delete[] set_begin_indexes_;
-        }
-        delete[] hot_dist_builders_;
-        delete relax_dist_builder_;
-        //        delete dataMapBuilder;
-    }
+    ~TemporarySkewedArgsGeneratorBuilder() override = default;
 };
 
 }  // namespace microbench::workload

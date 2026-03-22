@@ -1,5 +1,9 @@
 #pragma once
 
+#include <memory>
+#include "args_generators/args_generator.h"
+#include "data_maps/data_map_json_convector.h"
+#include "distributions/distribution_json_convector.h"
 #include "workloads/args_generators/impls/skewed_insert_args_generator.h"
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/distributions/builders/uniform_distribution_builder.h"
@@ -10,42 +14,37 @@ namespace microbench::workload {
 
 class SkewedInsertArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     size_t range_;
-
-    DistributionBuilder* dist_builder_ = new UniformDistributionBuilder();
-
-    DataMapBuilder* data_map_builder_ = new ArrayDataMapBuilder();
-
+    DistributionBuilderPtr dist_builder_ = std::make_shared<UniformDistributionBuilder>();
+    DataMapBuilderPtr data_map_builder_ = std::make_shared<ArrayDataMapBuilder>();
     double skewed_size_ = 0;
-
-    size_t skewed_length_;
+    size_t skewed_length_ = 0;
 
 public:
-    SkewedInsertArgsGeneratorBuilder* set_skewed_size(double skewed_size) {
+    SkewedInsertArgsGeneratorBuilder& set_skewed_size(double skewed_size) {
         skewed_size_ = skewed_size;
-        return this;
+        return *this;
     }
 
-    SkewedInsertArgsGeneratorBuilder* set_distribution_builder(DistributionBuilder* dist_builder) {
-        dist_builder_ = dist_builder;
-        return this;
+    SkewedInsertArgsGeneratorBuilder& set_distribution_builder(DistributionBuilderPtr dist_builder) {
+        dist_builder_ = std::move(dist_builder);
+        return *this;
     }
 
-    SkewedInsertArgsGeneratorBuilder* set_data_map_builder(DataMapBuilder* data_map_builder) {
-        data_map_builder_ = data_map_builder;
-        return this;
+    SkewedInsertArgsGeneratorBuilder& set_data_map_builder(DataMapBuilderPtr data_map_builder) {
+        data_map_builder_ = std::move(data_map_builder);
+        return *this;
     }
 
-    SkewedInsertArgsGeneratorBuilder* init(size_t range) override {
+    SkewedInsertArgsGeneratorBuilder& init(size_t range) override {
         range_ = range;
-        //        dataMapBuilder->init(range);
         skewed_length_ = (size_t)(range * skewed_size_);
-        return this;
+        return *this;
     }
 
-    SkewedInsertArgsGenerator<K>* build(Random64& rng) override {
-        return new SkewedInsertArgsGenerator<K>(skewed_length_,
-                                                dist_builder_->build(rng, range_ - skewed_length_),
-                                                data_map_builder_->build());
+    ArgsGeneratorPtr build(Random64& rng) override {
+        return std::make_shared<SkewedInsertArgsGenerator>(
+            skewed_length_, dist_builder_->build(rng, range_ - skewed_length_),
+            data_map_builder_->build());
     }
 
     void to_json(nlohmann::json& j) const override {
@@ -68,10 +67,7 @@ public:
                indented_title("Data Map", indents) + data_map_builder_->to_string(indents + 1);
     }
 
-    ~SkewedInsertArgsGeneratorBuilder() override {
-        delete dist_builder_;
-        //        delete dataMapBuilder; //TODO may delete twice
-    };
+    ~SkewedInsertArgsGeneratorBuilder() override = default;
 };
 
 }  // namespace microbench::workload

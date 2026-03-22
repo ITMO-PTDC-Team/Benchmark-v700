@@ -3,6 +3,7 @@
 //
 #pragma once
 
+#include <memory>
 #include <string>
 #include "distribution.h"
 #include "random_xoshiro256p.h"
@@ -11,7 +12,7 @@
 namespace microbench::workload {
 
 struct DistributionBuilder {
-    virtual Distribution* build(Random64& rng, size_t range) = 0;
+    virtual DistributionPtr build(Random64& rng, size_t range) = 0;
 
     virtual std::string to_string(size_t indents) = 0;
 
@@ -22,9 +23,13 @@ struct DistributionBuilder {
     virtual ~DistributionBuilder() = default;
 };
 
+using DistributionBuilderPtr = std::shared_ptr<DistributionBuilder>;
+
 struct MutableDistributionBuilder : public DistributionBuilder {
-    virtual MutableDistribution* build(Random64& rng) = 0;
+    virtual MutableDistributionPtr build(Random64& rng) = 0;
 };
+
+using MutableDistributionBuilderPtr = std::shared_ptr<MutableDistributionBuilder>;
 
 void to_json(nlohmann::json& j, const DistributionBuilder& s) {
     s.to_json(j);

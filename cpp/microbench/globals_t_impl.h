@@ -30,8 +30,6 @@ namespace microbench {
 
 struct globals_t {
     PAD;
-    // const
-    //    void *const NO_VALUE;
     VALUE_TYPE const NO_VALUE;
     const test_type KEY_MIN;  // must be smaller than any key that can be inserted/deleted
     const test_type

@@ -16,7 +16,7 @@ class Timer : public StopCondition {
     PAD;
     volatile bool stop_;
     PAD;
-    std::thread* stop_thread_;
+    std::unique_ptr<std::thread> stop_thread_;
     PAD;
     volatile bool is_started_;
     PAD;
@@ -44,14 +44,13 @@ public:
     void start(size_t num_threads) override {
         stop_ = false;
         is_started_ = false;
-        stop_thread_ = new std::thread(&Timer::wait, this);
+        stop_thread_ = std::make_unique<std::thread>(&Timer::wait, this);
         while (!is_started_) {
         };
     }
 
     void clean() override {
         stop_thread_->join();
-        delete stop_thread_;
     }
 
     bool is_stopped(int id) override {

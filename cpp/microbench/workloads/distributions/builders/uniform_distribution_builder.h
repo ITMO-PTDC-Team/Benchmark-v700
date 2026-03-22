@@ -4,6 +4,8 @@
 #pragma once
 
 #include <cassert>
+#include <memory>
+#include "distributions/distribution.h"
 #include "random_xoshiro256p.h"
 #include "workloads/distributions/distribution_builder.h"
 #include "workloads/distributions/impls/uniform_distribution.h"
@@ -12,12 +14,12 @@
 namespace microbench::workload {
 
 struct UniformDistributionBuilder : public MutableDistributionBuilder {
-    UniformDistribution* build(Random64& rng, size_t range) override {
-        return new UniformDistribution(rng, range);
+    DistributionPtr build(Random64& rng, size_t range) override {
+        return std::make_shared<UniformDistribution>(rng, range);
     }
 
-    UniformDistribution* build(Random64& rng) override {
-        return new UniformDistribution(rng);
+    MutableDistributionPtr build(Random64& rng) override {
+        return std::make_shared<UniformDistribution>(rng);
     }
 
     void to_json(nlohmann::json& j) const override {

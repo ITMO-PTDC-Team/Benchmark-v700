@@ -4,6 +4,7 @@
 #pragma once
 
 #include <iostream>
+#include <memory>
 #include <string>
 
 #include "random_xoshiro256p.h"
@@ -17,30 +18,30 @@ private:
     PAD;
     Random64& rng_;
     PAD;
-    ArgsGenerator<K>* args_generator_;
+    ArgsGeneratorPtr args_generator_;
     PAD;
     size_t number_of_attempts_;
 
 public:
     PrefillInsertThreadLoop(globals_t* g, Random64& rng, size_t thread_id,
-                            StopCondition* stop_condition, size_t rq_range,
-                            ArgsGenerator<K>* args_generator, size_t number_of_attempts)
-        : ThreadLoop(g, thread_id, stop_condition, rq_range),
+                            StopConditionPtr stop_condition, size_t rq_range,
+                            ArgsGeneratorPtr args_generator, size_t number_of_attempts)
+        : ThreadLoop(g, thread_id, std::move(stop_condition), rq_range),
           rng_(rng),
-          args_generator_(args_generator),
+          args_generator_(std::move(args_generator)),
           number_of_attempts_(number_of_attempts) {
     }
 
     void step() override {
         size_t counter = 0;
-        K* value;
+        KeyType* value;
         do {
-            K key = this->args_generator_->next_insert();
+            KeyType key = this->args_generator_->next_insert();
             value = this->execute_insert(key);
             ++counter;
-        } while (value != (K*)this->NO_VALUE && counter < number_of_attempts_);
+        } while (value != (KeyType*)this->NO_VALUE && counter < number_of_attempts_);
 
-        if (value != (K*)this->NO_VALUE) {
+        if (value != (KeyType*)this->NO_VALUE) {
             std::cerr << "WARNING: PrefillInsertThreadLoop with threadId=" << threadId
                       << " have not inserted a new key. Number of attempts is: "
                       << number_of_attempts_ << "\n";
@@ -59,31 +60,31 @@ public:
 namespace microbench::workload {
 
 struct PrefillInsertThreadLoopBuilder : public ThreadLoopBuilder {
-    ArgsGeneratorBuilder* argsGeneratorBuilder = new DefaultArgsGeneratorBuilder();
+    ArgsGeneratorBuilderPtr argsGeneratorBuilder = std::make_unique<DefaultArgsGeneratorBuilder>();
     size_t numberOfAttempts = 10e+6;
 
-    PrefillInsertThreadLoopBuilder* set_number_of_attempts(size_t number_of_attempts) {
+    PrefillInsertThreadLoopBuilder& set_number_of_attempts(size_t number_of_attempts) {
         numberOfAttempts = number_of_attempts;
-        return this;
+        return *this;
     }
 
-    PrefillInsertThreadLoopBuilder* set_args_generator_builder(
-        ArgsGeneratorBuilder* args_generator_builder) {
-        argsGeneratorBuilder = args_generator_builder;
-        return this;
+    PrefillInsertThreadLoopBuilder& set_args_generator_builder(
+        ArgsGeneratorBuilderPtr args_generator_builder) {
+        argsGeneratorBuilder = std::move(args_generator_builder);
+        return *this;
     }
 
-    PrefillInsertThreadLoopBuilder* init(int range) override {
+    PrefillInsertThreadLoopBuilder& init(int range) override {
         ThreadLoopBuilder::init(range);
         argsGeneratorBuilder->init(range);
-        return this;
+        return *this;
     }
 
-    //    template<typename K>
-    ThreadLoop* build(globals_t* g, Random64& rng, size_t thread_id,
-                      StopCondition* stop_condition) override {
-        return new PrefillInsertThreadLoop(g, rng, thread_id, stop_condition, this->RQ_RANGE,
-                                           argsGeneratorBuilder->build(rng), numberOfAttempts);
+    ThreadLoopPtr build(globals_t* g, Random64& rng, size_t thread_id,
+                        StopConditionPtr stop_condition) override {
+        return std::make_shared<PrefillInsertThreadLoop>(
+            g, rng, thread_id, std::move(stop_condition), this->RQ_RANGE,
+            argsGeneratorBuilder->build(rng), numberOfAttempts);
     }
 
     void to_json(nlohmann::json& json) const override {
@@ -106,9 +107,7 @@ struct PrefillInsertThreadLoopBuilder : public ThreadLoopBuilder {
                argsGeneratorBuilder->to_string(indents + 1);
     }
 
-    ~PrefillInsertThreadLoopBuilder() override {
-        delete argsGeneratorBuilder;
-    };
+    ~PrefillInsertThreadLoopBuilder() override = default;
 };
 
 }  // namespace microbench::workload

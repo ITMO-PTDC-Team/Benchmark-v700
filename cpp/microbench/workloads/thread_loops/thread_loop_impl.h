@@ -4,6 +4,8 @@
 #pragma once
 
 #include "adapter.h"
+#include "args_generators/args_generator.h"
+#include "globals_t.h"
 #include "globals_t_impl.h"
 
 namespace microbench::workload {
@@ -12,8 +14,10 @@ namespace microbench::workload {
     tid = this->threadId;                                                          \
     binding_bindThread(tid);                                                       \
     garbage = 0;                                                                   \
-    rqResultKeys = new K[this->RQ_RANGE + MAX_KEYS_PER_NODE];                      \
-    rqResultValues = new VALUE_TYPE[this->RQ_RANGE + MAX_KEYS_PER_NODE];           \
+    rqResultKeys = std::vector<KeyType>();                                         \
+    rqResultKeys.resize(this->RQ_RANGE + MAX_KEYS_PER_NODE);                       \
+    rqResultValues = std::vector<VALUE_TYPE>();                                    \
+    rqResultValues.resize(this->RQ_RANGE + MAX_KEYS_PER_NODE);                     \
     NO_VALUE = this->g->dsAdapter->getNoValue();                                   \
     __RLU_INIT_THREAD;                                                             \
     __RCU_INIT_THREAD;                                                             \
@@ -50,16 +54,12 @@ namespace microbench::workload {
     this->g->dsAdapter->deinitThread(tid);                                         \
     __RCU_DEINIT_THREAD;                                                           \
     __RLU_DEINIT_THREAD;                                                           \
-    delete[] rqResultKeys;                                                         \
-    delete[] rqResultValues;                                                       \
     this->g->garbage += garbage;
 
-template <typename K>
-K* ThreadLoop::execute_insert(K& key) {
+KeyType* ThreadLoop::execute_insert(KeyType& key) {
     TRACE COUTATOMICTID("### calling INSERT " << key << std::endl);
 
     VALUE_TYPE value = g->dsAdapter->insertIfAbsent(threadId, key, KEY_TO_VALUE(key));
-    //    K *value = (K *) g->dsAdapter->insertIfAbsent(threadId, key, KEY_TO_VALUE(key));
 
     if (value == g->dsAdapter->getNoValue()) {
         TRACE COUTATOMICTID("### completed INSERT modification for " << key << std::endl);
@@ -73,13 +73,11 @@ K* ThreadLoop::execute_insert(K& key) {
     GSTATS_ADD(threadId, num_inserts, 1);
     GSTATS_ADD(threadId, num_operations, 1);
 
-    return (K*)value;
+    return (KeyType*)value;
 }
 
-template <typename K>
-K* ThreadLoop::execute_remove(const K& key) {
+KeyType* ThreadLoop::execute_remove(const KeyType& key) {
     TRACE COUTATOMICTID("### calling ERASE " << key << std::endl);
-    //    K *value = (K *) g->dsAdapter->erase(this->threadId, key);
     VALUE_TYPE value = g->dsAdapter->erase(this->threadId, key);
 
     if (value != this->g->dsAdapter->getNoValue()) {
@@ -94,12 +92,10 @@ K* ThreadLoop::execute_remove(const K& key) {
     GSTATS_ADD(threadId, num_removes, 1);
     GSTATS_ADD(threadId, num_operations, 1);
 
-    return (K*)value;
+    return (KeyType*)value;
 }
 
-template <typename K>
-K* ThreadLoop::execute_get(const K& key) {
-    //    K *value = (K *) this->g->dsAdapter->find(this->threadId, key);
+KeyType* ThreadLoop::execute_get(const KeyType& key) {
     VALUE_TYPE value = this->g->dsAdapter->find(this->threadId, key);
 
     if (value != this->g->dsAdapter->getNoValue()) {
@@ -111,11 +107,10 @@ K* ThreadLoop::execute_get(const K& key) {
     GSTATS_ADD(threadId, num_searches, 1);
     GSTATS_ADD(threadId, num_operations, 1);
 
-    return (K*)value;
+    return (KeyType*)value;
 }
 
-template <typename K>
-bool ThreadLoop::execute_contains(const K& key) {
+bool ThreadLoop::execute_contains(const KeyType& key) {
     bool value = this->g->dsAdapter->contains(this->threadId, key);
 
     if (value) {
@@ -133,12 +128,12 @@ bool ThreadLoop::execute_contains(const K& key) {
 /**
  * the result is in the arrays rqResultKeys and rqResultValues
  */
-template <typename K>
-void ThreadLoop::execute_range_query(const K& leftKey, const K& rightKey) {
+void ThreadLoop::execute_range_query(const KeyType& leftKey, const KeyType& rightKey) {
     ++rq_cnt;
     size_t rqcnt;
-    if ((rqcnt = this->g->dsAdapter->rangeQuery(this->threadId, leftKey, rightKey, rqResultKeys,
-                                                (VALUE_TYPE*)rqResultValues))) {
+    if ((rqcnt =
+             this->g->dsAdapter->rangeQuery(this->threadId, leftKey, rightKey, rqResultKeys.data(),
+                                            (VALUE_TYPE*)rqResultValues.data()))) {
         garbage +=
             rqResultKeys[0] +
             rqResultKeys[rqcnt - 1];  // prevent rqResultValues and count from being optimized out

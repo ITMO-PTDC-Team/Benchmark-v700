@@ -25,19 +25,19 @@ struct RatioThreadLoopParameters {
 
     RatioThreadLoopParameters(const RatioThreadLoopParameters& ratio) = default;
 
-    RatioThreadLoopParameters* set_ins_ratio(double ins_ratio) {
+    RatioThreadLoopParameters& set_ins_ratio(double ins_ratio) {
         INS_RATIO = ins_ratio;
-        return this;
+        return *this;
     }
 
-    RatioThreadLoopParameters* set_rem_ratio(double rem_ratio) {
+    RatioThreadLoopParameters& set_rem_ratio(double rem_ratio) {
         REM_RATIO = rem_ratio;
-        return this;
+        return *this;
     }
 
-    RatioThreadLoopParameters* set_rq_ratio(double rq_ratio) {
+    RatioThreadLoopParameters& set_rq_ratio(double rq_ratio) {
         RQ_RATIO = rq_ratio;
-        return this;
+        return *this;
     }
 
     std::string to_string(const size_t indents = 1) {

@@ -3,6 +3,7 @@
 //
 #pragma once
 
+#include <memory>
 #include "nlohmann/json.hpp"
 #include "stop_condition.h"
 #include "workloads/stop_condition/impls/timer.h"
@@ -11,13 +12,13 @@
 
 namespace microbench::workload {
 
-StopCondition* get_stop_condition_from_json(const nlohmann::json& j) {
+StopConditionPtr get_stop_condition_from_json(const nlohmann::json& j) {
     std::string class_name = j["ClassName"];
-    StopCondition* stop_condition;
+    StopConditionPtr stop_condition;
     if (class_name == "Timer") {
-        stop_condition = new Timer();
+        stop_condition = std::make_shared<Timer>();
     } else if (class_name == "OperationCounter") {
-        stop_condition = new OperationCounter();
+        stop_condition = std::make_shared<OperationCounter>();
     } else {
         setbench_error("JSON PARSER: Unknown class name StopCondition -- " + class_name)
     }
