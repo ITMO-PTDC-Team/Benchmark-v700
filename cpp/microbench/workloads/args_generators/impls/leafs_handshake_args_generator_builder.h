@@ -19,13 +19,13 @@ class LeafsHandshakeArgsGeneratorBuilder : public ArgsGeneratorBuilder {
 private:
     size_t range_;
 
-    DistributionBuilderPtr read_dist_builder_ = std::make_unique<UniformDistributionBuilder>();
+    DistributionBuilderPtr read_dist_builder_ = std::make_shared<UniformDistributionBuilder>();
     MutableDistributionBuilderPtr insert_dist_builder_ =
-        std::make_unique<ZipfianDistributionBuilder>();
-    DistributionBuilderPtr remove_dist_builder_ = std::make_unique<UniformDistributionBuilder>();
+        std::make_shared<ZipfianDistributionBuilder>();
+    DistributionBuilderPtr remove_dist_builder_ = std::make_shared<UniformDistributionBuilder>();
 
-    DataMapBuilderPtr read_data_map_builder_ = std::make_unique<IdDataMapBuilder>();
-    DataMapBuilderPtr remove_data_map_builder_ = std::make_unique<IdDataMapBuilder>();
+    DataMapBuilderPtr read_data_map_builder_ = std::make_shared<IdDataMapBuilder>();
+    DataMapBuilderPtr remove_data_map_builder_ = std::make_shared<IdDataMapBuilder>();
     std::atomic<size_t> deleted_value_;
 
 public:
@@ -67,7 +67,7 @@ public:
     }
 
     ArgsGeneratorPtr build(Random64& rng) override {
-        return std::make_unique<LeafsHandshakeArgsGenerator>(
+        return std::make_shared<LeafsHandshakeArgsGenerator>(
             rng, range_, deleted_value_, read_dist_builder_->build(rng, range_),
             insert_dist_builder_->build(rng), remove_dist_builder_->build(rng, range_),
             read_data_map_builder_->build(), remove_data_map_builder_->build());

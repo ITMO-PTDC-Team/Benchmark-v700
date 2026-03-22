@@ -57,12 +57,5 @@
                 }
             }
         ]
-    },
-    "warmUp": {
-        "numThreads": 0,
-        "stopCondition": {
-            "ClassName": "Timer",
-            "workTime": 5000
-        }
     }
 }

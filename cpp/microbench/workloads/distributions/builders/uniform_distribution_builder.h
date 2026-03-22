@@ -15,11 +15,11 @@ namespace microbench::workload {
 
 struct UniformDistributionBuilder : public MutableDistributionBuilder {
     DistributionPtr build(Random64& rng, size_t range) override {
-        return std::make_unique<UniformDistribution>(rng, range);
+        return std::make_shared<UniformDistribution>(rng, range);
     }
 
     MutableDistributionPtr build(Random64& rng) override {
-        return std::make_unique<UniformDistribution>(rng);
+        return std::make_shared<UniformDistribution>(rng);
     }
 
     void to_json(nlohmann::json& j) const override {

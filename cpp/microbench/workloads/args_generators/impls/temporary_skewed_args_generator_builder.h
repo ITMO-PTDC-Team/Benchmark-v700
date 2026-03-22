@@ -17,8 +17,8 @@ namespace microbench::workload {
 class TemporarySkewedArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     size_t range_;
     size_t set_number_ = 0;
-    std::vector<std::unique_ptr<SkewedUniformDistributionBuilder>> hot_dist_builders_;
-    DistributionBuilderPtr relax_dist_builder_ = std::make_unique<UniformDistributionBuilder>();
+    std::vector<std::shared_ptr<SkewedUniformDistributionBuilder>> hot_dist_builders_;
+    DistributionBuilderPtr relax_dist_builder_ = std::make_shared<UniformDistributionBuilder>();
     std::vector<int64_t> hot_times_;
     std::vector<int64_t> relax_times_;
     int64_t default_hot_time_ = -1;
@@ -33,7 +33,7 @@ class TemporarySkewedArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     std::vector<size_t> set_begin_indexes_;
     PAD;
 
-    DataMapBuilderPtr data_map_builder_ = std::make_unique<ArrayDataMapBuilder>();
+    DataMapBuilderPtr data_map_builder_ = std::make_shared<ArrayDataMapBuilder>();
 
 public:
     TemporarySkewedArgsGeneratorBuilder& enable_manual_setting_set_begins() {
@@ -67,20 +67,20 @@ public:
         std::fill(relax_times_.begin(), relax_times_.end(), default_relax_time_);
 
         for (size_t i = 0; i < set_number_; ++i) {
-            hot_dist_builders_[i] = std::make_unique<SkewedUniformDistributionBuilder>();
+            hot_dist_builders_[i] = std::make_shared<SkewedUniformDistributionBuilder>();
         }
 
         return *this;
     }
 
     TemporarySkewedArgsGeneratorBuilder& set_sets_dist_builder(
-        std::vector<std::unique_ptr<SkewedUniformDistributionBuilder>> sets_dist_builder) {
+        std::vector<std::shared_ptr<SkewedUniformDistributionBuilder>> sets_dist_builder) {
         hot_dist_builders_ = std::move(sets_dist_builder);
         return *this;
     }
 
     TemporarySkewedArgsGeneratorBuilder& set_set_dist_builder(
-        const size_t index, std::unique_ptr<SkewedUniformDistributionBuilder> set_dist_builder) {
+        const size_t index, std::shared_ptr<SkewedUniformDistributionBuilder> set_dist_builder) {
         assert(index < set_number_);
         hot_dist_builders_[index] = std::move(set_dist_builder);
         return *this;
@@ -247,8 +247,7 @@ public:
 
         size_t i = 0;
         for (const auto& j_i : j["hotDistBuilders"]) {
-            hot_dist_builders_[i] = std::unique_ptr<SkewedUniformDistributionBuilder>(dynamic_cast<SkewedUniformDistributionBuilder*>(
-                get_distribution_from_json(j_i).release()));
+            hot_dist_builders_[i] = std::dynamic_pointer_cast<SkewedUniformDistributionBuilder>(get_distribution_from_json(j_i));
             ++i;
         }
     }

@@ -14,7 +14,7 @@ struct Distribution {
     virtual ~Distribution() = default;
 };
 
-using DistributionPtr = std::unique_ptr<Distribution>;
+using DistributionPtr = std::shared_ptr<Distribution>;
 
 struct MutableDistribution : public Distribution {
     virtual void set_range(size_t range) = 0;
@@ -27,6 +27,6 @@ struct MutableDistribution : public Distribution {
     }
 };
 
-using MutableDistributionPtr = std::unique_ptr<MutableDistribution>;
+using MutableDistributionPtr = std::shared_ptr<MutableDistribution>;
 
 }  // namespace microbench::workload

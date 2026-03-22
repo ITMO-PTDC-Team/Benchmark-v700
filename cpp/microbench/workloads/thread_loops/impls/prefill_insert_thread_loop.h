@@ -82,7 +82,7 @@ struct PrefillInsertThreadLoopBuilder : public ThreadLoopBuilder {
 
     ThreadLoopPtr build(globals_t* g, Random64& rng, size_t thread_id,
                         StopConditionPtr stop_condition) override {
-        return std::make_unique<PrefillInsertThreadLoop>(
+        return std::make_shared<PrefillInsertThreadLoop>(
             g, rng, thread_id, std::move(stop_condition), this->RQ_RANGE,
             argsGeneratorBuilder->build(rng), numberOfAttempts);
     }

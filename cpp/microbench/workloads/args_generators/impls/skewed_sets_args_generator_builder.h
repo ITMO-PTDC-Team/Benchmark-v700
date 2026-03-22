@@ -4,6 +4,7 @@
 #include "args_generators/args_generator.h"
 #include "data_maps/data_map_json_convector.h"
 #include "distributions/distribution_builder.h"
+#include "distributions/distribution_json_convector.h"
 #include "workloads/args_generators/impls/skewed_sets_args_generator.h"
 #include "workloads/args_generators/args_generator_builder.h"
 #include "workloads/distributions/builders/skewed_uniform_distribution_builder.h"
@@ -15,12 +16,12 @@ namespace microbench::workload {
 class SkewedSetsArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     size_t range_;
 
-    std::unique_ptr<SkewedUniformDistributionBuilder> read_dist_builder_ =
-        std::make_unique<SkewedUniformDistributionBuilder>();
-    std::unique_ptr<SkewedUniformDistributionBuilder> write_dist_builder_ =
-        std::make_unique<SkewedUniformDistributionBuilder>();
+    std::shared_ptr<SkewedUniformDistributionBuilder> read_dist_builder_ =
+        std::make_shared<SkewedUniformDistributionBuilder>();
+    std::shared_ptr<SkewedUniformDistributionBuilder> write_dist_builder_ =
+        std::make_shared<SkewedUniformDistributionBuilder>();
 
-    DataMapBuilderPtr data_map_builder_ = std::make_unique<ArrayDataMapBuilder>();
+    DataMapBuilderPtr data_map_builder_ = std::make_shared<ArrayDataMapBuilder>();
 
     double intersection_ = 0;
     size_t write_set_begins_;
@@ -63,7 +64,7 @@ public:
     }
 
     ArgsGeneratorPtr build(Random64& rng) override {
-        return std::make_unique<SkewedSetsArgsGenerator>(
+        return std::make_shared<SkewedSetsArgsGenerator>(
             range_, write_set_begins_, read_dist_builder_->build(rng, range_),
             write_dist_builder_->build(rng, range_), data_map_builder_->build());
     }
@@ -77,10 +78,10 @@ public:
     }
 
     void from_json(const nlohmann::json& j) override {
-        read_dist_builder_ = std::unique_ptr<SkewedUniformDistributionBuilder>(dynamic_cast<SkewedUniformDistributionBuilder*>(
-            get_distribution_from_json(j["readDistBuilder"]).release()));
-        write_dist_builder_ = std::unique_ptr<SkewedUniformDistributionBuilder>(dynamic_cast<SkewedUniformDistributionBuilder*>(
-            get_distribution_from_json(j["writeDistBuilder"]).release()));
+        read_dist_builder_ = std::dynamic_pointer_cast<SkewedUniformDistributionBuilder>(
+            get_distribution_from_json(j["readDistBuilder"]));
+        read_dist_builder_ = std::dynamic_pointer_cast<SkewedUniformDistributionBuilder>(
+            get_distribution_from_json(j["writeDistBuilder"]));
         intersection_ = j["intersection"];
         data_map_builder_ = get_data_map_from_json(j["dataMapBuilder"]);
     }

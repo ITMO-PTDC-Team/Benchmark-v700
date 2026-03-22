@@ -17,12 +17,12 @@ private:
     size_t range_;
 
 public:
-    DistributionBuilderPtr distributionBuilder = std::make_unique<UniformDistributionBuilder>();
+    DistributionBuilderPtr distributionBuilder = std::make_shared<UniformDistributionBuilder>();
     DataMapBuilderPtr dataMapBuilder = std::make_shared<IdDataMapBuilder>();
 
     DefaultArgsGeneratorBuilder& set_distribution_builder(
         DistributionBuilderPtr distribution_builder) {
-        distributionBuilder = std::move(distribution_builder);
+        distributionBuilder = distribution_builder;
         return *this;
     }
 
@@ -37,7 +37,7 @@ public:
     }
 
     ArgsGeneratorPtr build(Random64& rng) override {
-        return std::make_unique<DefaultArgsGenerator>(dataMapBuilder->build(),
+        return std::make_shared<DefaultArgsGenerator>(dataMapBuilder->build(),
                                                       distributionBuilder->build(rng, range_));
     }
 

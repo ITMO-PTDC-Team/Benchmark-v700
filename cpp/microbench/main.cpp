@@ -345,10 +345,10 @@ void run(globals_t* g) {
     /**
      * PREFILL STAGE
      */
-    if (g->benchParameters->prefill.get_num_threads() != 0) {
+    if (g->benchParameters->prefill.has_value()) {
         COUTATOMIC(to_string_stage("Prefill stage"))
 
-        execute(g, g->benchParameters->prefill);
+        execute(g, *g->benchParameters->prefill);
 
         {
             // print prefilling status information
@@ -378,10 +378,10 @@ void run(globals_t* g) {
     /**
      * WARM UP STAGE
      */
-    if (g->benchParameters->warmUp.get_num_threads() != 0) {
+    if (g->benchParameters->warmUp.has_value()) {
         COUTATOMIC(to_string_stage("WarmUp stage"))
 
-        execute(g, g->benchParameters->warmUp);
+        execute(g, *g->benchParameters->warmUp);
 
         // print warm up status information
         using namespace std::chrono;
@@ -409,7 +409,7 @@ void run(globals_t* g) {
 
     std::cout << to_string_stage("Test stage");
 
-    execute(g, g->benchParameters->test);
+    execute(g, *g->benchParameters->test);
 
     COUTATOMIC(std::endl);
     COUTATOMIC(to_string_big_stage("END RUNNING"))

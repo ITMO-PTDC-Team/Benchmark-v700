@@ -64,7 +64,7 @@ namespace microbench::workload {
 struct DefaultThreadLoopBuilder : public ThreadLoopBuilder {
     RatioThreadLoopParameters parameters;
 
-    ArgsGeneratorBuilderPtr argsGeneratorBuilder = std::make_unique<DefaultArgsGeneratorBuilder>();
+    ArgsGeneratorBuilderPtr argsGeneratorBuilder = std::make_shared<DefaultArgsGeneratorBuilder>();
 
     DefaultThreadLoopBuilder& set_ins_ratio(double ins_ratio) {
         parameters.INS_RATIO = ins_ratio;
@@ -95,7 +95,7 @@ struct DefaultThreadLoopBuilder : public ThreadLoopBuilder {
 
     ThreadLoopPtr build(globals_t* g, Random64& rng, size_t thread_id,
                         StopConditionPtr stop_condition) override {
-        return std::make_unique<DefaultThreadLoop>(g, rng, thread_id, std::move(stop_condition),
+        return std::make_shared<DefaultThreadLoop>(g, rng, thread_id, std::move(stop_condition),
                                                    this->RQ_RANGE, argsGeneratorBuilder->build(rng),
                                                    parameters);
     }

@@ -27,7 +27,7 @@ struct ArgsGeneratorBuilder {
     virtual ~ArgsGeneratorBuilder() = default;
 };
 
-using ArgsGeneratorBuilderPtr = std::unique_ptr<ArgsGeneratorBuilder>;
+using ArgsGeneratorBuilderPtr = std::shared_ptr<ArgsGeneratorBuilder>;
 
 void to_json(nlohmann::json& j, const ArgsGeneratorBuilder& s) {
     s.to_json(j);

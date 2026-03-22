@@ -15,7 +15,7 @@ public:
     }
 
     ArgsGeneratorPtr build(Random64& rng) override {
-        return std::make_unique<NullArgsGenerator>();
+        return std::make_shared<NullArgsGenerator>();
     }
 
     void to_json(nlohmann::json& j) const override {

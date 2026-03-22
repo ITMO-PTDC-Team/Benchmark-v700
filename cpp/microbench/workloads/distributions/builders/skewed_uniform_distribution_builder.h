@@ -20,8 +20,8 @@ struct SkewedUniformDistributionBuilder : public DistributionBuilder {
     double hotSize = 0;
     double hotRatio = 0;
 
-    DistributionBuilderPtr hotDistBuilder = std::make_unique<UniformDistributionBuilder>();
-    DistributionBuilderPtr coldDistBuilder = std::make_unique<UniformDistributionBuilder>();
+    DistributionBuilderPtr hotDistBuilder = std::make_shared<UniformDistributionBuilder>();
+    DistributionBuilderPtr coldDistBuilder = std::make_shared<UniformDistributionBuilder>();
     PAD;
 
     SkewedUniformDistributionBuilder& set_hot_size(double hot_size) {
@@ -55,7 +55,7 @@ struct SkewedUniformDistributionBuilder : public DistributionBuilder {
     }
 
     DistributionPtr build(Random64& rng, size_t range) override {
-        return std::make_unique<SkewedUniformDistribution>(
+        return std::make_shared<SkewedUniformDistribution>(
             rng, hotDistBuilder->build(rng, get_hot_length(range)),
             coldDistBuilder->build(rng, get_cold_length(range)), hotRatio, get_hot_length(range));
     }

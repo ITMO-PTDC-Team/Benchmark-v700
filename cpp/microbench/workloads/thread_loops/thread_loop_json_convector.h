@@ -17,11 +17,11 @@ ThreadLoopBuilderPtr get_thread_loop_from_json(const nlohmann::json& j) {
     ThreadLoopBuilderPtr thread_loop_builder;
 
     if (class_name == "DefaultThreadLoopBuilder") {
-        thread_loop_builder = std::make_unique<DefaultThreadLoopBuilder>();
+        thread_loop_builder = std::make_shared<DefaultThreadLoopBuilder>();
     } else if (class_name == "TemporaryOperationsThreadLoopBuilder") {
-        thread_loop_builder = std::make_unique<TemporaryOperationsThreadLoopBuilder>();
+        thread_loop_builder = std::make_shared<TemporaryOperationsThreadLoopBuilder>();
     } else if (class_name == "PrefillInsertThreadLoopBuilder") {
-        thread_loop_builder = std::make_unique<PrefillInsertThreadLoopBuilder>();
+        thread_loop_builder = std::make_shared<PrefillInsertThreadLoopBuilder>();
     } else {
         setbench_error("JSON PARSER: Unknown class name ThreadLoopBuilder -- " + class_name)
     }

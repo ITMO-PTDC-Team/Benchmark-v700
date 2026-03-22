@@ -27,7 +27,7 @@ public:
     }
 
     DataMapPtr build() override {
-        return std::make_unique<ArrayDataMap>(data_);
+        return std::make_shared<ArrayDataMap>(data_);
     }
 
     void to_json(nlohmann::json& j) const override {

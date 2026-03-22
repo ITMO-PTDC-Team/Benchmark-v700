@@ -27,9 +27,9 @@ class CreakersAndWaveArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     double creakers_ratio_ = 0;
     double wave_size_ = 0;
 
-    DistributionBuilderPtr creakers_dist_builder_ = std::make_unique<UniformDistributionBuilder>();
+    DistributionBuilderPtr creakers_dist_builder_ = std::make_shared<UniformDistributionBuilder>();
     MutableDistributionBuilderPtr wave_dist_builder_ =
-        std::make_unique<ZipfianDistributionBuilder>();
+        std::make_shared<ZipfianDistributionBuilder>();
 
     DataMapBuilderPtr data_map_builder_ = std::make_shared<ArrayDataMapBuilder>();
 
@@ -88,7 +88,7 @@ public:
     }
 
     ArgsGeneratorPtr build(Random64& rng) override {
-        return std::make_unique<CreakersAndWaveArgsGenerator>(
+        return std::make_shared<CreakersAndWaveArgsGenerator>(
             rng, creakers_ratio_, creakers_begin_, wave_begin_, wave_end_,
             creakers_dist_builder_->build(rng, creakers_length_), wave_dist_builder_->build(rng),
             data_map_builder_->build());
@@ -181,7 +181,7 @@ public:
     }
 
     ArgsGeneratorPtr build(Random64& rng) override {
-        return std::make_unique<CreakersAndWavePrefillArgsGenerator>(
+        return std::make_shared<CreakersAndWavePrefillArgsGenerator>(
             rng, wave_begin_, prefill_length_, data_map_builder_->build());
     }
 

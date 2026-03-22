@@ -20,8 +20,8 @@ private:
     size_t interval_;
 
 public:
-    DistributionBuilderPtr distributionBuilder = std::make_unique<UniformDistributionBuilder>();
-    DataMapBuilderPtr dataMapBuilder = std::make_unique<IdDataMapBuilder>();
+    DistributionBuilderPtr distributionBuilder = std::make_shared<UniformDistributionBuilder>();
+    DataMapBuilderPtr dataMapBuilder = std::make_shared<IdDataMapBuilder>();
 
     RangeQueryArgsGeneratorBuilder& set_distribution_builder(
         DistributionBuilderPtr distribution_builder) {
@@ -45,7 +45,7 @@ public:
     }
 
     ArgsGeneratorPtr build(Random64& rng) override {
-        return std::make_unique<RangeQueryArgsGenerator>(
+        return std::make_shared<RangeQueryArgsGenerator>(
             dataMapBuilder->build(), distributionBuilder->build(rng, range_), interval_);
     }
 

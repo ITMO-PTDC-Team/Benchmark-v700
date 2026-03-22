@@ -24,11 +24,11 @@ struct ZipfianDistributionBuilder : public MutableDistributionBuilder {
     }
 
     DistributionPtr build(Random64& rng, size_t range) override {
-        return std::make_unique<ZipfDistribution>(rng, alpha, range);
+        return std::make_shared<ZipfDistribution>(rng, alpha, range);
     }
 
     MutableDistributionPtr build(Random64& rng) override {
-        return std::make_unique<ZipfDistribution>(rng, alpha);
+        return std::make_shared<ZipfDistribution>(rng, alpha);
     }
 
     void to_json(nlohmann::json& j) const override {

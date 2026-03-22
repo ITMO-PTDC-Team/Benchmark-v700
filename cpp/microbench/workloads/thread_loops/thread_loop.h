@@ -80,6 +80,6 @@ void ThreadLoop::run() {
 
 #endif
 
-using ThreadLoopPtr = std::unique_ptr<ThreadLoop>;
+using ThreadLoopPtr = std::shared_ptr<ThreadLoop>;
 
 }  // namespace microbench::workload

@@ -23,7 +23,7 @@ struct ArgsGenerator {
     virtual ~ArgsGenerator() = default;
 };
 
-using ArgsGeneratorPtr = std::unique_ptr<ArgsGenerator>;
+using ArgsGeneratorPtr = std::shared_ptr<ArgsGenerator>;
 
 
 }  // namespace microbench::workload

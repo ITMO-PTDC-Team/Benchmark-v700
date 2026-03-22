@@ -14,7 +14,7 @@ namespace microbench::workload {
 
 class SkewedInsertArgsGeneratorBuilder : public ArgsGeneratorBuilder {
     size_t range_;
-    DistributionBuilderPtr dist_builder_ = std::make_unique<UniformDistributionBuilder>();
+    DistributionBuilderPtr dist_builder_ = std::make_shared<UniformDistributionBuilder>();
     DataMapBuilderPtr data_map_builder_ = std::make_shared<ArrayDataMapBuilder>();
     double skewed_size_ = 0;
     size_t skewed_length_ = 0;
@@ -42,7 +42,7 @@ public:
     }
 
     ArgsGeneratorPtr build(Random64& rng) override {
-        return std::make_unique<SkewedInsertArgsGenerator>(
+        return std::make_shared<SkewedInsertArgsGenerator>(
             skewed_length_, dist_builder_->build(rng, range_ - skewed_length_),
             data_map_builder_->build());
     }

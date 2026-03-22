@@ -28,11 +28,11 @@ DistributionBuilderPtr get_distribution_from_json(const nlohmann::json& j) {
     std::string class_name = j["ClassName"];
     DistributionBuilderPtr distribution_builder;
     if (class_name == "UniformDistributionBuilder") {
-        distribution_builder = std::make_unique<UniformDistributionBuilder>();
+        distribution_builder = std::make_shared<UniformDistributionBuilder>();
     } else if (class_name == "ZipfianDistributionBuilder") {
-        distribution_builder = std::make_unique<ZipfianDistributionBuilder>();
+        distribution_builder = std::make_shared<ZipfianDistributionBuilder>();
     } else if (class_name == "SkewedUniformDistributionBuilder") {
-        distribution_builder = std::make_unique<SkewedUniformDistributionBuilder>();
+        distribution_builder = std::make_shared<SkewedUniformDistributionBuilder>();
     } else {
         setbench_error("JSON PARSER: Unknown class name DistributionBuilder -- " + class_name)
     }
@@ -42,8 +42,7 @@ DistributionBuilderPtr get_distribution_from_json(const nlohmann::json& j) {
 }
 
 MutableDistributionBuilderPtr get_mutable_distribution_from_json(const nlohmann::json& j) {
-    return std::unique_ptr<MutableDistributionBuilder>(
-        dynamic_cast<MutableDistributionBuilder*>(get_distribution_from_json(j).release()));
+    return std::dynamic_pointer_cast<MutableDistributionBuilder>(get_distribution_from_json(j));
 }
 
 }  // namespace microbench::workload

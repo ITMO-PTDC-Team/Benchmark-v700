@@ -46,7 +46,7 @@ public:
         if (!undec_oper_types_.empty()) {
             add_args_generator_builder(
                 std::vector<std::string>(undec_oper_types_.begin(), undec_oper_types_.end()),
-                std::make_unique<NullArgsGeneratorBuilder>());
+                std::make_shared<NullArgsGeneratorBuilder>());
         }
 
         for (auto& it : args_generator_builders_) {

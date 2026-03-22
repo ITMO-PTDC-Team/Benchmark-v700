@@ -91,7 +91,7 @@ struct TemporaryOperationsThreadLoopBuilder : public ThreadLoopBuilder {
     std::vector<size_t> stagesDurations;
     std::vector<RatioThreadLoopParameters> ratios;
 
-    ArgsGeneratorBuilderPtr argsGeneratorBuilder = std::make_unique<DefaultArgsGeneratorBuilder>();
+    ArgsGeneratorBuilderPtr argsGeneratorBuilder = std::make_shared<DefaultArgsGeneratorBuilder>();
 
     TemporaryOperationsThreadLoopBuilder& set_stages_number(const size_t stages_number) {
         stagesNumber = stages_number;
@@ -158,7 +158,7 @@ struct TemporaryOperationsThreadLoopBuilder : public ThreadLoopBuilder {
 
     ThreadLoopPtr build(globals_t* g, Random64& rng, size_t tid,
                         StopConditionPtr stop_condition) override {
-        return std::make_unique<TemporaryOperationThreadLoop>(
+        return std::make_shared<TemporaryOperationThreadLoop>(
             g, rng, tid, stop_condition, this->RQ_RANGE, stagesNumber, stagesDurations, ratios,
             argsGeneratorBuilder->build(rng));
     }

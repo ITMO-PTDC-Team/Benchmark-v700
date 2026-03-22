@@ -16,7 +16,7 @@ struct IdDataMapBuilder : public DataMapBuilder {
     };
 
     DataMapPtr build() override {
-        return std::make_unique<IdDataMap>();
+        return std::make_shared<IdDataMap>();
     };
 
     void to_json(nlohmann::json& j) const override {

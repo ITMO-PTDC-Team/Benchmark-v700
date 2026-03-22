@@ -41,6 +41,6 @@ void from_json(const nlohmann::json& j, ThreadLoopBuilder& s) {
     s.from_json(j);
 }
 
-using ThreadLoopBuilderPtr = std::unique_ptr<ThreadLoopBuilder>;
+using ThreadLoopBuilderPtr = std::shared_ptr<ThreadLoopBuilder>;
 
 }  // namespace microbench::workload

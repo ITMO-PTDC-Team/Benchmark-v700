@@ -23,13 +23,13 @@ struct DistributionBuilder {
     virtual ~DistributionBuilder() = default;
 };
 
-using DistributionBuilderPtr = std::unique_ptr<DistributionBuilder>;
+using DistributionBuilderPtr = std::shared_ptr<DistributionBuilder>;
 
 struct MutableDistributionBuilder : public DistributionBuilder {
     virtual MutableDistributionPtr build(Random64& rng) = 0;
 };
 
-using MutableDistributionBuilderPtr = std::unique_ptr<MutableDistributionBuilder>;
+using MutableDistributionBuilderPtr = std::shared_ptr<MutableDistributionBuilder>;
 
 void to_json(nlohmann::json& j, const DistributionBuilder& s) {
     s.to_json(j);
